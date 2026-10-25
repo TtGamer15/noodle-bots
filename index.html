@@ -1313,32 +1313,75 @@ function setTier(t) {
 function seedFromCode(code) { let h = 2166136261; for (const ch of code) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function newCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
 
-/* ---------- direct-connect rooms for the website (PeerJS) ----------
-   GitHub Pages has no game server, so the player who creates a room hosts it:
-   everyone connects straight to the host's browser, and the host passes each
-   player's state on to the others. A free public PeerJS service only helps
-   the browsers find each other. */
-const PEER_PREFIX = 'noodlebots-tt15-', PEER_MAX = 16, PEER_SEND_MS = 80, PEER_TIMEOUT_MS = 15000;
-const PEERJS_URLS = ['https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js', 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js'];
-let peerLib = null;
-function loadPeerLib() {
-  if (window.Peer) return Promise.resolve(window.Peer);
-  if (peerLib) return peerLib;
-  const urls = window.NB_PEERJS_URL ? [window.NB_PEERJS_URL] : PEERJS_URLS;
-  peerLib = new Promise((resolve, reject) => {
-    const tryAt = (i) => {
-      if (i >= urls.length) { peerLib = null; reject({ code: 'no_lib' }); return; }
-      const sc = document.createElement('script'); sc.src = urls[i]; sc.async = true;
-      sc.onload = () => (window.Peer ? resolve(window.Peer) : tryAt(i + 1));
-      sc.onerror = () => { sc.remove(); tryAt(i + 1); };
-      document.head.append(sc);
-    };
-    tryAt(0);
-  });
-  return peerLib;
+/* ---------- online rooms for the website ----------
+   GitHub Pages has no game server, so players share their state through free
+   public MQTT message servers over secure WebSockets. Every player publishes
+   their own state and hears everyone else's, the same way rooms work inside
+   Claude, so the room keeps going if whoever made it leaves. Several servers
+   are tried at once in case one is down. */
+const NET_BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://mqtt.eclipseprojects.io/mqtt', 'wss://broker.hivemq.com:8884/mqtt', 'wss://test.mosquitto.org:8081/mqtt'];
+const NET_TOPIC = 'noodlebots/tt15/v2/', NET_MAX = 16, NET_SEND_MS = 125, NET_STALE_MS = 8000;
+const NET_TE = typeof TextEncoder === 'function' ? new TextEncoder() : null, NET_TD = typeof TextDecoder === 'function' ? new TextDecoder() : null;
+const netId = () => Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
+function mqStr(str) { const b = NET_TE.encode(str), o = new Uint8Array(2 + b.length); o[0] = b.length >> 8; o[1] = b.length & 255; o.set(b, 2); return o; }
+function mqCat(...arrs) { let n = 0; for (const x of arrs) n += x.length; const o = new Uint8Array(n); let i = 0; for (const x of arrs) { o.set(x, i); i += x.length; } return o; }
+function mqPacket(head, body) {
+  const len = []; let x = body.length;
+  do { let d = x % 128; x = Math.floor(x / 128); if (x > 0) d |= 128; len.push(d); } while (x > 0);
+  const o = new Uint8Array(1 + len.length + body.length); o[0] = head; o.set(len, 1); o.set(body, 1 + len.length); return o;
 }
-const peerOpts = () => Object.assign({ debug: 0 }, window.NB_PEER_OPTS || {});
-function makePeerRoom() {
+// A tiny MQTT 3.1.1 client (QoS 0 only): connect with a "last will", subscribe, publish, keep alive.
+function mqttConnect(url, opts) {
+  return new Promise((resolve, reject) => {
+    let ws;
+    try { ws = new WebSocket(url, ['mqtt']); } catch (e) { reject(e); return; }
+    ws.binaryType = 'arraybuffer';
+    let buf = new Uint8Array(0), ready = false, closed = false, pid = 1, ping = 0, lastIn = Date.now();
+    const timer = setTimeout(() => { if (!ready) { closed = true; try { ws.close(); } catch (e) { /* ignore */ } reject(new Error('timeout')); } }, opts.timeout || 7000);
+    const send = (pk) => { if (ws.readyState === 1) { try { ws.send(pk); } catch (e) { /* ignore */ } } };
+    const api = {
+      url,
+      get open() { return ready && !closed && ws.readyState === 1; },
+      publish(topic, text) { send(mqPacket(0x30, mqCat(mqStr(topic), NET_TE.encode(text)))); },
+      subscribe(filter) { const id = (pid++ % 65535) + 1; send(mqPacket(0x82, mqCat(new Uint8Array([id >> 8, id & 255]), mqStr(filter), new Uint8Array([0])))); },
+      close() { if (closed) return; closed = true; clearInterval(ping); send(new Uint8Array([0xe0, 0])); setTimeout(() => { try { ws.close(); } catch (e) { /* ignore */ } }, 60); },
+    };
+    ws.onopen = () => {
+      const parts = [mqStr('MQTT'), new Uint8Array([4, 0x02 | (opts.will ? 0x04 : 0), 0, 30]), mqStr(opts.clientId)];
+      if (opts.will) { const wp = NET_TE.encode(opts.will.payload); parts.push(mqStr(opts.will.topic), new Uint8Array([wp.length >> 8, wp.length & 255]), wp); }
+      send(mqPacket(0x10, mqCat(...parts)));
+    };
+    ws.onmessage = (ev) => {
+      lastIn = Date.now();
+      const chunk = new Uint8Array(ev.data); buf = buf.length ? mqCat(buf, chunk) : chunk;
+      while (buf.length >= 2) {
+        let mul = 1, len = 0, i = 1, byte;
+        do { if (i >= buf.length) return; byte = buf[i++]; len += (byte & 127) * mul; mul *= 128; } while ((byte & 128) && i < 5);
+        if (buf.length < i + len) return;
+        const head = buf[0], type = head >> 4, body = buf.subarray(i, i + len);
+        buf = buf.subarray(i + len);
+        if (type === 2) {
+          clearTimeout(timer);
+          if (body[1] !== 0) { closed = true; try { ws.close(); } catch (e) { /* ignore */ } reject(new Error('refused')); return; }
+          ready = true;
+          ping = setInterval(() => { send(new Uint8Array([0xc0, 0])); if (Date.now() - lastIn > 50000) { try { ws.close(); } catch (e) { /* ignore */ } } }, 20000);
+          resolve(api);
+        } else if (type === 3 && body.length >= 2) {
+          const tl = (body[0] << 8) | body[1]; let off = 2 + tl; if ((head >> 1) & 3) off += 2;
+          if (off <= body.length && opts.onMessage) { try { opts.onMessage(NET_TD.decode(body.subarray(2, 2 + tl)), NET_TD.decode(body.subarray(off))); } catch (e) { /* ignore */ } }
+        }
+      }
+    };
+    ws.onerror = () => {};
+    ws.onclose = () => {
+      clearInterval(ping); clearTimeout(timer);
+      const unexpected = ready && !closed; closed = true;
+      if (!ready) reject(new Error('closed'));
+      else if (unexpected && opts.onClose) opts.onClose(api);
+    };
+  });
+}
+function makeNetRoom() {
   const R = { id: null, my: {}, pres: new Map(), peerH: new Set(), connH: new Set(), errH: new Set(), connected: false, cache: null, pending: false, last: new Map(), dead: false, sentAt: 0, trail: 0 };
   R.snapshot = () => {
     if (R.cache) return R.cache;
@@ -1368,8 +1411,8 @@ function makePeerRoom() {
       const snap = Object.assign({}, R.my);
       if (R.id) R.setPres(R.id, snap);
       const now = Date.now(); clearTimeout(R.trail);
-      if (now - R.sentAt >= PEER_SEND_MS) { R.sentAt = now; send(snap); }
-      else R.trail = setTimeout(() => { R.sentAt = Date.now(); send(Object.assign({}, R.my)); }, PEER_SEND_MS - (now - R.sentAt));
+      if (now - R.sentAt >= NET_SEND_MS) { R.sentAt = now; send(snap); }
+      else R.trail = setTimeout(() => { R.sentAt = Date.now(); send(Object.assign({}, R.my)); }, NET_SEND_MS - (now - R.sentAt));
       return Promise.resolve();
     },
     peers: () => R.snapshot(),
@@ -1380,94 +1423,94 @@ function makePeerRoom() {
   });
   return R;
 }
-function hostPeerRoom(Peer, code) {
+function webRoom(code, create) {
   return new Promise((resolve, reject) => {
-    const R = makePeerRoom(), clients = new Map(), seen = new Map(); let settled = false;
-    const peer = new Peer(PEER_PREFIX + code, peerOpts());
-    const relay = (msg, except) => { for (const [id, c] of clients) if (id !== except && c.open) { try { c.send(msg); } catch (e) { /* ignore */ } } };
-    const dog = setInterval(() => {
-      const now = Date.now();
-      for (const [id, c] of clients) if (now - (seen.get(id) || now) > PEER_TIMEOUT_MS) { try { c.send({ t: 'bye' }); } catch (e) { /* ignore */ } setTimeout(() => { try { c.close(); } catch (e) { /* ignore */ } }, 300); clients.delete(id); seen.delete(id); R.drop(id); relay({ t: 'x', id }); }
-    }, 2000);
-    const api = R.makeApi((pr) => relay({ t: 'p', id: R.id, p: pr }), () => { clearInterval(dog); relay({ t: 'end' }); setTimeout(() => { try { peer.destroy(); } catch (e) { /* ignore */ } }, 150); });
-    peer.on('open', (id) => { if (settled) return; R.id = id; R.setConn(true); settled = true; resolve(api); });
-    peer.on('connection', (conn) => {
-      conn.on('open', () => {
-        if (clients.size >= PEER_MAX - 1) { try { conn.send({ t: 'full' }); } catch (e) { /* ignore */ } setTimeout(() => { try { conn.close(); } catch (e) { /* ignore */ } }, 400); return; }
-        clients.set(conn.peer, conn); seen.set(conn.peer, Date.now());
-        const all = []; for (const [id, v] of R.pres) all.push([id, v.p]);
-        try { conn.send({ t: 'snap', all }); } catch (e) { /* ignore */ }
-      });
-      conn.on('data', (m) => {
-        if (!m || typeof m !== 'object' || !clients.has(conn.peer)) return;
-        seen.set(conn.peer, Date.now());
-        if (m.t === 'bye') { try { conn.close(); } catch (e) { /* ignore */ } gone(); return; }
-        if (m.t !== 'p' || !m.p || typeof m.p !== 'object') return;
-        let len = 0; try { len = JSON.stringify(m.p).length; } catch (e) { return; }
-        if (len > 6000) return;
-        R.setPres(conn.peer, m.p); relay({ t: 'p', id: conn.peer, p: m.p }, conn.peer);
-      });
-      function gone() { if (!clients.has(conn.peer)) return; clients.delete(conn.peer); seen.delete(conn.peer); R.drop(conn.peer); relay({ t: 'x', id: conn.peer }); }
-      conn.on('close', gone); conn.on('error', gone);
-    });
-    peer.on('disconnected', () => { if (!R.dead) setTimeout(() => { try { if (!R.dead && peer.disconnected && !peer.destroyed) peer.reconnect(); } catch (e) { /* ignore */ } }, 1500); });
-    peer.on('error', (e) => {
-      if (settled) return;
-      settled = true; try { peer.destroy(); } catch (er) { /* ignore */ }
-      const type = e && e.type;
+    const brokers = Array.isArray(window.NB_MQTT_BROKERS) ? window.NB_MQTT_BROKERS : NET_BROKERS;
+    const me = netId(), base = NET_TOPIC + code + '/';
+    const R = makeNetRoom(); R.id = me;
+    let client = null, settled = false, dog = 0, reconnecting = false;
+    const seen = new Map();
+    const hear = (topic, text) => {
+      if (topic.slice(0, base.length) !== base) return;
+      const rest = topic.slice(base.length).split('/'), kind = rest[0], id = rest[1];
+      if (!id || id === me || id.length > 24) return;
+      if (kind === 'x') { seen.delete(id); R.drop(id); return; }
+      if (kind !== 'p' || text.length > 6000) return;
+      let pr; try { pr = JSON.parse(text); } catch (e) { return; }
+      seen.set(id, Date.now()); R.setPres(id, pr);
+    };
+    const optsFor = (url, onMsg) => ({ clientId: 'nb' + me + netId().slice(0, 4), will: { topic: base + 'x/' + me, payload: '1' }, onMessage: onMsg || hear, onClose: (c) => { if (c === client) lost(url); }, timeout: 7000 });
+    const send = (pr) => { if (client && client.open) client.publish(base + 'p/' + me, JSON.stringify(pr)); };
+    const api = R.makeApi(send, () => {
       clearInterval(dog);
-      reject({ code: type === 'unavailable-id' ? 'taken' : type === 'browser-incompatible' ? 'unsupported' : 'network' });
+      const c = client; client = null;
+      if (c) { if (c.open) c.publish(base + 'x/' + me, '1'); setTimeout(() => c.close(), 80); }
     });
-    setTimeout(() => { if (!settled) { settled = true; clearInterval(dog); try { peer.destroy(); } catch (e) { /* ignore */ } reject({ code: 'network' }); } }, 12000);
+    const begin = (c) => {
+      client = c; R.setConn(true); settled = true;
+      dog = setInterval(() => { const now = Date.now(); for (const [id, t] of seen) if (now - t > NET_STALE_MS) { seen.delete(id); R.drop(id); } }, 1000);
+      resolve(api);
+    };
+    async function lost(url) {
+      if (R.dead || reconnecting) return;
+      reconnecting = true; R.setConn(false);
+      for (let i = 0; i < 5 && !R.dead; i++) {
+        await new Promise((r) => setTimeout(r, 700 * (i + 1)));
+        if (R.dead) break;
+        try {
+          const c = await mqttConnect(url, optsFor(url));
+          if (R.dead) { c.close(); break; }
+          client = c; c.subscribe(base + '#'); R.setConn(true); reconnecting = false;
+          if (Object.keys(R.my).length) send(Object.assign({}, R.my));
+          return;
+        } catch (e) { /* try again */ }
+      }
+      reconnecting = false; if (!R.dead) R.fail('lost');
+    }
+    const fail = (why) => { if (settled) return; settled = true; reject({ code: why }); };
+    if (!NET_TE || !NET_TD || typeof WebSocket !== 'function') { fail('unsupported'); return; }
+    if (!brokers.length) { fail('network'); return; }
+    if (create) {
+      // Host: use the first server that answers, preferring the ones earlier in the list.
+      let left = brokers.length;
+      brokers.forEach((url, idx) => setTimeout(() => {
+        if (settled) { left--; return; }
+        mqttConnect(url, optsFor(url)).then((c) => {
+          if (settled) { c.close(); return; }
+          c.subscribe(base + '#'); begin(c);
+        }).catch(() => { if (--left === 0) fail('network'); });
+      }, idx * 500));
+      setTimeout(() => fail('network'), 12000);
+    } else {
+      // Joiner: listen on every server at once and stay on the one where the room is.
+      const open = []; let left = brokers.length;
+      brokers.forEach((url) => {
+        let mine = null;
+        const onMsg = (topic, text) => {
+          if (settled && client !== mine) return;
+          hear(topic, text);
+          if (!settled && mine && R.pres.size > 0) { for (const o of open) if (o !== mine) o.close(); begin(mine); }
+        };
+        mqttConnect(url, optsFor(url, onMsg)).then((c) => {
+          if (settled) { c.close(); return; }
+          mine = c; open.push(c); c.subscribe(base + '#');
+        }).catch(() => { if (--left === 0) fail('network'); });
+      });
+      setTimeout(() => { if (!settled) { for (const o of open) o.close(); fail(open.length ? 'not_found' : 'network'); } }, 9000);
+    }
   });
 }
-function joinPeerRoom(Peer, code) {
-  return new Promise((resolve, reject) => {
-    const R = makePeerRoom(); let settled = false, conn = null, heard = Date.now();
-    const peer = new Peer(peerOpts());
-    const dog = setInterval(() => { if (settled && !R.dead && Date.now() - heard > PEER_TIMEOUT_MS) { R.fail('host_left'); clearInterval(dog); try { peer.destroy(); } catch (e) { /* ignore */ } } }, 2000);
-    const finish = (err) => { if (settled) return; settled = true; clearInterval(dog); try { peer.destroy(); } catch (e) { /* ignore */ } reject(err); };
-    const api = R.makeApi((pr) => { if (conn && conn.open) { try { conn.send({ t: 'p', p: pr }); } catch (e) { /* ignore */ } } }, () => {
-      clearInterval(dog);
-      if (conn && conn.open) { try { conn.send({ t: 'bye' }); } catch (e) { /* ignore */ } }
-      setTimeout(() => { try { peer.destroy(); } catch (e) { /* ignore */ } }, 150);
-    });
-    peer.on('open', (id) => {
-      R.id = id;
-      conn = peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' });
-      conn.on('data', (m) => {
-        if (!m || typeof m !== 'object') return;
-        heard = Date.now();
-        if (m.t === 'bye' || m.t === 'end') { if (settled) { R.fail(m.t === 'bye' ? 'kicked' : 'host_left'); clearInterval(dog); try { peer.destroy(); } catch (e) { /* ignore */ } } return; }
-        if (m.t === 'snap' && Array.isArray(m.all)) {
-          for (const e of m.all.slice(0, PEER_MAX)) if (Array.isArray(e) && typeof e[0] === 'string' && e[0] !== R.id) R.setPres(e[0], e[1]);
-          R.setConn(true); heard = Date.now(); if (!settled) { settled = true; resolve(api); }
-        } else if (m.t === 'p' && typeof m.id === 'string' && m.id !== R.id) R.setPres(m.id, m.p);
-        else if (m.t === 'x' && typeof m.id === 'string') R.drop(m.id);
-        else if (m.t === 'full') finish({ code: 'full' });
-      });
-      conn.on('close', () => { if (!settled) finish({ code: 'not_found' }); else { R.fail('host_left'); clearInterval(dog); } });
-      conn.on('error', () => { if (!settled) finish({ code: 'not_found' }); });
-    });
-    peer.on('disconnected', () => { if (!R.dead && settled) setTimeout(() => { try { if (!R.dead && peer.disconnected && !peer.destroyed) peer.reconnect(); } catch (e) { /* ignore */ } }, 1500); });
-    peer.on('error', (e) => {
-      const type = e && e.type;
-      if (!settled) finish({ code: type === 'peer-unavailable' ? 'not_found' : type === 'browser-incompatible' ? 'unsupported' : 'network' });
-    });
-    setTimeout(() => finish({ code: 'not_found' }), 15000);
-  });
-}
-function makePeerApi() {
+function makeWebApi() {
   return {
     presence: () => Promise.resolve(),
     peers: () => [],
     onPeers: () => () => {},
     onConnection: (h) => { setTimeout(() => h(true), 0); return () => {}; },
-    async join(code, create) { const Peer = await loadPeerLib(); return create ? hostPeerRoom(Peer, code) : joinPeerRoom(Peer, code); },
+    join: (code, create) => webRoom(code, create),
   };
 }
 function setRoomHash(code) {
-  if (online.kind !== 'peer') return;
+  if (online.kind !== 'web') return;
   try { history.replaceState(null, '', code ? '#room=' + code : location.pathname + location.search); } catch (e) { /* ignore */ }
 }
 async function shareInvite() {
@@ -1496,7 +1539,7 @@ function dropToSolo(msg) {
 function initOnline() {
   online.apiTried = false;
   if (!(window.claude && typeof window.claude.use === 'function')) {
-    online.kind = 'peer'; online.api = makePeerApi(); online.apiTried = true; online.connected = true;
+    online.kind = 'web'; online.api = makeWebApi(); online.apiTried = true; online.connected = true;
     return;
   }
   online.kind = 'room';
@@ -1539,7 +1582,7 @@ async function joinRoom(code, create) {
   setOnlineStatus(create ? 'Opening your room…' : `Joining room ${code}…`);
   let r;
   try {
-    if (online.kind === 'peer') {
+    if (online.kind === 'web') {
       for (let tries = 0; ; tries++) {
         try { r = await online.api.join(code, !!create); break; }
         catch (e) { if (create && e && e.code === 'taken' && tries < 4) { code = newCode(); continue; } throw e; }
@@ -1548,9 +1591,9 @@ async function joinRoom(code, create) {
   } catch (e) {
     const c = e && e.code;
     setOnlineStatus(c === 'limit_reached' ? 'Too many rooms open right now. Try again in a moment.'
-      : c === 'full' ? `Room ${code} is full (${PEER_MAX} players max).`
-      : c === 'not_found' ? `Couldn't find room ${code}. Check the code, and make sure whoever made the room still has the game open.`
-      : c === 'network' || c === 'no_lib' ? "Couldn't reach the matchmaking service. Check your internet connection and try again."
+      : c === 'full' ? `Room ${code} is full (${NET_MAX} players max).`
+      : c === 'not_found' ? `Couldn't find room ${code}. Check the code, and make sure someone in that room still has the game open.`
+      : c === 'network' ? "Couldn't reach the online game servers. Check your internet connection and try again."
       : c === 'unsupported' ? "This browser can't do online play. Try Safari or Chrome."
       : `Couldn't join room ${code}. Check the code and try again.`, true);
     setRoomHash(null);
@@ -1562,8 +1605,8 @@ async function joinRoom(code, create) {
   gameKind = 'online'; myDeaths = 0;
   setupWorld(seedFromCode(code), TIERS[0].R, TIERS[0].food);
   try { online.unsubs.push(r.onPeers(onRoomPeers, (err) => {
-    if (online.kind !== 'peer') { toast('Lost the connection to the room.'); return; }
-    dropToSolo(err && err.code === 'kicked' ? "You were away too long, so you left the room. You're playing solo now." : "The host left, so the room closed. You're playing solo now.");
+    if (online.kind !== 'web') { toast('Lost the connection to the room.'); return; }
+    dropToSolo("Lost the connection to the room. You're playing solo now.");
   })); } catch (e) { /* ignore */ }
   try { online.unsubs.push(r.onConnection((c) => { online.connected = c; updateRoomChip(); })); } catch (e) { /* ignore */ }
   setLobbyPresence();
@@ -2041,7 +2084,7 @@ function updateRoomChip() {
     t.textContent = W <= 360 ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${TIERS[online.tier].name}${online.room && !online.connected ? ' · reconnecting' : ''}`;
     $('exitBtn').textContent = 'Leave';
   } else { t.textContent = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
-  const inv = gameKind === 'online' && !!online.code && online.kind === 'peer';
+  const inv = gameKind === 'online' && !!online.code && online.kind === 'web';
   $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv);
 }
 function updateDock() {
@@ -2197,11 +2240,11 @@ function updateOnlineScreen() {
     body.hidden = true; return;
   }
   body.hidden = false;
-  if (online.kind === 'peer') {
+  if (online.kind === 'web') {
     $('roomListGroup').hidden = true;
     if (!online.busy) setOnlineStatus(location.protocol === 'file:'
       ? 'Create a room and tell your friends the 4-letter code. Online play works best on the website version of the game.'
-      : "Create a room, then send your friends the 4-letter code or the invite link. You're the host, so keep the game open on your screen while friends play.");
+      : "Create a room, then send your friends the 4-letter code or the invite link. The room keeps going as long as someone in it is still playing.");
     return;
   }
   $('roomListGroup').hidden = false;
@@ -2611,7 +2654,7 @@ $('musicChk').addEventListener('change', (e) => { profile.music = e.target.check
 $('musicBtn').addEventListener('click', () => { toggleMusic(); blurIfPlaying(); });
 document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn' && t.id !== 'inviteBtn') SFX.click(); }, true);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); if (online.room) sendPresence(performance.now()); });
-window.addEventListener('pagehide', () => { save(); if (online.kind === 'peer' && online.room) { try { online.room.leave(); } catch (e) { /* ignore */ } } });
+window.addEventListener('pagehide', () => { save(); if (online.kind === 'web' && online.room) { try { online.room.leave(); } catch (e) { /* ignore */ } } });
 window.addEventListener('resize', () => { resize(); updateDock(); updateRoomChip(); boardTick = 0; });
 
 /* ================= main loop ================= */
@@ -2648,9 +2691,14 @@ function boot() {
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
   showScreen('menu');
   initOnline();
-  if (online.kind === 'peer') {
-    const m = /^#(?:room=)?([A-Za-z]{4})$/.exec(location.hash || '');
-    if (m) { showScreen('online'); updateOnlineScreen(); $('codeIn').value = m[1].toUpperCase(); joinRoom(m[1], false); }
+  if (online.kind === 'web') {
+    const joinFromHash = () => {
+      const m = /^#(?:room=)?([A-Za-z]{4})$/.exec(location.hash || '');
+      if (!m || online.busy || (online.room && online.code === m[1].toUpperCase())) return;
+      showScreen('online'); updateOnlineScreen(); $('codeIn').value = m[1].toUpperCase(); joinRoom(m[1], false);
+    };
+    joinFromHash();
+    window.addEventListener('hashchange', joinFromHash);
   }
   if (window.NB_DEBUG) window.__nb = { info: () => ({ kind: gameKind, mode, players: online.players, isHost: online.isHost, code: online.code, me: online.myPeer, snakes: snakes.map((sn) => [sn.kind, sn.name, Math.round(sn.x), Math.round(sn.y)]) }) };
   requestAnimationFrame((t) => { last = t; loop(t); });
