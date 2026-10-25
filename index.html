@@ -31,6 +31,7 @@
   color-scheme:dark;
 }
 html,body{height:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 #app{position:relative;height:100%;overflow:hidden}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
@@ -110,18 +111,14 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .iqline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .iqbar{width:64px;height:6px;border-radius:999px;background:rgba(244,239,254,.12);overflow:hidden;flex:none}
 .iqbar i{display:block;height:100%;width:10%;background:var(--accent);border-radius:inherit;transition:width .5s}
-@media (max-width:640px){
-  .dock .switch{display:none}
-  .dock{gap:6px;padding:6px}
-  .dock .btn{padding:10px 12px}
-  .boost{min-width:84px;min-height:48px;font-size:15px}
-  .big{font-size:28px}
-  .roomchip{font-size:11px}
-  .chipbtn{padding:4px 8px}
-}
+.chipbtn.icon{width:30px;height:28px;padding:0;display:inline-grid;place-items:center;flex:none}
+.chipbtn.icon svg{width:16px;height:16px}
+.chipbtn.icon[aria-pressed="false"] .i-on,.chipbtn.icon[aria-pressed="true"] .i-off{display:none}
+.chipbtn.icon[aria-pressed="false"]{color:var(--muted)}
+.roomchip .chipbtn{flex:none}
 .menu-grid{display:grid;gap:16px;min-width:0}
 .menu-grid > .col{display:grid;gap:16px;align-content:start;min-width:0}
-@media (min-width:900px){.menu-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}}
+@media (min-width:700px){.menu-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}}
 @media (min-width:1500px) and (min-height:860px){.card,.stats,.board,.dock,.midstack,#minimap{zoom:1.2}}
 .opt .sw{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px;border:1px solid var(--line)}
 .input{font:500 16px var(--f-body);color:var(--ink);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;box-sizing:border-box;min-width:0}
@@ -202,16 +199,67 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .result{display:grid;gap:4px;padding:14px;border-radius:14px;background:color-mix(in srgb,var(--bot) 8%,transparent);border:1px solid color-mix(in srgb,var(--bot) 30%,transparent)}
 .result b{font-family:var(--f-num);font-size:40px;line-height:1;color:var(--bot);font-variant-numeric:tabular-nums}
 .result span{font-size:13px;color:var(--muted);line-height:1.45}
+/* Phones held upright */
 @media (max-width:640px){
-  .board{width:150px;padding:8px 10px}
-  .board ol{font-size:12px}
+  #hud{gap:8px;padding-block:10px}
+  .stats{gap:2px}
+  .big{font-size:28px}
+  .sub{font-size:12px;gap:6px}
+  .iqline{font-size:11px;gap:6px;white-space:nowrap}
+  .iqbar{width:40px}
+  #genVal{display:none}
+  .roomchip{font-size:11px;margin-top:4px;padding:3px 3px 3px 9px;gap:4px}
+  .board{width:142px;padding:7px 9px;border-radius:12px}
+  .board ol{font-size:11.5px;margin-top:4px}
+  .board .lbl{font-size:9.5px}
+  #minimap{width:64px;height:64px}
+  .bottom{gap:8px}
+  .dock{gap:6px;padding:6px;border-radius:16px}
+  .dock .switch{display:none}
+  .teach{width:100%;order:-1;padding:0 4px;gap:4px}
+  .teach-top{font-size:12px}
+  .teach-sub{display:none}
+  .dock .btn{padding:10px 12px;font-size:13px}
+  .boost{min-width:80px;min-height:46px;font-size:15px}
+  .me-row{grid-template-columns:116px minmax(0,1fr);gap:12px}
+  .preview{height:88px}
+  .card{padding:18px;gap:14px}
+  .bc-stats dd{font-size:16px}
+}
+@media (pointer:coarse) and (orientation:portrait){#hud{padding-bottom:max(18px,env(safe-area-inset-bottom,0px))}}
+/* Phones turned sideways */
+@media (max-height:500px){
+  #hud{gap:6px;padding-block:8px}
+  .stats{gap:1px}
+  .lbl{font-size:10px}
+  .big{font-size:24px}
+  .sub{font-size:12px}
+  .iqline{font-size:11px;white-space:nowrap}
+  .roomchip{margin-top:3px;font-size:11px;padding:2px 2px 2px 9px;gap:4px}
+  .board{width:176px;padding:6px 10px;border-radius:12px}
+  .board ol{font-size:12px;margin-top:3px;gap:1px}
   #minimap{width:72px;height:72px}
-  .teach{width:100%;order:-1}
-  .me-row{grid-template-columns:1fr}
-  .card{padding:18px}
+  .dock{gap:6px;padding:5px;border-radius:14px;flex-wrap:nowrap}
+  .dock .switch{display:none}
+  .teach{width:170px;padding:0 4px;gap:3px}
+  .teach-top{font-size:12px}
+  .teach-sub{font-size:11px}
+  .dock .btn{padding:9px 12px;font-size:13px}
+  .boost{min-width:76px;min-height:40px}
+  .screen{padding-block:12px}
+  .card{padding:16px;gap:12px;border-radius:18px}
+  .card h2{font-size:20px}
+  .logo{font-size:40px}
+  .tag{font-size:14px}
+  .preview{height:84px}
+  .preview.big{height:96px}
+  #accChart{height:80px}
+  .result b{font-size:30px}
+  .btn.big{padding:12px 16px;font-size:16px}
 }
 @media (prefers-reduced-motion:reduce){.pulse,.toast{animation:none}.btn,.meter > div{transition:none}}
 </style>
+<style>html{height:100%;height:100dvh}</style>
 </head>
 <body>
 <div id="app">
@@ -223,7 +271,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <p class="big" id="lenVal">0</p>
       <p class="sub"><span id="rankVal">Rank –</span><span class="chip" id="driverChip">You</span></p>
       <p class="iqline"><span class="iqbar" aria-hidden="true"><i id="iqFill"></i></span><span id="iqVal">Bot smarts 10%</span><span id="genVal"></span></p>
-      <div class="roomchip"><span id="roomText">Solo</span><button class="chipbtn" id="muteBtn" type="button" aria-pressed="false">Sound on</button><button class="chipbtn" id="musicBtn" type="button" aria-pressed="false">Music on</button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
+      <div class="roomchip"><span id="roomText">Solo</span><button class="chipbtn icon" id="muteBtn" type="button" aria-pressed="true" aria-label="Sound effects" title="Sound effects (M)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg></button><button class="chipbtn icon" id="musicBtn" type="button" aria-pressed="true" aria-label="Calm music" title="Calm music (N)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg></button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
     </div>
     <div class="board"><p class="lbl">Biggest noodles</p><ol id="boardList"></ol></div>
     <div class="midstack">
@@ -1702,7 +1750,7 @@ function updateHud() {
   const rank = player ? list.indexOf(player) + 1 : 0;
   $('rankVal').textContent = rank ? `Rank ${rank} of ${list.length}` : 'Rank –';
   const ol = $('boardList'); ol.textContent = '';
-  const topN = W < 640 ? 3 : 6, top = list.slice(0, topN);
+  const topN = W < 640 || H < 500 ? 3 : 6, top = list.slice(0, topN);
   const addRow = (s, i) => {
     const li = document.createElement('li');
     if (s === player) { li.classList.add('me'); if (botDriving) li.classList.add('bot'); }
@@ -1741,7 +1789,7 @@ function updateDock() {
   }
   const tb = $('trainBtn'); tb.disabled = !!trainJob || sampCount < MIN_TRAIN; tb.textContent = trainJob ? 'Training…' : 'Train bot';
   const bb = $('botBtn'); bb.disabled = !botReady() || !player || !player.alive; bb.classList.toggle('driving', botDriving);
-  $('botBtnLabel').textContent = botDriving ? 'Take back' : 'Bot takes over';
+  $('botBtnLabel').textContent = botDriving ? 'Take back' : W < 640 || H < 500 ? 'Use bot' : 'Bot takes over';
   $('dockAuto').checked = !!profile.auto;
 }
 function updateBotCard() {
@@ -2079,8 +2127,8 @@ function musicSchedule() {
 }
 function syncSoundUI() {
   $('soundChk').checked = !!profile.sound; $('musicChk').checked = !!profile.music; $('volIn').value = String(Math.round(profile.volume * 100));
-  const m = $('muteBtn'); m.textContent = profile.sound ? 'Sound on' : 'Sound off'; m.setAttribute('aria-pressed', String(!profile.sound));
-  const mu = $('musicBtn'); mu.textContent = profile.music ? 'Music on' : 'Music off'; mu.setAttribute('aria-pressed', String(!profile.music));
+  $('muteBtn').setAttribute('aria-pressed', String(!!profile.sound));
+  $('musicBtn').setAttribute('aria-pressed', String(!!profile.music));
 }
 function toggleSound() { profile.sound = !profile.sound; audioUnlock(); applyVolume(); if (!profile.sound) setBoostSound(false); save(); syncSoundUI(); }
 function toggleMusic() { profile.music = !profile.music; audioUnlock(); applyVolume(); save(); syncSoundUI(); }
@@ -2283,7 +2331,7 @@ $('musicBtn').addEventListener('click', () => { toggleMusic(); blurIfPlaying(); 
 document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn') SFX.click(); }, true);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); if (online.room) sendPresence(performance.now()); });
 window.addEventListener('pagehide', () => save());
-window.addEventListener('resize', resize);
+window.addEventListener('resize', () => { resize(); updateDock(); boardTick = 0; });
 
 /* ================= main loop ================= */
 let last = performance.now(), saveT = 0;
