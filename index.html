@@ -33,6 +33,8 @@
   --bot-ink:#002630;
   --bot-deep:#16707f;
   --danger:#ff5d7d;
+  --team-red:#ff7d95;
+  --team-blue:#7cc8ff;
   --danger-ink:#2a0010;
   --f-display:"Bungee","Arial Black",Impact,system-ui,sans-serif;
   --f-body:"Lexend",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -319,6 +321,37 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   .logo{font-size:32px}
   .card{padding:12px;gap:10px}
 }
+/* ---------- game modes ---------- */
+.modetabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.modetab{appearance:none;border:0;background:transparent;color:var(--muted);font:600 13px/1.2 var(--f-body);padding:10px 6px;border-radius:10px;cursor:pointer;touch-action:manipulation;min-width:0}
+.modetab[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.modetab:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
+.modeinfo{font-size:13px;line-height:1.45;color:var(--muted)}
+.optrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.optrow > .lbl{margin-right:2px}
+.modeline{font-size:13px;line-height:1.45;color:var(--muted)}
+.modeline b{color:var(--ink);font-weight:600}
+.modebar{pointer-events:none;display:grid;justify-items:center;gap:4px;padding:8px 14px;border-radius:16px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(6px);max-width:100%;box-sizing:border-box}
+.mb-row{display:flex;align-items:center;gap:12px;min-width:0}
+.mb-team{display:inline-flex;align-items:center;gap:6px;font:700 15px var(--f-num);font-variant-numeric:tabular-nums}
+.mb-team.red{color:var(--team-red)}
+.mb-team.blue{color:var(--team-blue)}
+.pips{display:inline-flex;gap:3px}
+.pips i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.2}
+.pips i.on{opacity:1}
+.mb-team.low .pips i.on{animation:blink 1s steps(2,start) infinite}
+@keyframes blink{to{opacity:.35}}
+.mb-time{font:700 18px var(--f-num);font-variant-numeric:tabular-nums;min-width:4em;text-align:center}
+.mb-time.sd{color:var(--danger);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.mb-role{font-size:13px;font-weight:600;text-align:center}
+.mb-role.it{color:var(--team-red)}
+.mb-stam{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);width:150px}
+.mb-stam .meter{flex:1}
+#app.mode-on #hud .board,#app.mode-on .iqline,#app.mode-on #rankVal{display:none}
+#app.tag-on .boost{background:linear-gradient(90deg,color-mix(in srgb,var(--bot) 34%,transparent) var(--stam,100%),rgba(244,239,254,.08) var(--stam,100%))}
+@media (max-width:420px){.pips{display:none}.mb-time{font-size:16px}.modebar{padding:6px 10px}}
+@media (max-height:500px) and (orientation:landscape){.modebar{position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));padding:5px 10px;gap:2px}.mb-role{font-size:12px}.modebar .pips{display:none}}
+@media (prefers-reduced-motion:reduce){.mb-team.low .pips i.on{animation:none}}
 @media (prefers-reduced-motion:reduce){.pulse,.toast{animation:none}.btn,.meter > div{transition:none}}
 </style>
 <style>html{height:100%;height:100dvh}</style>
@@ -337,6 +370,15 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
     </div>
     <div class="board"><p class="lbl">Biggest noodles</p><ol id="boardList"></ol></div>
     <div class="midstack">
+      <div class="modebar" id="modeBar" hidden>
+        <div class="mb-row" id="mbTeams">
+          <span class="mb-team red" id="mbRedWrap"><b id="mbRed">10</b><span class="pips" id="pipsRed"></span></span>
+          <span class="mb-time" id="mbTime">5:00</span>
+          <span class="mb-team blue" id="mbBlueWrap"><span class="pips" id="pipsBlue"></span><b id="mbBlue">10</b></span>
+        </div>
+        <p class="mb-role" id="mbRole"></p>
+        <div class="mb-stam" id="mbStam" hidden><span>Boost</span><div class="meter small"><div id="stamFill"></div></div></div>
+      </div>
       <div class="banner" id="botBanner" hidden><span class="pulse" aria-hidden="true"></span><span id="bannerText">Your bot is driving</span><button class="btn small" id="takeBackBtn" type="button">Take back <kbd>B</kbd></button></div>
       <div id="toastBox" aria-live="polite"></div>
     </div>
@@ -373,6 +415,18 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
           <input id="nameIn" class="input" maxlength="14" autocomplete="off" placeholder="Player">
           <button class="btn small" id="lockerBtn" type="button">Customize snake</button>
         </div>
+      </div>
+      <div class="group">
+        <p class="lbl">Game mode</p>
+        <div class="modetabs" role="group" aria-label="Game mode">
+          <button type="button" class="modetab" data-mode="classic" aria-pressed="true">Classic</button>
+          <button type="button" class="modetab" data-mode="ctl" aria-pressed="false">Capture the Leader</button>
+          <button type="button" class="modetab" data-mode="tag" aria-pressed="false">Tag</button>
+        </div>
+        <p class="modeinfo" id="modeInfo"></p>
+        <div class="optrow" id="optCtl" hidden><span class="lbl">Teams</span><button type="button" class="opt" data-ctl="1">1v1</button><button type="button" class="opt" data-ctl="2">2v2</button><button type="button" class="opt" data-ctl="3">3v3</button></div>
+        <div class="optrow" id="optTag" hidden><button type="button" class="opt" data-tag="1v1">1v1<small>Pass It on</small></button><button type="button" class="opt" data-tag="run">Run<small>You vs 3 hunters</small></button><button type="button" class="opt" data-tag="hunt">Hunt<small>You + 2 bots vs 1</small></button></div>
+        <div class="optrow" id="optDiff" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-diff="easy">Easy</button><button type="button" class="opt" data-diff="normal">Normal</button><button type="button" class="opt" data-diff="hard">Hard</button></div>
       </div>
       <div class="play-row">
         <button class="btn primary big" id="soloBtn" type="button">Play solo</button>
@@ -468,6 +522,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="group" id="onlineBody">
         <div class="group">
           <p class="lbl">Start a room</p>
+          <p class="modeline" id="roomModeLine"></p>
           <label class="switch" for="fillerChk"><input type="checkbox" id="fillerChk" checked><span class="track"></span><span>Fill empty spots with bots</span></label>
           <button class="btn primary" id="createBtn" type="button">Create room</button>
         </div>
@@ -492,6 +547,25 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         </table>
       </div>
       </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Match result -->
+  <section id="result" class="screen" hidden>
+    <div class="card">
+      <p class="eyebrow" id="resMode">Capture the Leader</p>
+      <h2 id="resTitle">Your team wins!</h2>
+      <p class="tip" id="resWhy"></p>
+      <div class="trio">
+        <div><span id="resL1">Red minis left</span><b id="resV1">0</b></div>
+        <div><span id="resL2">Blue minis left</span><b id="resV2">0</b></div>
+        <div><span id="resL3">Match time</span><b id="resV3">0:00</b></div>
+      </div>
+      <p class="tip" id="resNext" hidden></p>
+      <div class="row">
+        <button class="btn primary" id="resAgain" type="button">Play again</button>
+        <button class="btn" id="resMenu" type="button">Menu</button>
       </div>
     </div>
   </section>
@@ -623,7 +697,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0 };
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal' } };
 let brain = null;
 let newSince = 0;
 
@@ -631,6 +705,10 @@ function applyProfileData(p) {
   if (!p || typeof p !== 'object') return;
   for (const k of ['practice', 'bestYou', 'bestBot', 'totalRecorded', 'games', 'kills', 'sessions']) if (typeof p[k] === 'number' && isFinite(p[k])) profile[k] = clamp(Math.floor(p[k]), 0, 1e9);
   for (const k of ['auto', 'reflex', 'sound', 'music']) if (typeof p[k] === 'boolean') profile[k] = p[k];
+  if (p.modeSel && typeof p.modeSel === 'object') {
+    const ms = p.modeSel;
+    profile.modeSel = { m: ['classic', 'ctl', 'tag'].includes(ms.m) ? ms.m : 'classic', ctl: clamp(int(ms.ctl, 1), 1, 3), tag: ['1v1', 'run', 'hunt'].includes(ms.tag) ? ms.tag : '1v1', diff: ['easy', 'normal', 'hard'].includes(ms.diff) ? ms.diff : 'normal' };
+  }
   if (typeof p.volume === 'number' && isFinite(p.volume)) profile.volume = clamp(p.volume, 0, 1);
   if (typeof p.theme === 'number' && isFinite(p.theme)) profile.theme = clamp(Math.floor(p.theme), -1, 5);
   for (const k of ['acc', 'near']) if (p[k] === null || (typeof p[k] === 'number' && isFinite(p[k]))) profile[k] = p[k] === null ? null : clamp(p[k], 0, 1);
@@ -940,7 +1018,7 @@ function makeSnake(o) {
   const ang = o.ang !== undefined ? o.ang : Math.random() * TAU;
   const s = { id: ++snakeId, kind: o.kind, name: o.name || 'Player', mass: o.mass || START_MASS, x: pos[0], y: pos[1], ang, targetAng: ang,
     wantBoost: false, boosting: false, boostAcc: 0, alive: true, segs: [], r: 10, spacing: 5, npc: o.npc || null, lastBin: 4,
-    grace: o.kind === 'player' ? 1.5 : 0.5, bot: false, ghost: false, npcId: o.npcId, nameIdx: o.nameIdx || 0 };
+    grace: o.kind === 'player' ? 1.5 : 0.5, bot: false, ghost: false, npcId: o.npcId, nameIdx: o.nameIdx || 0, team: -1, role: '', it: false, stam: 1, spd: 1 };
   applyLook(s, o.look || randomLook());
   updateSize(s);
   const n = segCount(s.mass);
@@ -1005,9 +1083,11 @@ function moveSnake(s, dt) {
   const tr = 4.8 / (1 + s.mass / 900);
   const diff = wrapA(s.targetAng - s.ang), mt = tr * dt;
   s.ang = wrapA(s.ang + clamp(diff, -mt, mt));
-  s.boosting = s.wantBoost && s.mass > MIN_BOOST_MASS;
-  const sp = s.boosting ? BOOST_SPEED : BASE_SPEED;
-  if (s.boosting) {
+  const tagOn = match.m === 'tag';
+  if (tagOn) { s.boosting = s.wantBoost && s.stam > 0.03; s.stam = clamp(s.stam + (s.boosting ? -0.42 : 0.2) * dt, 0, 1); }
+  else s.boosting = s.wantBoost && s.mass > MIN_BOOST_MASS;
+  const sp = (s.boosting ? BOOST_SPEED : BASE_SPEED) * (s.spd || 1);
+  if (s.boosting && !tagOn) {
     s.boostAcc += dt;
     while (s.boostAcc >= 0.1) {
       s.boostAcc -= 0.1; s.mass -= 1;
@@ -1016,6 +1096,14 @@ function moveSnake(s, dt) {
     }
   } else s.boostAcc = 0;
   s.x += Math.cos(s.ang) * sp * dt; s.y += Math.sin(s.ang) * sp * dt;
+  if (tagOn) {
+    const d = Math.hypot(s.x, s.y), lim = worldR - s.r - 2;
+    if (d > lim) {
+      const nx = s.x / d, ny = s.y / d; s.x = nx * lim; s.y = ny * lim;
+      const dot = Math.cos(s.ang) * nx + Math.sin(s.ang) * ny;
+      if (dot > 0) s.ang = Math.atan2(Math.sin(s.ang) - 2 * dot * ny, Math.cos(s.ang) - 2 * dot * nx);
+    }
+  }
   if (s.peakMass === undefined || s.mass > s.peakMass) s.peakMass = s.mass;
   bodyFollow(s);
 }
@@ -1058,7 +1146,7 @@ function sense(s, out) {
   let nh = -1, nhd = 1e9;
   let n = queryNear(segHead, segNext, hx, hy, RH, qbuf);
   for (let q = 0; q < n; q++) {
-    const i = qbuf[q]; if (segOwner[i] === s) continue;
+    const i = qbuf[q]; if (segOwner[i] === s || friendly(s, segOwner[i])) continue;
     const dx = segX[i] - hx, dy = segY[i] - hy, d2 = dx * dx + dy * dy; if (d2 > RH * RH) continue;
     const d = Math.sqrt(d2), lx = dx * ch + dy * sh, ly = -dx * sh + dy * ch, k = sectorOf(Math.atan2(ly, lx));
     const ed = d - segR[i] - s.r;
@@ -1094,13 +1182,13 @@ function sense(s, out) {
 /* ---------- look-ahead used by NPCs and by your bot's survival reflexes ---------- */
 function pathHits(s, rel, n, steps) {
   steps = steps || 14; const dt = 0.035, tr = 4.8 / (1 + s.mass / 900), sp = s.boosting ? BOOST_SPEED : BASE_SPEED;
-  let x = s.x, y = s.y, a = s.ang; const tgt = wrapA(s.ang + rel), lim = (worldR - s.r - 10) ** 2;
+  let x = s.x, y = s.y, a = s.ang; const tgt = wrapA(s.ang + rel), lim = (worldR - s.r - 10) ** 2, ghosts = match.m === 'tag';
   for (let t = 0; t < steps; t++) {
     a += clamp(wrapA(tgt - a), -tr * dt, tr * dt);
     x += Math.cos(a) * sp * dt; y += Math.sin(a) * sp * dt;
     if (x * x + y * y > lim) return t + 1;
     for (let q = 0; q < n; q++) {
-      const i = qbuf[q]; if (segOwner[i] === s) continue;
+      const i = qbuf[q]; if (ghosts || segOwner[i] === s || friendly(s, segOwner[i])) continue;
       const dx = segX[i] - x, dy = segY[i] - y, rr = segR[i] + s.r * 0.8 + 6;
       if (dx * dx + dy * dy < rr * rr) return t + 1;
     }
@@ -1198,10 +1286,13 @@ function killSnake(s, killer) {
   if (s !== player && player && player.alive && mode === 'play' && Math.hypot(s.x - player.x, s.y - player.y) < 900) SFX.pop();
   const i = snakes.indexOf(s); if (i >= 0) snakes.splice(i, 1);
   if (s.kind === 'player') onPlayerDeath(killer);
-  if (s.kind === 'npc') recordNpcResult(s);
-  else if (s.kind === 'npc' && killer && typeof killer === 'object') {
-    if (killer === player) creditKill(s.name);
-    else if (killer.kind === 'remote' && gameKind === 'online') online.nk.push({ id: s.npcId, peer: killer.peer, t: performance.now() });
+  if (s.kind === 'npc') {
+    if (!s.role) recordNpcResult(s);
+    if (killer && typeof killer === 'object') {
+      if (killer === player) creditKill(s.name || 'a mini bot');
+      else if (killer.kind === 'remote' && gameKind === 'online') online.nk.push({ id: s.npcId, peer: killer.peer, t: performance.now() });
+    }
+    if (s.role && inModes() && isRef()) onModeBotDeath(s);
   }
 }
 function eatAround(s, dt) {
@@ -1210,7 +1301,7 @@ function eatAround(s, dt) {
     const fi = qbuf[q], f = foodAt(fi); if (!f || f.eaten) continue;
     const dx = s.x - f.x, dy = s.y - f.y, d = Math.sqrt(dx * dx + dy * dy);
     if (d < s.r + f.r + 6) {
-      s.mass += f.v; if (s === player) SFX.eat(f.v);
+      if (match.m !== 'tag') s.mass += f.v; if (s === player) SFX.eat(f.v);
       if (fi < MAX_SLOTS) { if (gameKind === 'online') logEat(fi * 1000 + (slotGen[fi] % 1000)); slotGen[fi]++; setSlot(fi); }
       else { f.eaten = true; if (gameKind === 'online' && f.id) { logEat(f.id); eatenDrops.set(f.id, performance.now()); } }
     } else if (d < reach && d > 0) { const pull = Math.min(d, 420 * dt) / d; f.x += dx * pull; f.y += dy * pull; }
@@ -1223,6 +1314,564 @@ function npcTarget() {
   return t.extra ? t.extra : Math.max(0, t.snakes - humans);
 }
 
+
+/* ================= game modes: Capture the Leader and Tag ================= */
+const TEAMS = [
+  { name: 'Red', color: '#ff5d7d', soft: 'rgba(255,93,125,0.13)', pal: 7, pal2: 1 },
+  { name: 'Blue', color: '#52b7ff', soft: 'rgba(82,183,255,0.13)', pal: 3, pal2: 9 },
+];
+const IT_COLOR = '#ff3b55';
+const DIFF_IQ = { easy: 0.35, normal: 0.62, hard: 0.92 };
+const CTL_R = [0, 2000, 2400, 2800], CTL_MINIS = 10, LEADER_MASS = 450, GUARD_MASS = 70, MINI_MASS = 36, TAG_MASS = 50, CAPTURE_AT = 3;
+const ROLE_CODE = { L: 1, G: 2, M: 3, P: 4 }, CODE_ROLE = ['', 'L', 'G', 'M', 'P'];
+const MODE_INFO = {
+  classic: 'Eat, grow and dodge. Your bot learns by watching how you play.',
+  ctl: 'Red vs Blue. Each Leader is big and guarded by 10 mini bots that drive like the bot you trained. A Leader respawns while their team has 3+ minis. Catch one with fewer than 3 and your team wins.',
+  tag: 'Nobody dies here. Whoever is It glows red: touch someone with your head to tag them. Boost runs on stamina, so save it for close calls.',
+};
+let match = { m: 'classic' };
+const inModes = () => match.m === 'ctl' || match.m === 'tag';
+const isRef = () => gameKind === 'solo' || online.isHost;
+const myKey = () => (gameKind === 'online' && online.myPeer ? online.myPeer : 'me');
+function keyOf(s) { if (!s) return ''; if (s.kind === 'player') return myKey(); if (s.kind === 'remote') return s.peer; return 'b' + s.npcId; }
+function friendly(a, b) { return match.m === 'ctl' && !!b && a.team >= 0 && a.team === b.team; }
+const fmtTime = (sec) => { sec = Math.max(0, Math.ceil(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; };
+function modeName(m) {
+  if (m.m === 'ctl') return `Capture the Leader ${m.sz}v${m.sz}`;
+  if (m.m === 'tag') return m.v === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one';
+  return 'Classic';
+}
+function newMatchCfg() { const ms = profile.modeSel; return { m: ms.m, sz: ms.ctl, v: ms.tag, df: ms.diff }; }
+function cfgOf(m) { return { m: m.m, sz: m.sz, v: m.v, df: m.df }; }
+function arenaFor(m) { return m.m === 'ctl' ? CTL_R[clamp(m.sz, 1, 3)] : m.v === '1v1' ? 1300 : 1700; }
+function foodFor(R) { return Math.min(MAX_SLOTS - 50, Math.round(SOLO_FOOD * (R / SOLO_R) ** 2)); }
+function setArena(R, food) { worldR = worldTargetR = R; activeSlots = food; for (let i = 0; i < MAX_SLOTS; i++) { const sl = slots[i]; sl.x = sl.ux * worldR; sl.y = sl.uy * worldR; } }
+function miniLook(t) { return { c1: TEAMS[t].pal, c2: TEAMS[t].pal2, pat: 2, eye: 0, hat: 0 }; }
+function pickName() {
+  const used = new Set(snakes.map((sn) => sn.name)); let ni = Math.floor(Math.random() * NPC_NAMES.length);
+  for (let t = 0; t < 14 && used.has(NPC_NAMES[ni]); t++) ni = Math.floor(Math.random() * NPC_NAMES.length);
+  return ni;
+}
+function tagSpot(farFrom) {
+  let best = [0, 0], bd = -1;
+  for (let t = 0; t < 30; t++) {
+    const a = Math.random() * TAU, d = Math.sqrt(Math.random()) * worldR * 0.7, x = Math.cos(a) * d, y = Math.sin(a) * d;
+    let md = 1e9; for (const sn of snakes) { if (farFrom && !farFrom(sn)) continue; md = Math.min(md, Math.hypot(sn.x - x, sn.y - y)); }
+    if (md > bd) { bd = md; best = [x, y]; }
+  }
+  return best;
+}
+function spawnModeBot(o) {
+  const t = o.team === 0 || o.team === 1 ? o.team : -1;
+  let pos, ang, mass;
+  if (match.m === 'ctl') {
+    const b = match.bases[t], a = o.role === 'M' ? (o.idx / CTL_MINIS) * TAU : Math.random() * TAU, rr = o.role === 'M' ? 190 + Math.random() * 50 : o.role === 'L' ? 20 : 150;
+    pos = [b[0] + Math.cos(a) * rr, b[1] + Math.sin(a) * rr]; ang = Math.atan2(-b[1], -b[0]) + rand(-0.6, 0.6);
+    mass = o.role === 'L' ? LEADER_MASS : o.role === 'G' ? GUARD_MASS : MINI_MASS;
+  } else { pos = o.pos || tagSpot(); ang = Math.random() * TAU; mass = TAG_MASS; }
+  let ni = 0, name = '', look;
+  if (o.role === 'M') look = miniLook(t);
+  else { ni = o.ni !== undefined ? o.ni : pickName(); name = NPC_NAMES[ni]; look = o.look || randomLook(); }
+  const sn = makeSnake({ kind: 'npc', name, nameIdx: ni, look, mass, pos, ang, npc: newNpcMind(), npcId: npcIdNext++ });
+  sn.team = t; sn.role = o.role; sn.orbit = Math.random() * TAU; sn.thinkIn = Math.floor(Math.random() * 4); sn.grace = 1; sn.stam = 1; sn.spd = o.spd || 1;
+  snakes.push(sn); return sn;
+}
+function humanKeys() {
+  if (gameKind !== 'online' || !online.room) return [myKey()];
+  let ps = []; try { ps = online.room.peers().filter((p) => p.presence && p.presence.g === 'nb1'); } catch (e) { ps = []; }
+  const keys = ps.map((p) => p.peer);
+  if (online.myPeer && !keys.includes(online.myPeer)) keys.push(online.myPeer);
+  return keys.slice(0, NET_MAX);
+}
+function orderedHumans(prevTm) {
+  const now = humanKeys(), prev = prevTm ? Object.keys(prevTm).filter((k) => now.includes(k)) : [];
+  return prev.concat(now.filter((k) => !prev.includes(k)).sort());
+}
+function startMatch(cfg) {
+  const now = performance.now(), old = match;
+  const m = cfg.m === 'tag' ? 'tag' : 'ctl';
+  match = { m, sz: clamp(int(cfg.sz, 1), 1, 3), v: ['1v1', 'run', 'hunt', 'evo'].includes(cfg.v) ? cfg.v : '1v1', df: DIFF_IQ[cfg.df] ? cfg.df : 'normal',
+    mid: (Math.random() * 2147483647) | 0, round: (old.round || 0) + 1, st: 'play', win: null, why: '', sd: false, tm: {}, it: new Set(), mc: [0, 0], nb: null,
+    queue: [], overAt: 0, runner: '', myRespawnAt: 0, itTime: 0, made: 0, wasIt: false, started: now };
+  if (gameKind === 'online' && m === 'tag' && match.v !== '1v1') match.v = 'evo';
+  const R = arenaFor(match); match.bases = [[-R * 0.6, 0], [R * 0.6, 0]];
+  match.tEnd = now + 1000 * (m === 'ctl' ? 300 : match.v === '1v1' ? 120 : 90); match.tl = (match.tEnd - now) / 1000;
+  if (gameKind === 'solo') setupWorld((Math.random() * 4294967296) >>> 0, R, foodFor(R));
+  else { snakes = snakes.filter((sn) => sn.kind === 'remote'); player = null; drops = []; setArena(R, foodFor(R)); }
+  const humans = gameKind === 'solo' ? ['me'] : orderedHumans(old.tm);
+  if (m === 'ctl') setupCtl(humans); else setupTag(humans);
+  placeLocal();
+  toast(roleIntro());
+}
+function setupCtl(humans) {
+  const teams = [[], []];
+  humans.forEach((k, i) => teams[i % 2].push(k));
+  for (let t = 0; t < 2; t++) {
+    teams[t].forEach((k, j) => { match.tm[k] = [t, j === 0 ? 'L' : 'G']; });
+    if (!teams[t].length) spawnModeBot({ team: t, role: 'L' });
+    const bots = Math.max(0, match.sz - Math.max(1, teams[t].length));
+    for (let g = 0; g < bots; g++) spawnModeBot({ team: t, role: 'G' });
+    for (let k = 0; k < CTL_MINIS; k++) spawnModeBot({ team: t, role: 'M', idx: k });
+  }
+  countMinis();
+}
+function setupTag(humans) {
+  for (const k of humans) match.tm[k] = [-1, 'P'];
+  if (match.v === '1v1') {
+    const keys = humans.slice();
+    for (let i = keys.length; i < 2; i++) keys.push(keyOf(spawnModeBot({ role: 'P' })));
+    match.it.add(keys[Math.floor(Math.random() * keys.length)]);
+    return;
+  }
+  let runner;
+  if (match.v === 'run') runner = 'me';
+  else if (match.v === 'hunt') { const b = spawnModeBot({ role: 'P', spd: 1.08 }); runner = keyOf(b); match.it.add('me'); }
+  else runner = humans[(match.round - 1) % humans.length];
+  match.runner = runner;
+  for (const k of humans) if (k !== runner) match.it.add(k);
+  const total = Math.max(4, humans.length + (match.v === 'hunt' ? 1 : 0));
+  const have = humans.length + (match.v === 'hunt' ? 1 : 0);
+  for (let i = have; i < total; i++) { const b = spawnModeBot({ role: 'P' }); match.it.add(keyOf(b)); }
+}
+function placeLocal() {
+  const k = myKey(), tr = match.tm[k];
+  if (player) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
+  let pos, ang, mass;
+  if (match.m === 'ctl') {
+    const t = tr ? tr[0] : 0, b = match.bases[t];
+    pos = [b[0] + rand(-90, 90), b[1] + rand(-90, 90)]; ang = Math.atan2(-b[1], -b[0]); mass = tr && tr[1] === 'L' ? LEADER_MASS : GUARD_MASS;
+  } else {
+    const iAmIt = match.it.has(k);
+    pos = tagSpot((sn) => sn.it !== iAmIt); ang = Math.random() * TAU; mass = TAG_MASS;
+  }
+  player = makeSnake({ kind: 'player', name: cleanName(profile.name), look: profile.look, mass, pos, ang });
+  player.grace = 2; player.stam = 1;
+  if (match.m === 'tag' && match.v !== '1v1' && match.runner === k) player.spd = 1.08;
+  snakes.push(player); cam.x = player.x; cam.y = player.y;
+  mode = 'play'; showScreen(null); botDriving = false; botWatch = false; input.last = performance.now(); match.myRespawnAt = 0;
+  run = { max: 0, time: 0 }; lastKiller = null;
+  syncRoles(); match.wasIt = player.it;
+  updateBanner(); updateDock(); updateRoomChip(); boardTick = 0; SFX.spawn();
+}
+function syncRoles() {
+  if (!inModes()) return;
+  for (const sn of snakes) {
+    if (sn.kind === 'player' || sn.kind === 'remote') { const tr = match.tm[keyOf(sn)]; sn.team = tr ? tr[0] : -1; sn.role = tr ? tr[1] : ''; }
+    sn.it = match.m === 'tag' && match.it.has(keyOf(sn));
+  }
+}
+function roleIntro() {
+  const k = myKey(), tr = match.tm[k];
+  if (match.m === 'ctl') { const t = tr ? TEAMS[tr[0]].name : 'your'; return tr && tr[1] === 'L' ? `You lead the ${t} team. Keep your minis alive!` : `You guard the ${t} team's Leader.`; }
+  if (match.v === '1v1') return match.it.has(k) ? "You're It! Tag them with your head." : 'Run! Whoever is It glows red.';
+  return match.it.has(k) ? 'Hunt the runner down before time runs out!' : 'Run! Survive until the clock hits zero.';
+}
+function countMinis() { match.mc = [0, 0]; for (const sn of snakes) if (sn.alive && sn.role === 'M' && sn.team >= 0) match.mc[sn.team]++; }
+function leaderOf(t) { for (const sn of snakes) if (sn.alive && sn.team === t && sn.role === 'L') return sn; return null; }
+function leaderKeyOf(t) { for (const k of Object.keys(match.tm || {})) { const tr = match.tm[k]; if (tr[0] === t && tr[1] === 'L') return k; } return null; }
+function teamBrain(t) {
+  const lk = leaderKeyOf(t); if (!lk) return null;
+  if (lk === myKey()) return botReady() ? brain : null;
+  const e = online.brains.get(lk); return e && e.brain ? e.brain : null;
+}
+function leaderDown(t) {
+  if (match.st !== 'play') return;
+  countMinis();
+  if (match.sd || match.mc[t] < CAPTURE_AT) endMatch(1 - t, `${TEAMS[t].name}'s Leader was captured${match.sd ? ' in sudden death' : ` with only ${match.mc[t]} mini${match.mc[t] === 1 ? '' : 's'} left`}.`);
+}
+function onModeBotDeath(sn) {
+  if (match.st !== 'play' || match.m !== 'ctl') return;
+  if (sn.role === 'G') match.queue.push({ at: performance.now() + 3000, team: sn.team, role: 'G', ni: sn.nameIdx, look: sn.look });
+  else if (sn.role === 'L') {
+    countMinis();
+    if (!match.sd && match.mc[sn.team] >= CAPTURE_AT) match.queue.push({ at: performance.now() + 3000, team: sn.team, role: 'L', ni: sn.nameIdx, look: sn.look });
+    else leaderDown(sn.team);
+  } else countMinis();
+}
+function onModePlayerDeath(killer) {
+  const wasBot = botDriving; botDriving = false; updateBanner(); SFX.death(); setBoostSound(false);
+  lastKiller = killer === 'edge' ? 'edge' : killer && killer.kind === 'remote' ? killer.peer : killer && (killer.kind === 'rnpc' || killer.kind === 'npc') ? 'n' + killer.npcId : null;
+  const t = player.team, role = player.role;
+  if (isRef()) countMinis();
+  const captured = role === 'L' && (match.sd || (match.mc[t] || 0) < CAPTURE_AT);
+  if (isRef() && role === 'L') leaderDown(t);
+  match.myRespawnAt = performance.now() + 3000;
+  toast(captured ? (wasBot ? 'Your bot got your Leader captured!' : 'Your Leader was captured!') : 'Respawning at your base in 3…');
+}
+function endMatch(win, why) {
+  if (match.st !== 'play') return;
+  match.st = 'over'; match.win = win; match.why = why; match.overAt = performance.now();
+  if (gameKind === 'solo') setTimeout(() => { if (match.st === 'over' && gameKind === 'solo') showResult(); }, 900);
+  else showResult();
+}
+function checkTags(now) {
+  if (now - (match.started || 0) < 2500) return;
+  const its = [], runs = [];
+  for (const sn of snakes) { if (!sn.alive || sn.ghost) continue; (sn.it ? its : runs).push(sn); }
+  for (const a of its) for (const b of runs) {
+    if (match.nb && now < match.nb.until && keyOf(a) === match.nb.from && keyOf(b) === match.nb.to) continue;
+    if (Math.abs(a.x - b.x) > 900 || Math.abs(a.y - b.y) > 900) continue;
+    const rr = (a.r + b.r) * 0.85, rr2 = rr * rr;
+    for (let i = 0; i < b.segs.length; i += 2) { const p = b.segs[i], dx = p.x - a.x, dy = p.y - a.y; if (dx * dx + dy * dy < rr2) { onTag(a, b, now); return; } }
+  }
+}
+function onTag(a, b, now) {
+  const ka = keyOf(a), kb = keyOf(b);
+  if (match.v === '1v1') {
+    match.it.delete(ka); match.it.add(kb); a.it = false; b.it = true;
+    match.nb = { from: kb, to: ka, until: now + 2000 };
+    syncRoles();
+  } else endMatch('H', `${b === player ? 'You' : b.name || 'The runner'} got tagged by ${a === player ? 'you' : a.name || 'a hunter'}.`);
+}
+function modeTick(dt, now) {
+  if (isRef() && match.st === 'play') {
+    match.tl = Math.max(0, (match.tEnd - now) / 1000);
+    if (match.m === 'ctl') {
+      countMinis();
+      if (match.tl <= 0 && !match.sd) { match.sd = true; toast("Sudden death! Leaders can't respawn anymore."); }
+      for (let i = match.queue.length - 1; i >= 0; i--) if (now >= match.queue[i].at) { spawnModeBot(match.queue[i]); match.queue.splice(i, 1); }
+    } else {
+      if (frame % 2 === 0) checkTags(now);
+      if (match.st === 'play' && match.tl <= 0) {
+        if (match.v === '1v1') { const loser = [...match.it][0] || ''; endMatch(loser, 'Time ran out.'); }
+        else endMatch('R', 'The runner lasted until the clock ran out.');
+      }
+    }
+  }
+  if (gameKind === 'online' && online.isHost && match.st === 'over' && now - match.overAt > 8000) startMatch(cfgOf(match));
+  if (match.myRespawnAt && now >= match.myRespawnAt) { match.myRespawnAt = 0; if (match.st === 'play' && (!player || !player.alive)) placeLocal(); }
+  if (match.m === 'tag' && player && player.alive) {
+    if (player.it) match.itTime += dt;
+    if (match.wasIt && !player.it) { match.made++; SFX.kill(); toast('Tagged! Run!'); }
+    else if (!match.wasIt && player.it) { SFX.botOn(); toast(match.v === '1v1' ? "You're It! Tag them back." : 'Hunt the runner!'); }
+    match.wasIt = player.it;
+  }
+  if (!$('result').hidden && frame % 10 === 0) updateResultNext(now);
+}
+/* ---------- bot brains for the modes ---------- */
+const mtBuf = new Float32Array(FEAT), mtP = new Float32Array(NB);
+function nearestEnemy(sn, cx, cy, maxD, filter) {
+  let best = null, bd = maxD * maxD;
+  for (const o of snakes) {
+    if (!o.alive || o.ghost || o === sn || (o.team === sn.team && sn.team >= 0)) continue;
+    if (filter && !filter(o)) continue;
+    const dx = o.x - cx, dy = o.y - cy, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = o; }
+  }
+  return best;
+}
+function nearestRunner(sn) {
+  let best = null, bd = 1e12; const ks = keyOf(sn), now = performance.now();
+  for (const o of snakes) {
+    if (!o.alive || o.it || o === sn) continue;
+    if (match.nb && now < match.nb.until && match.nb.from === ks && match.nb.to === keyOf(o)) continue;
+    const d = (o.x - sn.x) ** 2 + (o.y - sn.y) ** 2; if (d < bd) { bd = d; best = o; }
+  }
+  return best;
+}
+function modeThink(sn) {
+  const iq = npcIQ;
+  if (sn.orbit === undefined) sn.orbit = Math.random() * TAU;
+  let tx = sn.x + Math.cos(sn.ang) * 200, ty = sn.y + Math.sin(sn.ang) * 200, wt = 0.4, food = 0.8, boost = false, dangerMul = 1, brainRef = null;
+  if (match.m === 'ctl') {
+    const base = match.bases[sn.team] || [0, 0], L = leaderOf(sn.team), home = L || { x: base[0], y: base[1], ang: 0 };
+    const enemyT = 1 - sn.team, eMinis = match.mc[enemyT] || 0, myMinis = match.mc[sn.team] || 0;
+    if (sn.role === 'M' || sn.role === 'G') {
+      const guardR = sn.role === 'M' ? 220 : 330;
+      if (sn.role === 'M') brainRef = teamBrain(sn.team);
+      const threat = nearestEnemy(sn, home.x, home.y, sn.role === 'M' ? 700 : 900) || nearestEnemy(sn, sn.x, sn.y, 380);
+      const raider = myMinis > eMinis + 2 && sn.npcId % 3 === 0;
+      const prey = !threat && raider ? nearestEnemy(sn, sn.x, sn.y, 3000, (o) => o.role !== 'L' || eMinis < CAPTURE_AT || match.sd) : null;
+      const tgt = threat || prey;
+      if (tgt) {
+        const d = Math.hypot(tgt.x - sn.x, tgt.y - sn.y), lead = Math.min(220, d * 0.5);
+        tx = tgt.x + Math.cos(tgt.ang) * lead; ty = tgt.y + Math.sin(tgt.ang) * lead; wt = 2.2; food = 0.3; boost = iq > 0.5 && d < 320;
+      } else {
+        const dHome = Math.hypot(home.x - sn.x, home.y - sn.y);
+        if (dHome > guardR * 1.7) { tx = home.x; ty = home.y; wt = 1.8; }
+        else { sn.orbit += 0.22; tx = home.x + Math.cos(sn.orbit) * guardR; ty = home.y + Math.sin(sn.orbit) * guardR; wt = 1.1; }
+      }
+    } else {
+      dangerMul = 1.6;
+      const eL = leaderOf(enemyT);
+      if (eL && (match.sd || eMinis < CAPTURE_AT)) {
+        const d = Math.hypot(eL.x - sn.x, eL.y - sn.y), lead = Math.min(260, d * 0.5);
+        tx = eL.x + Math.cos(eL.ang) * lead; ty = eL.y + Math.sin(eL.ang) * lead; wt = 2.4; boost = iq > 0.4 && d < 420 && sn.mass > 120;
+      } else {
+        const dB = Math.hypot(base[0] - sn.x, base[1] - sn.y);
+        if (dB > 520) { tx = base[0]; ty = base[1]; wt = 1.4; } else { food = 1.4; wt = 0.15; }
+      }
+    }
+  } else if (match.m === 'tag') {
+    dangerMul = 0; food = 0;
+    if (sn.it) {
+      const r = nearestRunner(sn);
+      if (r) { const d = Math.hypot(r.x - sn.x, r.y - sn.y), lead = Math.min(240, d * 0.45); tx = r.x + Math.cos(r.ang) * lead; ty = r.y + Math.sin(r.ang) * lead; wt = 3; boost = d < 420 && sn.stam > 0.25 && Math.random() < 0.3 + 0.7 * iq; }
+    } else {
+      let fx = 0, fy = 0, nd = 1e9;
+      for (const o of snakes) if (o.alive && o.it) { const dx = sn.x - o.x, dy = sn.y - o.y, d2 = dx * dx + dy * dy + 1; fx += dx / d2; fy += dy / d2; nd = Math.min(nd, Math.sqrt(d2)); }
+      const pd = Math.hypot(sn.x, sn.y);
+      if (pd > worldR * 0.6) { const k = (pd / worldR) * 0.004; fx -= sn.x / pd * k; fy -= sn.y / pd * k; }
+      const fl = Math.hypot(fx, fy) || 1; tx = sn.x + fx / fl * 300; ty = sn.y + fy / fl * 300; wt = 2.6;
+      boost = nd < 300 && sn.stam > 0.2 && Math.random() < 0.3 + 0.7 * iq;
+    }
+  }
+  sense(sn, mtBuf);
+  let prior = null;
+  if (brainRef) {
+    const out = forward(brainRef, mtBuf); let mx = -1e9; for (let j = 0; j < NB; j++) mx = Math.max(mx, out[j]);
+    let sum = 0; for (let j = 0; j < NB; j++) { mtP[j] = Math.exp(out[j] - mx); sum += mtP[j]; }
+    for (let j = 0; j < NB; j++) mtP[j] = Math.log(mtP[j] / sum + 1e-4);
+    prior = mtP;
+  }
+  const P = sn.npc, rel = wrapA(Math.atan2(ty - sn.y, tx - sn.x) - sn.ang);
+  const dangerW = P.caution * (0.3 + 0.7 * iq) * 4 * dangerMul, noise = (1 - iq) * 0.7 + 0.05;
+  let best = 4, bestScore = -1e9;
+  for (let b = 0; b < NB; b++) {
+    const k = sectorOf(TB[b]), kl = (k + S - 1) % S, kr = (k + 1) % S;
+    const danger = mtBuf[k] + 0.5 * (mtBuf[kl] + mtBuf[kr]);
+    const fd = mtBuf[12 + k] + 0.4 * (mtBuf[12 + kl] + mtBuf[12 + kr]);
+    let sc = fd * food * P.greed - danger * danger * dangerW + Math.cos(TB[b] - rel) * wt + (Math.random() - 0.5) * noise - Math.abs(TB[b]) * 0.05;
+    if (prior) sc += prior[b] * 0.6;
+    if (b === sn.lastBin) sc += 0.06;
+    if (sc > bestScore) { bestScore = sc; best = b; }
+  }
+  if (Math.random() < 0.25 + 0.75 * iq) best = safeBin(sn, best, ORDER[best], Math.round(12 * (0.6 + 0.4 * iq)));
+  sn.lastBin = best; sn.targetAng = wrapA(sn.ang + TB[best]);
+  sn.wantBoost = boost && (match.m === 'tag' || sn.mass > 30);
+  sn.thinkIn = Math.round(2 + (1 - iq) * 7);
+}
+/* ---------- drawing ---------- */
+function drawLeaderCrown(c, sn) {
+  const h = sn.segs[0], r = sn.r, bx = h.x, by = h.y - r * 0.55;
+  c.save(); c.lineJoin = 'round'; c.fillStyle = '#ffd447'; c.strokeStyle = '#a8740f'; c.lineWidth = r * 0.08; c.beginPath();
+  c.moveTo(bx - r * 0.6, by); c.lineTo(bx - r * 0.6, by - r * 0.7); c.lineTo(bx - r * 0.3, by - r * 0.35); c.lineTo(bx, by - r * 0.9); c.lineTo(bx + r * 0.3, by - r * 0.35); c.lineTo(bx + r * 0.6, by - r * 0.7); c.lineTo(bx + r * 0.6, by); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = sn.team >= 0 ? TEAMS[sn.team].color : '#ff5d7d'; c.beginPath(); c.arc(bx, by - r * 0.22, r * 0.13, 0, TAU); c.fill();
+  c.restore();
+}
+function drawBases(b, z) {
+  for (let t = 0; t < 2; t++) {
+    const [x, y] = match.bases[t], R = 300;
+    if (x + R < b.x0 || x - R > b.x1 || y + R < b.y0 || y - R > b.y1) continue;
+    ctx.fillStyle = TEAMS[t].soft; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
+    ctx.save(); ctx.setLineDash([18, 14]); ctx.strokeStyle = TEAMS[t].color; ctx.globalAlpha = 0.45; ctx.lineWidth = 3 / Math.max(0.5, z); ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.stroke(); ctx.restore();
+    ctx.globalAlpha = 0.5; ctx.fillStyle = TEAMS[t].color; ctx.font = `700 ${22 / Math.max(0.6, z)}px Bungee, Lexend, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${TEAMS[t].name.toUpperCase()} BASE`, x, y + R * 0.7); ctx.globalAlpha = 1;
+  }
+}
+/* ---------- HUD, menu and results ---------- */
+function setPips(el, n) {
+  if (el.childElementCount !== CTL_MINIS) { el.textContent = ''; for (let i = 0; i < CTL_MINIS; i++) el.append(document.createElement('i')); }
+  [...el.children].forEach((d, i) => d.classList.toggle('on', i < n));
+}
+function updateModeBar() {
+  const on = inModes() && mode === 'play';
+  app.classList.toggle('mode-on', inModes()); app.classList.toggle('tag-on', match.m === 'tag');
+  $('modeBar').hidden = !on; if (!on) return;
+  const tEl = $('mbTime');
+  tEl.textContent = match.m === 'ctl' && match.sd ? 'Sudden death' : fmtTime(match.tl); tEl.classList.toggle('sd', match.m === 'ctl' && !!match.sd);
+  const roleEl = $('mbRole'), me = player;
+  $('mbStam').hidden = match.m !== 'tag';
+  if (match.m === 'ctl') {
+    $('mbRedWrap').hidden = $('mbBlueWrap').hidden = false;
+    const r = match.mc[0] || 0, bl = match.mc[1] || 0;
+    $('mbRed').textContent = r; $('mbBlue').textContent = bl; setPips($('pipsRed'), r); setPips($('pipsBlue'), bl);
+    $('mbRedWrap').classList.toggle('low', r < CAPTURE_AT); $('mbBlueWrap').classList.toggle('low', bl < CAPTURE_AT);
+    const tr = match.tm[myKey()], t = tr ? tr[0] : -1;
+    roleEl.classList.remove('it');
+    if (!me || !me.alive) roleEl.textContent = match.st === 'play' ? 'Respawning…' : '';
+    else if (t < 0) roleEl.textContent = 'Joining a team…';
+    else {
+      const mine = match.mc[t] || 0;
+      roleEl.textContent = tr[1] === 'L' ? (mine < CAPTURE_AT || match.sd ? `${TEAMS[t].name} Leader · you can be captured!` : `${TEAMS[t].name} Leader · ${mine} minis guarding you`) : `${TEAMS[t].name} Guard · protect your Leader`;
+    }
+  } else {
+    $('mbRedWrap').hidden = $('mbBlueWrap').hidden = true;
+    const it = !!(me && me.it);
+    roleEl.classList.toggle('it', it);
+    roleEl.textContent = match.v === '1v1' ? (it ? "You're It! Tag them" : "Run! Don't get tagged") : it ? 'Hunter · tag the runner' : 'Runner · survive the clock';
+    const st = me ? clamp(me.stam, 0, 1) : 1;
+    $('stamFill').style.width = Math.round(st * 100) + '%';
+    $('boostBtn').style.setProperty('--stam', Math.round(st * 100) + '%');
+  }
+}
+function setModeSel(patch) { Object.assign(profile.modeSel, patch); save(); renderModeSel(); }
+function renderModeSel() {
+  const ms = profile.modeSel;
+  for (const b of document.querySelectorAll('.modetab')) b.setAttribute('aria-pressed', String(b.dataset.mode === ms.m));
+  for (const b of document.querySelectorAll('[data-ctl]')) b.setAttribute('aria-pressed', String(+b.dataset.ctl === ms.ctl));
+  for (const b of document.querySelectorAll('[data-tag]')) b.setAttribute('aria-pressed', String(b.dataset.tag === ms.tag));
+  for (const b of document.querySelectorAll('[data-diff]')) b.setAttribute('aria-pressed', String(b.dataset.diff === ms.diff));
+  $('modeInfo').textContent = MODE_INFO[ms.m];
+  $('optCtl').hidden = ms.m !== 'ctl'; $('optTag').hidden = ms.m !== 'tag'; $('optDiff').hidden = ms.m === 'classic';
+  $('watchBtn').hidden = ms.m !== 'classic';
+  const cfg = newMatchCfg(), line = $('roomModeLine');
+  if (ms.m === 'classic') line.textContent = 'Mode: Classic. Pick another mode in the menu if you like.';
+  else { line.textContent = ''; const b = document.createElement('b'); b.textContent = ms.m === 'ctl' ? `Capture the Leader ${ms.ctl}v${ms.ctl}` : ms.tag === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one'; line.append('Mode: ', b, `, ${ms.diff} bots. Friends who join play your mode.`); }
+}
+function resultFor() {
+  const k = myKey(), out = { mode: modeName(match), title: '', won: false, labels: [], values: [] };
+  const elapsed = fmtTime((match.overAt - (match.started || match.overAt)) / 1000);
+  if (match.m === 'ctl') {
+    const tr = match.tm[k], t = tr ? tr[0] : -1, w = match.win;
+    out.won = t === w; out.title = t < 0 ? `${TEAMS[w] ? TEAMS[w].name : 'A'} team wins!` : out.won ? 'Your team wins!' : 'Your team lost';
+    out.mode = `${modeName(match)} · ${TEAMS[w] ? TEAMS[w].name : ''} wins`;
+    out.labels = ['Red minis left', 'Blue minis left', 'Match time']; out.values = [match.mc[0] || 0, match.mc[1] || 0, match.started ? elapsed : '–'];
+  } else if (match.v === '1v1') {
+    out.won = match.win !== k; out.title = out.won ? 'You win!' : 'You were It at the end';
+    out.labels = ['Tags you made', 'Time you were It', 'Round']; out.values = [match.made, fmtTime(match.itTime), match.round];
+  } else {
+    const iRun = match.runner === k, runnerWon = match.win === 'R';
+    out.won = iRun ? runnerWon : !runnerWon; out.title = out.won ? 'You win!' : 'You lose';
+    out.labels = ['Your role', 'Winner', 'Round']; out.values = [iRun ? 'Runner' : 'Hunter', runnerWon ? 'Runner' : 'Hunters', match.round];
+  }
+  return out;
+}
+function showResult() {
+  const r = resultFor();
+  $('resMode').textContent = r.mode; $('resMode').className = r.won ? 'eyebrow bot' : 'eyebrow';
+  $('resTitle').textContent = r.title; $('resWhy').textContent = match.why || '';
+  for (let i = 0; i < 3; i++) { $('resL' + (i + 1)).textContent = r.labels[i]; $('resV' + (i + 1)).textContent = r.values[i]; }
+  $('resAgain').hidden = gameKind !== 'solo';
+  $('resMenu').textContent = gameKind === 'online' ? 'Leave room' : 'Menu';
+  $('resNext').hidden = gameKind !== 'online';
+  updateResultNext(performance.now());
+  profile.games++; save(); checkUnlocks();
+  if (r.won) SFX.trainDone(); else SFX.death();
+  mode = 'dead'; botDriving = false; updateBanner(); setBoostSound(false);
+  showScreen('result');
+}
+function updateResultNext(now) {
+  if (gameKind !== 'online') return;
+  const left = Math.max(0, Math.ceil((8000 - (now - match.overAt)) / 1000));
+  $('resNext').textContent = left > 0 ? `Next round starts in ${left}…` : 'Starting the next round…';
+}
+/* ---------- online: share the match, and each Leader's bot brain ---------- */
+function packMatch(now) {
+  if (!inModes()) return { m: 'classic' };
+  return { m: match.m, sz: match.sz, v: match.v, df: match.df, mid: match.mid, rd: match.round, st: match.st, tl: Math.round(match.tl), sd: match.sd ? 1 : 0,
+    win: match.win, why: match.why, tm: match.tm, it: [...match.it], mc: match.mc, rn: match.runner || null,
+    nb: match.nb && now < match.nb.until ? [match.nb.from, match.nb.to, Math.round(match.nb.until - now)] : null,
+    ov: match.st === 'over' ? Math.round(now - match.overAt) : 0, el: Math.round((now - (match.started || now)) / 1000) };
+}
+function applyMatchFromHost(md) {
+  if (!md || typeof md !== 'object') return;
+  const now = performance.now();
+  if (md.m !== 'ctl' && md.m !== 'tag') {
+    if (online.awaitSpawnAt) { online.awaitSpawnAt = 0; if (!inModes()) startGame({ watch: false }); }
+    if (inModes()) { match = { m: 'classic' }; for (const sn of snakes) { sn.team = -1; sn.role = ''; sn.it = false; } $('result').hidden = true; if (mode !== 'menu') startGame({ watch: false }); }
+    return;
+  }
+  const mid = int(md.mid), fresh = match.m !== md.m || match.mid !== mid, wasOver = match.st === 'over';
+  if (fresh) {
+    match = { m: md.m, queue: [], myRespawnAt: 0, itTime: 0, made: 0, wasIt: false };
+    for (const [, sn] of online.rnpcs) { const i = snakes.indexOf(sn); if (i >= 0) snakes.splice(i, 1); sn.alive = false; }
+    online.rnpcs.clear(); drops = [];
+  }
+  match.m = md.m; match.mid = mid; match.sz = clamp(int(md.sz, 1), 1, 3); match.v = ['1v1', 'evo'].includes(md.v) ? md.v : '1v1'; match.df = DIFF_IQ[md.df] ? md.df : 'normal';
+  match.round = int(md.rd, 1); match.st = md.st === 'over' ? 'over' : 'play'; match.tl = clamp(num(md.tl), 0, 600); match.tEnd = now + match.tl * 1000; match.sd = md.sd === 1;
+  match.win = typeof md.win === 'number' || typeof md.win === 'string' ? md.win : null; match.why = typeof md.why === 'string' ? cleanText(md.why, 120) : '';
+  match.mc = Array.isArray(md.mc) ? [clamp(int(md.mc[0]), 0, 99), clamp(int(md.mc[1]), 0, 99)] : [0, 0];
+  match.runner = typeof md.rn === 'string' ? md.rn.slice(0, 32) : '';
+  match.started = now - clamp(num(md.el), 0, 3600) * 1000;
+  const tm = {};
+  if (md.tm && typeof md.tm === 'object') for (const k of Object.keys(md.tm).slice(0, 40)) { const v = md.tm[k]; if (Array.isArray(v) && (v[0] === 0 || v[0] === 1 || v[0] === -1) && ROLE_CODE[v[1]] && k.length <= 32) tm[k] = [v[0], v[1]]; }
+  match.tm = tm;
+  match.it = new Set(Array.isArray(md.it) ? md.it.filter((x) => typeof x === 'string' && x.length <= 32).slice(0, 40) : []);
+  match.nb = Array.isArray(md.nb) && typeof md.nb[0] === 'string' && typeof md.nb[1] === 'string' ? { from: md.nb[0], to: md.nb[1], until: now + clamp(num(md.nb[2]), 0, 3000) } : null;
+  const R = arenaFor(match); match.bases = [[-R * 0.6, 0], [R * 0.6, 0]];
+  if (match.st === 'over') match.overAt = now - clamp(num(md.ov), 0, 10000);
+  const waiting = !!online.awaitSpawnAt; online.awaitSpawnAt = 0;
+  if (fresh || (waiting && !player)) { if (worldR !== R) setArena(R, foodFor(R)); $('result').hidden = true; placeLocal(); toast(roleIntro()); }
+  else {
+    const tr = match.tm[myKey()];
+    if (match.m === 'ctl' && tr && player && player.alive && (player.team !== tr[0] || player.role !== tr[1])) placeLocal();
+    else syncRoles();
+  }
+  if (match.st === 'over' && !wasOver && !fresh) showResult();
+  if (match.st === 'over' && fresh) showResult();
+}
+function cleanText(v, n) { return String(v).replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '').slice(0, n); }
+function removeBotQuietly(sn) {
+  const i = snakes.indexOf(sn); if (i >= 0) snakes.splice(i, 1);
+  sn.alive = false; if (gameKind === 'online') online.rmBots.push({ id: sn.npcId, t: performance.now() });
+}
+function refAssign() {
+  if (!inModes() || match.st !== 'play') return;
+  const humans = humanKeys(); let changed = false;
+  for (const k of Object.keys(match.tm)) {
+    if (humans.includes(k)) continue;
+    const [t, r] = match.tm[k]; delete match.tm[k]; changed = true;
+    if (match.m === 'ctl' && r === 'L') spawnModeBot({ team: t, role: 'L' });
+    if (match.m === 'tag' && match.it.has(k)) {
+      match.it.delete(k);
+      if (match.v === '1v1') { const pool = snakes.filter((sn) => sn.alive && !sn.it); if (pool.length) match.it.add(keyOf(pool[Math.floor(Math.random() * pool.length)])); }
+    }
+    if (match.m === 'tag' && match.runner === k && match.v !== '1v1') endMatch('H', 'The runner left the room.');
+  }
+  for (const k of humans) {
+    if (match.tm[k]) continue;
+    changed = true;
+    if (match.m === 'ctl') {
+      const counts = [0, 0]; for (const tr of Object.values(match.tm)) if (tr[0] >= 0) counts[tr[0]]++;
+      const t = counts[0] <= counts[1] ? 0 : 1;
+      if (!leaderKeyOf(t)) {
+        // A friend joining a team that only has a bot Leader takes over as Leader.
+        match.tm[k] = [t, 'L'];
+        for (const sn of snakes.filter((x) => x.kind === 'npc' && x.team === t && x.role === 'L')) removeBotQuietly(sn);
+        match.queue = match.queue.filter((q) => !(q.team === t && q.role === 'L'));
+      } else {
+        match.tm[k] = [t, 'G'];
+        const bot = snakes.find((sn) => sn.kind === 'npc' && sn.team === t && sn.role === 'G');
+        if (bot) removeBotQuietly(bot);
+      }
+    } else {
+      match.tm[k] = [-1, 'P'];
+      if (match.v !== '1v1') match.it.add(k);
+      else {
+        const bot = snakes.find((sn) => sn.kind === 'npc' && sn.role === 'P');
+        if (bot) { const wasIt = match.it.delete(keyOf(bot)); removeBotQuietly(bot); if (wasIt) match.it.add(k); }
+      }
+    }
+  }
+  if (changed) syncRoles();
+}
+let bwCache = null;
+function nextBrainChunk() {
+  if (!botReady()) return null;
+  const ver = profile.sessions * 100000 + (profile.practice % 100000);
+  if (!bwCache || bwCache.ver !== ver) {
+    const scales = [], q = new Int8Array(weightCount()); let o = 0;
+    for (const L of brain.layers) for (const arr of [L.W, L.b]) {
+      let mx = 1e-6; for (let i = 0; i < arr.length; i++) mx = Math.max(mx, Math.abs(arr[i]));
+      const sc = mx / 127; scales.push(sc); for (let i = 0; i < arr.length; i++) q[o++] = clamp(Math.round(arr[i] / sc), -127, 127);
+    }
+    const head = new Uint8Array(new Float32Array(scales).buffer), all = new Uint8Array(head.length + q.length);
+    all.set(head, 0); all.set(new Uint8Array(q.buffer), head.length);
+    const b64 = bytesToB64(all), parts = []; for (let i = 0; i < b64.length; i += 1500) parts.push(b64.slice(i, i + 1500));
+    bwCache = { ver, parts, i: 0 };
+  }
+  const i = bwCache.i++ % bwCache.parts.length;
+  return [bwCache.ver, i, bwCache.parts.length, bwCache.parts[i]];
+}
+function takeBrainChunk(peer, bw) {
+  const ver = num(bw[0]), i = int(bw[1]), n = int(bw[2]), part = bw[3];
+  if (n < 1 || n > 8 || i < 0 || i >= n || typeof part !== 'string' || part.length > 1600) return;
+  let e = online.brains.get(peer);
+  if (!e || e.ver !== ver || e.n !== n) { e = { ver, n, parts: new Array(n), brain: e && e.brain || null }; online.brains.set(peer, e); }
+  if (e.parts[i] === part && e.done) return;
+  e.parts[i] = part;
+  if (e.parts.every((x) => typeof x === 'string')) {
+    try {
+      const bytes = b64ToBytes(e.parts.join('')), nT = (SIZES.length - 1) * 2, need = nT * 4 + weightCount();
+      if (bytes.length !== need) return;
+      const scales = new Float32Array(bytes.buffer.slice(0, nT * 4)), q = new Int8Array(bytes.buffer.slice(nT * 4));
+      const f = new Float32Array(weightCount()); let o = 0, ti = 0;
+      for (let l = 0; l < SIZES.length - 1; l++) for (const len of [SIZES[l] * SIZES[l + 1], SIZES[l + 1]]) { const sc = scales[ti++]; if (!isFinite(sc) || sc < 0 || sc > 100) return; for (let j = 0; j < len; j++, o++) f[o] = q[o] * sc; }
+      const br = makeBrain(); if (setWeights(br, new Uint8Array(f.buffer))) { e.brain = br; e.done = true; }
+    } catch (err) { /* ignore a broken brain */ }
+  }
+}
+
 /* ---------- one simulation tick ---------- */
 let respawnT = 0;
 function step(dt, now) {
@@ -1232,14 +1881,15 @@ function step(dt, now) {
     for (let i = 0; i < MAX_SLOTS; i++) { const s = slots[i]; s.x = s.ux * worldR; s.y = s.uy * worldR; }
   }
   const npcHost = gameKind === 'solo' || online.isHost;
-  updateIQ(dt);
-  for (const s of snakes) if (s.kind === 'npc') { s.thinkIn = (s.thinkIn || 0) - 1; if (s.thinkIn <= 0) npcThink(s); }
+  if (inModes()) { npcIQ = DIFF_IQ[match.df] || 0.62; if (player && player.alive && mode === 'play') run.time += dt; }
+  else updateIQ(dt);
+  for (const s of snakes) if (s.kind === 'npc') { s.thinkIn = (s.thinkIn || 0) - 1; if (s.thinkIn <= 0) { if (s.role) modeThink(s, now); else npcThink(s); } }
   if (player && player.alive && mode === 'play') {
     player.bot = botDriving;
     if (botDriving) { if (botReady()) { if (frame % 2 === 0) botThink(player); } else setBot(false); }
     else {
       humanControl(player);
-      if (frame % 3 === 0 && now - input.last < 4000) record(player);
+      if (frame % 3 === 0 && now - input.last < 4000 && match.m !== 'tag') record(player);
       if (profile.auto && botReady() && now - input.last > AWAY_MS) setBot(true, 'auto');
     }
   }
@@ -1248,13 +1898,13 @@ function step(dt, now) {
 
   const dying = [];
   for (const s of snakes) {
-    if (!s.alive || s.grace > 0) continue;
+    if (!s.alive || s.grace > 0 || match.m === 'tag') continue;
     if (s.kind !== 'player' && !(s.kind === 'npc' && npcHost)) continue;
     const hx = s.x, hy = s.y;
     if (hx * hx + hy * hy > (worldR - s.r * 0.6) ** 2) { dying.push([s, 'edge']); continue; }
     const n = queryNear(segHead, segNext, hx, hy, s.r + 50, qbuf);
     for (let q = 0; q < n; q++) {
-      const i = qbuf[q], o = segOwner[i]; if (o === s) continue;
+      const i = qbuf[q], o = segOwner[i]; if (o === s || friendly(s, o)) continue;
       const dx = segX[i] - hx, dy = segY[i] - hy, rr = s.r * 0.72 + segR[i] * 0.88;
       if (dx * dx + dy * dy < rr * rr) { if (segIdx[i] < 3 && s.mass > o.mass) continue; dying.push([s, o]); break; }
     }
@@ -1272,7 +1922,9 @@ function step(dt, now) {
   drops.length = w;
   buildFoodGrid();
 
-  if (npcHost) {
+  if (inModes()) modeTick(dt, now);
+  if (gameKind === 'online' && online.awaitSpawnAt && now - online.awaitSpawnAt > 3000 && !player) { online.awaitSpawnAt = 0; if (inModes()) placeLocal(); else startGame({ watch: false }); }
+  if (npcHost && !inModes()) {
     respawnT -= dt;
     if (respawnT <= 0) {
       respawnT = 0.7;
@@ -1285,7 +1937,7 @@ function step(dt, now) {
       }
     }
   }
-  if (player && player.alive && mode === 'play') {
+  if (player && player.alive && mode === 'play' && !inModes()) {
     const sc = Math.floor(player.mass * 10);
     if (sc > run.max) run.max = sc;
     if (botDriving) { if (sc > profile.bestBot) profile.bestBot = sc; }
@@ -1300,7 +1952,7 @@ function step(dt, now) {
 
 /* ================= online play (room capability) ================= */
 const online = { api: null, room: null, code: null, myPeer: null, isHost: false, claim: false, noClaimSince: 0, filler: true, tier: 0, players: 1,
-  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false, avgLt: 0, hostIq: 0.1, kind: 'room', busy: false };
+  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false, avgLt: 0, hostIq: 0.1, kind: 'room', busy: false, pendingCfg: null, brains: new Map(), awaitSpawnAt: 0, rmBots: [] };
 function logEat(id) { online.eatLog.push({ id, t: performance.now() }); }
 const tierFor = (n) => (n <= 3 ? 0 : n <= 8 ? 1 : n <= 12 ? 2 : 3);
 function setTier(t) {
@@ -1533,6 +2185,7 @@ function dropToSolo(msg) {
   online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear();
   try { r.leave(); } catch (e) { /* ignore */ }
   gameKind = 'solo'; worldTargetR = SOLO_R; activeSlots = SOLO_FOOD;
+  if (inModes()) { match.st = 'over'; match = { m: 'classic' }; snakes = snakes.filter((sn) => !sn.role); for (const sn of snakes) { sn.team = -1; sn.role = ''; sn.it = false; } }
   setRoomHash(null); updateRoomChip(); toast(msg);
 }
 
@@ -1601,8 +2254,9 @@ async function joinRoom(code, create) {
   } finally { online.busy = false; $('createBtn').disabled = $('joinBtn').disabled = false; }
   online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0;
   online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = [];
-  online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear();
-  gameKind = 'online'; myDeaths = 0;
+  online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear(); online.brains.clear();
+  gameKind = 'online'; myDeaths = 0; match = { m: 'classic' };
+  online.pendingCfg = create && profile.modeSel.m !== 'classic' ? newMatchCfg() : null;
   setupWorld(seedFromCode(code), TIERS[0].R, TIERS[0].food);
   try { online.unsubs.push(r.onPeers(onRoomPeers, (err) => {
     if (online.kind !== 'web') { toast('Lost the connection to the room.'); return; }
@@ -1610,7 +2264,8 @@ async function joinRoom(code, create) {
   })); } catch (e) { /* ignore */ }
   try { online.unsubs.push(r.onConnection((c) => { online.connected = c; updateRoomChip(); })); } catch (e) { /* ignore */ }
   setLobbyPresence();
-  startGame({ watch: false });
+  if (create) startGame({ watch: false });
+  else { if (player) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); } player = null; mode = 'play'; showScreen(null); online.awaitSpawnAt = performance.now(); }
   sendPresence(performance.now());
   toast(create ? `Room ${code} is open. Tell your friends the code!` : `You joined room ${code}`);
   setRoomHash(code); updateRoomChip();
@@ -1623,6 +2278,7 @@ async function leaveRoom(silent) {
   if (r) { try { await r.leave(); } catch (e) { /* ignore */ } }
   setRoomHash(null);
   setLobbyPresence();
+  match = { m: 'classic' }; online.pendingCfg = null; online.awaitSpawnAt = 0;
   if (!silent) { setupSoloWorld(); showMenu(); }
 }
 function onRoomPeers(change) {
@@ -1651,6 +2307,7 @@ function applyPeer(peer, pr, now) {
   if (rs.snake && rs.snake.alive && (!aliveNow || d > rs.d)) {
     const s = rs.snake; s.netD = d; rs.d = d;
     killSnake(s, null);
+    if (online.isHost && match.m === 'ctl' && match.st === 'play') { const tr = match.tm[peer]; if (tr && tr[1] === 'L') leaderDown(tr[0]); }
     const key = peer.slice(0, 8) + '.' + d;
     if (pr.kb === online.myPeer && online.myPeer && !online.seenKills.has(key)) { online.seenKills.add(key); creditKill(rs.name); }
     rs.snake = null;
@@ -1661,13 +2318,14 @@ function applyPeer(peer, pr, now) {
     s.peer = peer; s.netD = d; s.errX = 0; s.errY = 0; s.grace = 0;
     setNet(s, num(pr.x), num(pr.y), num(pr.a), num(pr.m, START_MASS), !!pr.b, now);
     s.errX = 0; s.errY = 0; for (const p of s.segs) { p.x = s.x; p.y = s.y; }
-    snakes.push(s); rs.snake = s;
+    snakes.push(s); rs.snake = s; syncRoles();
   } else if (aliveNow && rs.snake) {
     const s = rs.snake;
     setNet(s, num(pr.x), num(pr.y), num(pr.a), num(pr.m, s.mass), !!pr.b, now);
     s.name = rs.name; if (s.lookCode !== pr.s) { s.lookCode = pr.s; applyLook(s, unpackLook(pr.s)); }
   }
   if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; }
+  if (online.isHost && Array.isArray(pr.bw)) takeBrainChunk(peer, pr.bw);
   if (Array.isArray(pr.e)) {
     const cur = new Set();
     for (const e of pr.e.slice(0, 90)) {
@@ -1704,17 +2362,18 @@ function computeRoomMeta() {
   if (online.claim && !host) host = online.myPeer;
   const was = online.isHost;
   online.isHost = !!online.myPeer && online.claim && host === online.myPeer;
-  if (online.isHost && !was) startHosting();
-  if (online.isHost) setTier(tierFor(online.players));
+  if (online.isHost && !was) { startHosting(); if (online.pendingCfg) { const c = online.pendingCfg; online.pendingCfg = null; startMatch(c); } }
+  if (online.isHost) { if (!inModes()) setTier(tierFor(online.players)); else refAssign(); }
   else if (host) { const hp = ps.find((p) => p.peer === host); if (hp) applyHost(hp.presence); }
   updateRoomChip();
 }
 function applyHost(pr) {
   if (online.lastHostPres === pr) return; online.lastHostPres = pr;
   const now = performance.now();
-  if (Array.isArray(pr.w)) { setTier(pr.w[0]); online.filler = pr.w[1] === 1; online.hostIq = clamp(num(pr.w[2], 10), 0, 100) / 100; }
+  applyMatchFromHost(pr.md);
+  if (Array.isArray(pr.w)) { if (!inModes()) setTier(pr.w[0]); online.filler = pr.w[1] === 1; online.hostIq = clamp(num(pr.w[2], 10), 0, 100) / 100; }
   const seen = new Set();
-  if (Array.isArray(pr.np)) for (const e of pr.np.slice(0, 24)) {
+  if (Array.isArray(pr.np)) for (const e of pr.np.slice(0, 40)) {
     if (!Array.isArray(e) || e.length < 7) continue;
     const id = int(e[0]); seen.add(id);
     const x = num(e[1]), y = num(e[2]), a = num(e[3]) / 100, m = num(e[4], 120) / 10, b = e[5] === 1, code = int(e[6]);
@@ -1726,8 +2385,11 @@ function applyHost(pr) {
       for (const p of s.segs) { p.x = s.x; p.y = s.y; }
       online.rnpcs.set(id, s); snakes.push(s);
     } else setNet(s, x, y, a, m, b, now);
+    s.team = e[7] === 0 || e[7] === 1 ? e[7] : -1; s.role = CODE_ROLE[int(e[8])] || ''; s.it = match.m === 'tag' && match.it.has('b' + id);
+    if (s.role === 'M' && s.lookCode !== code) { s.lookCode = code; applyLook(s, unpackLook(code % 100000)); }
   }
-  for (const [id, s] of online.rnpcs) if (!seen.has(id)) { if (s.alive) killSnake(s, null); online.rnpcs.delete(id); }
+  const quiet = new Set(Array.isArray(pr.rm) ? pr.rm.slice(0, 60).map((x) => int(x)) : []);
+  for (const [id, s] of online.rnpcs) if (!seen.has(id)) { if (quiet.has(id)) { const i = snakes.indexOf(s); if (i >= 0) snakes.splice(i, 1); s.alive = false; } else if (s.alive) killSnake(s, null); online.rnpcs.delete(id); }
   if (Array.isArray(pr.nk)) for (const e of pr.nk.slice(0, 20)) {
     if (Array.isArray(e) && online.myPeer && e[1] === online.myPeer) {
       const k = 'nk' + int(e[0]);
@@ -1736,10 +2398,11 @@ function applyHost(pr) {
   }
 }
 function startHosting() {
+  if (inModes()) { match.queue = match.queue || []; match.tEnd = performance.now() + (match.tl || 0) * 1000; if (match.st === 'over') match.overAt = performance.now(); }
   let maxId = npcIdNext;
   for (const [id, s] of online.rnpcs) {
     if (!s.alive) continue;
-    s.kind = 'npc'; s.npc = newNpcMind(); s.npc.startMass = s.mass; s.peakMass = s.mass; s.thinkIn = 0; s.lastBin = 4; s.wantBoost = false; s.targetAng = s.ang; s.grace = 0;
+    s.kind = 'npc'; s.npc = newNpcMind(); s.npc.startMass = s.mass; s.peakMass = s.mass; s.thinkIn = 0; s.lastBin = 4; s.wantBoost = false; s.targetAng = s.ang; s.grace = 0; s.orbit = Math.random() * TAU; s.stam = 1;
     if (id >= maxId) maxId = id + 1;
   }
   online.rnpcs.clear(); npcIdNext = maxId;
@@ -1759,12 +2422,16 @@ function sendPresence(now) {
   if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; }
   if (online.isHost) {
     pr.w = [online.tier, online.filler ? 1 : 0, Math.round(npcIQ * 100)];
-    pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 20).map((s) => [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 100000 * s.nameIdx]);
+    pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 36).map((s) => [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 100000 * s.nameIdx, s.team, ROLE_CODE[s.role] || 0]);
+    pr.md = packMatch(now);
     pr.nk = online.nk.map((e) => [e.id, e.peer]);
-  } else { pr.w = null; pr.np = null; pr.nk = null; }
+    online.rmBots = online.rmBots.filter((e) => now - e.t < 4000); pr.rm = online.rmBots.length ? online.rmBots.map((e) => e.id) : null;
+  } else { pr.w = null; pr.np = null; pr.nk = null; pr.md = null; pr.rm = null; }
+  pr.bw = match.m === 'ctl' && !online.isHost && player && player.role === 'L' ? nextBrainChunk() : null;
   let txt = JSON.stringify(pr);
   while (txt.length > 3900 && pr.e.length) { pr.e = pr.e.slice(Math.ceil(pr.e.length / 2)); txt = JSON.stringify(pr); }
   while (txt.length > 3900 && pr.np && pr.np.length) { pr.np.pop(); txt = JSON.stringify(pr); }
+  if (txt.length > 3900 && pr.bw) { pr.bw = null; }
   r.presence(pr).catch(() => {});
 }
 
@@ -1814,13 +2481,20 @@ function drawSnake(c, s, b, t, now, z) {
   const segs = s.segs, n = segs.length, r = s.r, m = r * 2;
   const vis = (p) => p.x > b.x0 - m && p.x < b.x1 + m && p.y > b.y0 - m && p.y < b.y1 + m;
   if (s.ghost) c.globalAlpha = 0.3;
+  const tm = match.m === 'ctl' && s.team >= 0 ? TEAMS[s.team] : null;
+  if (s.it) {
+    const ga = c.globalAlpha; c.globalAlpha = ga * (0.34 + 0.16 * Math.sin(now * 0.012)); c.fillStyle = IT_COLOR; c.beginPath();
+    for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + r + 10, p.y); c.arc(p.x, p.y, r + 10, 0, TAU); }
+    c.fill(); c.globalAlpha = ga;
+  }
   if (s.boosting) {
     const ga = c.globalAlpha; c.globalAlpha = ga * 0.28; c.fillStyle = s.color; c.beginPath();
     for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + r * 1.7, p.y); c.arc(p.x, p.y, r * 1.7, 0, TAU); }
     c.fill(); c.globalAlpha = ga;
   }
-  c.fillStyle = s.outline; c.beginPath();
-  for (let i = n - 1; i >= 0; i--) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + r + 2.5, p.y); c.arc(p.x, p.y, r + 2.5, 0, TAU); }
+  const ow = tm || s.it ? 4 : 2.5;
+  c.fillStyle = s.it ? IT_COLOR : tm ? tm.color : s.outline; c.beginPath();
+  for (let i = n - 1; i >= 0; i--) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + r + ow, p.y); c.arc(p.x, p.y, r + ow, 0, TAU); }
   c.fill();
   for (let i = n - 1; i >= 0; i--) { const p = segs[i]; if (!vis(p)) continue; c.fillStyle = segColor(s, i, n, t); c.beginPath(); c.arc(p.x, p.y, r, 0, TAU); c.fill(); }
   if (s.look.pat === 3) {
@@ -1835,7 +2509,7 @@ function drawSnake(c, s, b, t, now, z) {
   c.fillStyle = 'rgba(255,255,255,0.13)'; c.beginPath();
   for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x - r * 0.2 + r * 0.38, p.y - r * 0.3); c.arc(p.x - r * 0.2, p.y - r * 0.3, r * 0.38, 0, TAU); }
   c.fill();
-  if (vis(segs[0])) { drawEyes(c, s, now); drawHat(c, s, now); if (s.bot) drawAntenna(c, s, now); }
+  if (vis(segs[0])) { drawEyes(c, s, now); if (s.role === 'L' && match.m === 'ctl') drawLeaderCrown(c, s); else drawHat(c, s, now); if (s.bot) drawAntenna(c, s, now); }
   c.globalAlpha = 1;
 }
 function drawEyes(c, s, now) {
@@ -1916,6 +2590,7 @@ function render(now) {
   if (tf < 1) drawThemeLayer(thP, 1 - tf, b, now);
   drawThemeLayer(thC, tf, b, now);
   ctx.restore();
+  if (match.m === 'ctl' && match.bases) drawBases(b, z);
   ctx.beginPath(); ctx.rect(b.x0 - 10, b.y0 - 10, b.x1 - b.x0 + 20, b.y1 - b.y0 + 20); ctx.arc(0, 0, worldR, 0, TAU, true);
   ctx.fillStyle = 'rgba(4,3,10,0.62)'; ctx.fill();
   ctx.beginPath(); ctx.arc(0, 0, worldR, 0, TAU); ctx.strokeStyle = tf < 0.5 ? thP.edge : thC.edge; ctx.globalAlpha = 0.55; ctx.lineWidth = 8 / Math.max(0.5, z); ctx.stroke(); ctx.globalAlpha = 1;
@@ -1946,7 +2621,9 @@ function render(now) {
   ctx.font = `600 ${13 / z}px Lexend, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
   for (const s of snakes) {
     const h = s.segs[0]; if (h.x < b.x0 || h.x > b.x1 || h.y < b.y0 || h.y > b.y1) continue;
-    const lift = s.r + (HATS[s.look.hat].id !== 'none' || s.bot ? s.r * 1.3 : 0) + 10 / z;
+    if (s.role === 'M') continue;
+    const lift = s.r + (HATS[s.look.hat].id !== 'none' || s.bot || s.role === 'L' ? s.r * 1.3 : 0) + 10 / z;
+    if (s.it) { ctx.fillStyle = IT_COLOR; ctx.globalAlpha = 1; ctx.fillText('IT', h.x, h.y - lift - 16 / z); }
     ctx.fillStyle = s === player ? 'rgba(244,239,254,0.95)' : s.kind === 'remote' ? 'rgba(244,239,254,0.85)' : 'rgba(244,239,254,0.55)';
     ctx.globalAlpha = s.ghost ? 0.4 : 1;
     ctx.fillText(s.kind === 'remote' && s.bot ? s.name + ' (bot)' : s.name, h.x, h.y - lift);
@@ -1966,7 +2643,7 @@ function drawMini() {
   mctx.strokeStyle = C.danger; mctx.globalAlpha = 0.5; mctx.lineWidth = 1.5 * DPR; mctx.stroke(); mctx.globalAlpha = 1;
   for (const s of snakes) {
     if (s === player) continue;
-    mctx.fillStyle = s.kind === 'remote' ? C.ink : s.color; mctx.globalAlpha = s.kind === 'remote' ? 0.95 : 0.55;
+    mctx.fillStyle = s.it ? IT_COLOR : match.m === 'ctl' && s.team >= 0 ? TEAMS[s.team].color : s.kind === 'remote' ? C.ink : s.color; mctx.globalAlpha = s.kind === 'remote' || s.role === 'L' || s.it ? 0.95 : 0.55;
     const x = w / 2 + s.x / worldR * R, y = h / 2 + s.y / worldR * R, rr = (s.kind === 'remote' ? 2.4 : 1.5) * DPR + s.r / 40 * DPR;
     mctx.beginPath(); mctx.arc(x, y, rr, 0, TAU); mctx.fill();
   }
@@ -1998,12 +2675,13 @@ function drawPreview(cv, look, now) {
 
 /* ================= HUD & screens ================= */
 const app = $('app');
-const screens = ['menu', 'locker', 'online', 'death', 'train'];
+const screens = ['menu', 'locker', 'online', 'death', 'train', 'result'];
 function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', mode === 'play' && !name); }
 function showMenu() {
+  if (inModes() && gameKind === 'solo') { match = { m: 'classic' }; setupSoloWorld(); }
   mode = 'menu'; if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
   player = null; botDriving = false; updateBanner();
-  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); showScreen('menu');
+  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); renderModeSel(); showScreen('menu');
 }
 function startGame(opts = {}) {
   mode = 'play'; showScreen(null);
@@ -2016,6 +2694,7 @@ function startGame(opts = {}) {
   updateBanner(); updateDock(); updateRoomChip(); boardTick = 0; SFX.spawn();
 }
 function onPlayerDeath(killer) {
+  if (inModes()) { if (match.m === 'ctl' && match.st === 'play') onModePlayerDeath(killer); return; }
   const wasBot = botDriving; botDriving = false; updateBanner(); SFX.death(); setBoostSound(false);
   lastKiller = killer === 'edge' ? 'edge' : killer && killer.kind === 'remote' ? killer.peer : killer && (killer.kind === 'rnpc' || killer.kind === 'npc') ? 'n' + killer.npcId : null;
   profile.games++; save(); checkUnlocks();
@@ -2056,6 +2735,7 @@ function updateBanner() {
 let boardTick = 0;
 function updateHud() {
   if (player && player.alive) $('lenVal').textContent = fmt(player.mass * 10);
+  if (boardTick % 6 === 0) updateModeBar();
   if (++boardTick % 12 !== 1) return;
   const iqp = Math.round(npcIQ * 100); $('iqVal').textContent = W <= 360 ? `Smarts ${iqp}%` : `Bot smarts ${iqp}%`; $('iqFill').style.width = iqp + '%';
   $('genVal').textContent = gameKind === 'solo' || online.isHost ? `· Gen ${fmt(profile.npcGen + 1)}` : '';
@@ -2084,6 +2764,7 @@ function updateRoomChip() {
     t.textContent = W <= 360 ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${TIERS[online.tier].name}${online.room && !online.connected ? ' · reconnecting' : ''}`;
     $('exitBtn').textContent = 'Leave';
   } else { t.textContent = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
+  if (gameKind === 'online' && online.code && inModes() && W > 360) t.textContent = `Room ${online.code} · ${online.players} player${online.players === 1 ? '' : 's'} · ${modeName(match)}`;
   const inv = gameKind === 'online' && !!online.code && online.kind === 'web';
   $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv);
 }
@@ -2180,6 +2861,14 @@ function drawAccChart(jobArg) {
 
 /* ---------- locker ---------- */
 function openLocker() { $('lockerName').value = profile.name; buildLocker(); showScreen('locker'); }
+function lockProgress(L) {
+  if (L.type === 'games') return `${Math.min(profile.games, L.v)}/${L.v}`;
+  if (L.type === 'kills') return `${Math.min(profile.kills, L.v)}/${L.v}`;
+  if (L.type === 'best') return `best ${fmt(profile.bestYou)}`;
+  if (L.type === 'botBest') return `best ${fmt(profile.bestBot)}`;
+  if (L.type === 'botLevel') return botReady() ? `now level ${botLevel().n}` : 'not trained yet';
+  return '';
+}
 function buildLocker() {
   const mkSw = (rowId, key) => {
     const row = $(rowId); row.textContent = '';
@@ -2197,7 +2886,7 @@ function buildLocker() {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'opt';
       const ok = isUnlocked(it); b.disabled = !ok; b.setAttribute('aria-pressed', String(profile.look[key] === i));
       const t = document.createElement('span'); t.textContent = it.name; b.append(t);
-      if (!ok) { const sm = document.createElement('small'); sm.textContent = `Unlock: ${it.lock.text}`; b.append(sm); }
+      if (!ok) { const sm = document.createElement('small'); sm.textContent = `Unlock: ${it.lock.text} · ${lockProgress(it.lock)}`; b.append(sm); }
       b.addEventListener('click', () => { profile.look[key] = i; save(); buildLocker(); });
       row.append(b);
     });
@@ -2617,9 +3306,18 @@ $('nameIn').addEventListener('input', (e) => { profile.name = e.target.value.sli
 $('lockerName').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
 $('lockerBtn').addEventListener('click', openLocker);
 $('lockerDone').addEventListener('click', showMenu);
-$('soloBtn').addEventListener('click', () => { if (gameKind !== 'solo') setupSoloWorld(); startGame({ watch: false }); });
-$('watchBtn').addEventListener('click', () => { if (gameKind !== 'solo') setupSoloWorld(); startGame({ watch: true }); });
-$('onlineBtn').addEventListener('click', () => { showScreen('online'); updateOnlineScreen(); });
+$('soloBtn').addEventListener('click', () => {
+  if (profile.modeSel.m === 'classic') { const wasMode = inModes(); match = { m: 'classic' }; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: false }); }
+  else { gameKind = 'solo'; startMatch(newMatchCfg()); }
+});
+for (const b of document.querySelectorAll('.modetab')) b.addEventListener('click', () => setModeSel({ m: b.dataset.mode }));
+for (const b of document.querySelectorAll('[data-ctl]')) b.addEventListener('click', () => setModeSel({ ctl: +b.dataset.ctl }));
+for (const b of document.querySelectorAll('[data-tag]')) b.addEventListener('click', () => setModeSel({ tag: b.dataset.tag }));
+for (const b of document.querySelectorAll('[data-diff]')) b.addEventListener('click', () => setModeSel({ diff: b.dataset.diff }));
+$('resAgain').addEventListener('click', () => { if (gameKind === 'solo') startMatch(cfgOf(match)); });
+$('resMenu').addEventListener('click', () => { if (gameKind === 'online') leaveRoom(false); else showMenu(); });
+$('watchBtn').addEventListener('click', () => { const wasMode = inModes(); match = { m: 'classic' }; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: true }); });
+$('onlineBtn').addEventListener('click', () => { showScreen('online'); updateOnlineScreen(); renderModeSel(); });
 $('onlineBack').addEventListener('click', showMenu);
 $('createBtn').addEventListener('click', () => joinRoom(newCode(), true));
 $('joinBtn').addEventListener('click', () => joinRoom($('codeIn').value.trim(), false));
@@ -2686,7 +3384,7 @@ function boot() {
   cam.x = 0; cam.y = 0;
   checkUnlocks();
   $('nameIn').value = profile.name;
-  updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip();
+  updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
   showScreen('menu');
@@ -2700,7 +3398,18 @@ function boot() {
     joinFromHash();
     window.addEventListener('hashchange', joinFromHash);
   }
-  if (window.NB_DEBUG) window.__nb = { info: () => ({ kind: gameKind, mode, players: online.players, isHost: online.isHost, code: online.code, me: online.myPeer, snakes: snakes.map((sn) => [sn.kind, sn.name, Math.round(sn.x), Math.round(sn.y)]) }) };
+  if (window.NB_DEBUG) window.__nb = {
+    info: () => ({ kind: gameKind, mode, players: online.players, isHost: online.isHost, code: online.code, me: online.myPeer, snakes: snakes.map((sn) => [sn.kind, sn.name, Math.round(sn.x), Math.round(sn.y), sn.team, sn.role, sn.it ? 1 : 0, Math.round(sn.mass)]) }),
+    match: () => ({ m: match.m, st: match.st, mc: match.mc, win: match.win, why: match.why, it: [...(match.it || [])], tl: Math.round(match.tl || 0), sd: !!match.sd, tm: match.tm, mid: match.mid, v: match.v }),
+    killRole: (role, team, n) => { let k = 0; for (const sn of [...snakes]) if (sn.kind === 'npc' && sn.role === role && sn.team === team && k < (n || 1)) { killSnake(sn, null); k++; } return k; },
+    killPlayer: () => { if (player && player.alive) killSnake(player, 'edge'); },
+    kills: () => profile.kills,
+    playerKills: (n) => { let k = 0; for (const sn of [...snakes]) if (sn.kind === 'npc' && k < n) { killSnake(sn, player); k++; } return profile.kills; },
+    setTime: (sec) => { match.tEnd = performance.now() + sec * 1000; },
+    brains: () => [...online.brains.entries()].map(([k, e]) => [k, !!e.done]),
+    teamBrain: (t) => !!teamBrain(t),
+    tagNow: () => { const a = snakes.find((sn) => sn.it && sn.alive), b = snakes.find((sn) => !sn.it && sn.alive); if (!a || !b) return false; match.started = 0; const mv = b.kind === 'remote' ? a : b, to = mv === a ? b : a; mv.x = to.x + 2; mv.y = to.y; for (const p of mv.segs) { p.x = mv.x; p.y = mv.y; } return true; },
+  };
   requestAnimationFrame((t) => { last = t; loop(t); });
 }
 const hot = window.claude && window.claude.hot;
