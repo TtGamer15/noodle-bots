@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);box-sizing:border-box;background:#17122c}</style>
 <title>Noodle Bots</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -104,6 +105,24 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .soundrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .savebox{display:grid;gap:10px;padding:14px;border-radius:16px;border:1px solid var(--line)}
 .savemsg{font-size:13px;color:var(--muted);min-height:1.2em}
+.card.wide{max-width:980px}
+.btn,.opt,.swatch,.chipbtn,.switch{touch-action:manipulation}
+.iqline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.iqbar{width:64px;height:6px;border-radius:999px;background:rgba(244,239,254,.12);overflow:hidden;flex:none}
+.iqbar i{display:block;height:100%;width:10%;background:var(--accent);border-radius:inherit;transition:width .5s}
+@media (max-width:640px){
+  .dock .switch{display:none}
+  .dock{gap:6px;padding:6px}
+  .dock .btn{padding:10px 12px}
+  .boost{min-width:84px;min-height:48px;font-size:15px}
+  .big{font-size:28px}
+  .roomchip{font-size:11px}
+  .chipbtn{padding:4px 8px}
+}
+.menu-grid{display:grid;gap:16px;min-width:0}
+.menu-grid > .col{display:grid;gap:16px;align-content:start;min-width:0}
+@media (min-width:900px){.menu-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}}
+@media (min-width:1500px) and (min-height:860px){.card,.stats,.board,.dock,.midstack,#minimap{zoom:1.2}}
 .opt .sw{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px;border:1px solid var(--line)}
 .input{font:500 16px var(--f-body);color:var(--ink);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;box-sizing:border-box;min-width:0}
 .meter{height:8px;border-radius:999px;background:rgba(244,239,254,.1);overflow:hidden}
@@ -203,7 +222,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <p class="lbl">Length</p>
       <p class="big" id="lenVal">0</p>
       <p class="sub"><span id="rankVal">Rank –</span><span class="chip" id="driverChip">You</span></p>
-      <div class="roomchip"><span id="roomText">Solo</span><button class="chipbtn" id="muteBtn" type="button" aria-pressed="false">Sound on</button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
+      <p class="iqline"><span class="iqbar" aria-hidden="true"><i id="iqFill"></i></span><span id="iqVal">Bot smarts 10%</span><span id="genVal"></span></p>
+      <div class="roomchip"><span id="roomText">Solo</span><button class="chipbtn" id="muteBtn" type="button" aria-pressed="false">Sound on</button><button class="chipbtn" id="musicBtn" type="button" aria-pressed="false">Music on</button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
     </div>
     <div class="board"><p class="lbl">Biggest noodles</p><ol id="boardList"></ol></div>
     <div class="midstack">
@@ -231,7 +251,9 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 
   <!-- Menu -->
   <section id="menu" class="screen">
-    <div class="card">
+    <div class="card wide">
+      <div class="menu-grid">
+      <div class="col">
       <h1 class="logo">Noodle <span>Bots</span></h1>
       <p class="tag">Eat, grow, and teach a bot to play exactly like you. Then hand it the controls whenever you need a break.</p>
       <div class="me-row">
@@ -247,6 +269,13 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <button class="btn big" id="onlineBtn" type="button">Play with friends</button>
       </div>
       <button class="btn bot big" id="watchBtn" type="button">Watch my bot play</button>
+      <ol class="how">
+        <li><span><b>Play.</b> Steer with your mouse, or drag your thumb anywhere on a phone. Hold click, Space or Boost to go fast. The game records how you steer.</span></li>
+        <li><span><b>Train.</b> Press Train bot. A small brain studies your moves right here in your browser.</span></li>
+        <li><span><b>Hand over.</b> Press <b>B</b> or Bot takes over and it plays like you until you take back control.</span></li>
+      </ol>
+      </div>
+      <div class="col">
       <div class="botcard">
         <div class="botcard-head">
           <span class="botface"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg></span>
@@ -274,7 +303,10 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         </div>
       </div>
       <div class="soundrow">
-        <label class="switch" for="soundChk"><input type="checkbox" id="soundChk"><span class="track"></span><span>Sound effects <span class="lbl">(M)</span></span></label>
+        <div class="toggles">
+          <label class="switch" for="soundChk"><input type="checkbox" id="soundChk"><span class="track"></span><span>Sound effects <span class="lbl">(M)</span></span></label>
+          <label class="switch" for="musicChk"><input type="checkbox" id="musicChk"><span class="track"></span><span>Calm music <span class="lbl">(N)</span></span></label>
+        </div>
         <input type="range" id="volIn" class="range" min="0" max="100" step="5" aria-label="Volume">
       </div>
       <div class="savebox">
@@ -289,35 +321,40 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         </div>
         <p class="savemsg" id="saveMsg" aria-live="polite"></p>
       </div>
-      <ol class="how">
-        <li><span><b>Play.</b> Steer with your mouse or finger. Hold click, Space or Boost to go fast. The game records how you steer.</span></li>
-        <li><span><b>Train.</b> Press Train bot. A small brain studies your moves right here in your browser.</span></li>
-        <li><span><b>Hand over.</b> Press <b>B</b> or Bot takes over and it plays like you until you take back control.</span></li>
-      </ol>
+      </div>
+      </div>
     </div>
   </section>
 
   <!-- Locker -->
   <section id="locker" class="screen" hidden>
-    <div class="card">
+    <div class="card wide">
       <div class="card-head"><h2>Locker</h2><button class="btn primary small" id="lockerDone" type="button">Done</button></div>
+      <div class="menu-grid">
+      <div class="col">
       <canvas id="lockerPreview" class="preview big" aria-label="Snake preview"></canvas>
       <div class="group"><label class="lbl" for="lockerName">Name</label><input id="lockerName" class="input" maxlength="14" autocomplete="off" placeholder="Player"></div>
       <div class="group"><p class="lbl">Main color</p><div class="swatches" id="c1Row"></div></div>
       <div class="group"><p class="lbl">Second color</p><div class="swatches" id="c2Row"></div></div>
+      <div class="group"><p class="lbl">Saved looks</p><div class="slots" id="slotRow"></div></div>
+      </div>
+      <div class="col">
       <div class="group"><p class="lbl">Pattern</p><div class="opts" id="patRow"></div></div>
       <div class="group"><p class="lbl">Eyes</p><div class="opts" id="eyeRow"></div></div>
       <div class="group"><p class="lbl">Hat</p><div class="opts" id="hatRow"></div></div>
       <div class="group"><p class="lbl">Arena background</p><div class="opts" id="themeRow"></div></div>
-      <div class="group"><p class="lbl">Saved looks</p><div class="slots" id="slotRow"></div></div>
+      </div>
+      </div>
     </div>
   </section>
 
   <!-- Online -->
   <section id="online" class="screen" hidden>
-    <div class="card">
+    <div class="card wide">
       <div class="card-head"><h2>Play with friends</h2><button class="btn small" id="onlineBack" type="button">Back</button></div>
       <p class="status" id="onlineStatus">Connecting…</p>
+      <div class="menu-grid">
+      <div class="col">
       <div class="group" id="onlineBody">
         <div class="group">
           <p class="lbl">Start a room</p>
@@ -330,6 +367,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         </div>
         <div class="group"><p class="lbl">Rooms open now</p><ul class="roomlist" id="roomList"></ul></div>
       </div>
+      </div>
+      <div class="col">
       <div class="group">
         <p class="lbl">Arena size grows with your room</p>
         <table class="maps">
@@ -341,6 +380,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
             <tr><td>13+</td><td>Huge</td><td>8 extra bots join</td></tr>
           </tbody>
         </table>
+      </div>
+      </div>
       </div>
     </div>
   </section>
@@ -424,6 +465,9 @@ const HATS = [
 ];
 const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [10000, 'Arena Shark'], [20000, 'Mega Noodle'], [40000, 'Legend'], [80000, 'Your Twin']];
 
+// Arena bot genes: greed, caution, wander, boost, hunter, food spread, turn cost, look-ahead
+const GENES = [[0.3, 2.5], [0.3, 3], [0, 0.6], [0, 0.2], [0, 1], [0, 0.8], [0, 0.2], [0.6, 1.4]];
+
 /* ================= utils ================= */
 const wrapA = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -469,20 +513,24 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, volume: 0.7, theme: 0 };
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0 };
 let brain = null;
 let newSince = 0;
 
 function applyProfileData(p) {
   if (!p || typeof p !== 'object') return;
   for (const k of ['practice', 'bestYou', 'bestBot', 'totalRecorded', 'games', 'kills', 'sessions']) if (typeof p[k] === 'number' && isFinite(p[k])) profile[k] = clamp(Math.floor(p[k]), 0, 1e9);
-  for (const k of ['auto', 'reflex', 'sound']) if (typeof p[k] === 'boolean') profile[k] = p[k];
+  for (const k of ['auto', 'reflex', 'sound', 'music']) if (typeof p[k] === 'boolean') profile[k] = p[k];
   if (typeof p.volume === 'number' && isFinite(p.volume)) profile.volume = clamp(p.volume, 0, 1);
   if (typeof p.theme === 'number' && isFinite(p.theme)) profile.theme = clamp(Math.floor(p.theme), -1, 5);
   for (const k of ['acc', 'near']) if (p[k] === null || (typeof p[k] === 'number' && isFinite(p[k]))) profile[k] = p[k] === null ? null : clamp(p[k], 0, 1);
   if (typeof p.name === 'string') profile.name = p.name.slice(0, 14);
   if (typeof p.look === 'number' && isFinite(p.look)) profile.look = unpackLook(p.look);
   if (Array.isArray(p.slots)) profile.slots = [0, 1, 2].map((i) => (typeof p.slots[i] === 'number' && isFinite(p.slots[i]) ? Math.max(0, Math.floor(p.slots[i])) : null));
+  if (Array.isArray(p.npcPool)) profile.npcPool = p.npcPool.slice(0, 12)
+    .filter((e) => e && Array.isArray(e.g) && e.g.length === GENES.length && e.g.every((v) => typeof v === 'number' && isFinite(v)) && typeof e.f === 'number' && isFinite(e.f))
+    .map((e) => ({ g: e.g.map((v, i) => clamp(v, GENES[i][0], GENES[i][1])), f: clamp(e.f, 0, 1e7) }));
+  if (typeof p.npcGen === 'number' && isFinite(p.npcGen)) profile.npcGen = clamp(Math.floor(p.npcGen), 0, 1e9);
 }
 let saveTimer = 0;
 function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 500); }
@@ -711,7 +759,8 @@ let snakes = [];
 let player = null;
 let snakeId = 0, frame = 0;
 let botDriving = false, botWatch = false;
-let run = { max: 0 };
+let run = { max: 0, time: 0 };
+let npcIQ = 0.55;
 let myDeaths = 0, lastKiller = null;
 const eatenDrops = new Map();
 
@@ -793,7 +842,30 @@ function randomLook() {
   const hatRoll = Math.random();
   return { c1, c2, pat: Math.floor(Math.random() * 5), eye: Math.floor(Math.random() * 4), hat: hatRoll < 0.78 ? 0 : 1 + Math.floor(Math.random() * 3) };
 }
-function randomPersonality() { return { greed: rand(0.8, 1.7), caution: rand(0.9, 1.8), wander: rand(0.08, 0.4), boost: rand(0.02, 0.1), hunter: Math.random() < 0.35 ? rand(0.25, 0.8) : 0 }; }
+function breedGenome() {
+  const pool = profile.npcPool;
+  if (pool.length < 3 || Math.random() < 0.15) return GENES.map(([a, b]) => a + Math.random() * (b - a));
+  const pick = () => { let best = null; for (let k = 0; k < 3; k++) { const e = pool[Math.floor(Math.random() * pool.length)]; if (!best || e.f > best.f) best = e; } return best; };
+  const p1 = pick(), p2 = Math.random() < 0.3 ? pick() : null;
+  return GENES.map(([a, b], i) => clamp((p2 && Math.random() < 0.5 ? p2.g[i] : p1.g[i]) + gauss() * (b - a) * 0.08, a, b));
+}
+function newNpcMind() { const g = breedGenome(); return { g, greed: g[0], caution: g[1], wander: g[2], boost: g[3], hunter: g[4], spread: g[5], turn: g[6], look: g[7], born: performance.now(), startMass: 0 }; }
+function recordNpcResult(s) {
+  const m = s.npc; if (!m || !m.g) return;
+  const life = (performance.now() - m.born) / 1000, f = Math.max(0, (s.peakMass || s.mass) - (m.startMass || 0)) + life * 0.4;
+  const pool = profile.npcPool;
+  if (pool.length < 12 || f > pool[pool.length - 1].f) {
+    pool.push({ g: m.g.map((v) => Math.round(v * 1000) / 1000), f: Math.round(f * 10) / 10 });
+    pool.sort((a, b) => b.f - a.f); if (pool.length > 12) pool.length = 12; profile.npcGen++;
+  }
+}
+const iqFromTime = (t) => 0.1 + 0.9 * (1 - Math.exp(-t / 150));
+function updateIQ(dt) {
+  if (player && player.alive && mode === 'play') run.time += dt;
+  if (gameKind === 'solo') npcIQ = mode === 'menu' ? 0.55 : iqFromTime(run.time);
+  else if (online.isHost) npcIQ = iqFromTime(online.avgLt);
+  else npcIQ = online.hostIq;
+}
 function findSpawn(avoidPlayer) {
   let best = [0, 0], bestD = -1;
   for (let t = 0; t < 26; t++) {
@@ -813,7 +885,8 @@ function spawnNpc(initial) {
   const used = new Set(snakes.map((s) => s.name));
   let ni = Math.floor(Math.random() * NPC_NAMES.length);
   for (let t = 0; t < 12 && used.has(NPC_NAMES[ni]); t++) ni = Math.floor(Math.random() * NPC_NAMES.length);
-  const s = makeSnake({ kind: 'npc', name: NPC_NAMES[ni], nameIdx: ni, mass: 12 + Math.pow(Math.random(), 2.5) * 260, pos, ang: Math.atan2(-pos[1], -pos[0]) + rand(-1, 1), npc: randomPersonality(), npcId: npcIdNext++ });
+  const s = makeSnake({ kind: 'npc', name: NPC_NAMES[ni], nameIdx: ni, mass: 12 + Math.pow(Math.random(), 2.5) * 260, pos, ang: Math.atan2(-pos[1], -pos[0]) + rand(-1, 1), npc: newNpcMind(), npcId: npcIdNext++ });
+  s.npc.startMass = s.mass; s.peakMass = s.mass; s.thinkIn = Math.floor(Math.random() * 3);
   snakes.push(s); return s;
 }
 
@@ -833,6 +906,7 @@ function moveSnake(s, dt) {
     }
   } else s.boostAcc = 0;
   s.x += Math.cos(s.ang) * sp * dt; s.y += Math.sin(s.ang) * sp * dt;
+  if (s.peakMass === undefined || s.mass > s.peakMass) s.peakMass = s.mass;
   bodyFollow(s);
 }
 function bodyFollow(s) {
@@ -908,8 +982,8 @@ function sense(s, out) {
 }
 
 /* ---------- look-ahead used by NPCs and by your bot's survival reflexes ---------- */
-function pathHits(s, rel, n) {
-  const steps = 14, dt = 0.035, tr = 4.8 / (1 + s.mass / 900), sp = s.boosting ? BOOST_SPEED : BASE_SPEED;
+function pathHits(s, rel, n, steps) {
+  steps = steps || 14; const dt = 0.035, tr = 4.8 / (1 + s.mass / 900), sp = s.boosting ? BOOST_SPEED : BASE_SPEED;
   let x = s.x, y = s.y, a = s.ang; const tgt = wrapA(s.ang + rel), lim = (worldR - s.r - 10) ** 2;
   for (let t = 0; t < steps; t++) {
     a += clamp(wrapA(tgt - a), -tr * dt, tr * dt);
@@ -923,12 +997,13 @@ function pathHits(s, rel, n) {
   }
   return 0;
 }
-function safeBin(s, pref, order) {
+function safeBin(s, pref, order, steps) {
+  steps = steps || 14;
   const sp = s.boosting ? BOOST_SPEED : BASE_SPEED;
-  const n = queryNear(segHead, segNext, s.x, s.y, sp * 0.5 + 90, qbuf);
-  const h0 = pathHits(s, TB[pref], n); if (h0 === 0) return pref;
+  const n = queryNear(segHead, segNext, s.x, s.y, sp * steps * 0.035 + 90, qbuf);
+  const h0 = pathHits(s, TB[pref], n, steps); if (h0 === 0) return pref;
   let best = pref, bestH = h0;
-  for (const b of order) { if (b === pref) continue; const h = pathHits(s, TB[b], n); if (h === 0) return b; if (h > bestH) { bestH = h; best = b; } }
+  for (const b of order) { if (b === pref) continue; const h = pathHits(s, TB[b], n, steps); if (h === 0) return b; if (h > bestH) { bestH = h; best = b; } }
   return best;
 }
 
@@ -936,18 +1011,21 @@ function safeBin(s, pref, order) {
 const npcBuf = new Float32Array(FEAT);
 function npcThink(s) {
   sense(s, npcBuf);
-  const P = s.npc; let best = 4, bestScore = -1e9;
+  const P = s.npc, iq = npcIQ;
+  const noise = P.wander + (1 - iq) * 0.9, dangerW = P.caution * (0.25 + 0.75 * iq) * 4, hunt = iq > 0.45 ? P.hunter : 0;
+  let best = 4, bestScore = -1e9;
   for (let b = 0; b < NB; b++) {
     const k = sectorOf(TB[b]), kl = (k + S - 1) % S, kr = (k + 1) % S;
     const danger = npcBuf[k] + 0.5 * (npcBuf[kl] + npcBuf[kr]);
-    const food = npcBuf[12 + k] + 0.3 * (npcBuf[12 + kl] + npcBuf[12 + kr]);
-    let score = food * P.greed - danger * danger * P.caution * 4 - Math.abs(TB[b]) * 0.08 + (Math.random() - 0.5) * P.wander + P.hunter * npcBuf[24 + k] * 0.5;
+    const food = npcBuf[12 + k] + P.spread * (npcBuf[12 + kl] + npcBuf[12 + kr]);
+    let score = food * P.greed - danger * danger * dangerW - Math.abs(TB[b]) * P.turn + (Math.random() - 0.5) * noise + hunt * npcBuf[24 + k] * 0.5;
     if (b === s.lastBin) score += 0.08;
     if (score > bestScore) { bestScore = score; best = b; }
   }
-  best = safeBin(s, best, ORDER[best]);
+  if (Math.random() < 0.15 + 0.85 * iq) best = safeBin(s, best, ORDER[best], Math.round(14 * P.look * (0.6 + 0.4 * iq)));
   s.lastBin = best; s.targetAng = wrapA(s.ang + TB[best]);
-  s.wantBoost = s.mass > 40 && npcBuf[6] < 0.2 && ((npcBuf[18] > 0.7 && Math.random() < P.boost) || (s.wantBoost && Math.random() < 0.85));
+  s.wantBoost = s.mass > 40 && npcBuf[6] < 0.2 && ((npcBuf[18] > 0.7 && Math.random() < P.boost * (0.3 + 0.7 * iq)) || (s.wantBoost && Math.random() < 0.85));
+  s.thinkIn = Math.round(3 + (1 - iq) * 9);
 }
 
 /* ---------- your bot ---------- */
@@ -977,11 +1055,12 @@ const recBuf = new Float32Array(FEAT);
 function humanControl(s) {
   if (input.left || input.right) s.targetAng = s.ang + (input.right ? 0.9 : -0.9);
   else if (input.mode === 'keys') s.targetAng = s.ang;
+  else if (input.mode === 'joy' && input.joyAng != null) s.targetAng = input.joyAng;
   else if (input.has) {
     const hx = W / 2 + (s.x - cam.x) * cam.z, hy = H / 2 + (s.y - cam.y) * cam.z, dx = input.px - hx, dy = input.py - hy;
     if (dx * dx + dy * dy > 16) s.targetAng = Math.atan2(dy, dx);
   }
-  s.wantBoost = input.mBoost || input.kBoost || input.tBoost;
+  s.wantBoost = input.mBoost || input.kBoost || input.tBoost || !!input.tBoost2;
 }
 function record(s) { sense(s, recBuf); pushSample(recBuf, nearestBin(wrapA(s.targetAng - s.ang)) * 2 + (s.wantBoost ? 1 : 0), true); }
 
@@ -1009,6 +1088,7 @@ function killSnake(s, killer) {
   if (s !== player && player && player.alive && mode === 'play' && Math.hypot(s.x - player.x, s.y - player.y) < 900) SFX.pop();
   const i = snakes.indexOf(s); if (i >= 0) snakes.splice(i, 1);
   if (s.kind === 'player') onPlayerDeath(killer);
+  if (s.kind === 'npc') recordNpcResult(s);
   else if (s.kind === 'npc' && killer && typeof killer === 'object') {
     if (killer === player) creditKill(s.name);
     else if (killer.kind === 'remote' && gameKind === 'online') online.nk.push({ id: s.npcId, peer: killer.peer, t: performance.now() });
@@ -1042,7 +1122,8 @@ function step(dt, now) {
     for (let i = 0; i < MAX_SLOTS; i++) { const s = slots[i]; s.x = s.ux * worldR; s.y = s.uy * worldR; }
   }
   const npcHost = gameKind === 'solo' || online.isHost;
-  for (const s of snakes) if (s.kind === 'npc' && (frame + s.id) % 3 === 0) npcThink(s);
+  updateIQ(dt);
+  for (const s of snakes) if (s.kind === 'npc') { s.thinkIn = (s.thinkIn || 0) - 1; if (s.thinkIn <= 0) npcThink(s); }
   if (player && player.alive && mode === 'play') {
     player.bot = botDriving;
     if (botDriving) { if (botReady()) { if (frame % 2 === 0) botThink(player); } else setBot(false); }
@@ -1065,7 +1146,7 @@ function step(dt, now) {
     for (let q = 0; q < n; q++) {
       const i = qbuf[q], o = segOwner[i]; if (o === s) continue;
       const dx = segX[i] - hx, dy = segY[i] - hy, rr = s.r * 0.72 + segR[i] * 0.88;
-      if (dx * dx + dy * dy < rr * rr) { dying.push([s, o]); break; }
+      if (dx * dx + dy * dy < rr * rr) { if (segIdx[i] < 3 && s.mass > o.mass) continue; dying.push([s, o]); break; }
     }
   }
   for (const [s] of dying) s.alive = false;
@@ -1109,7 +1190,7 @@ function step(dt, now) {
 
 /* ================= online play (room capability) ================= */
 const online = { api: null, room: null, code: null, myPeer: null, isHost: false, claim: false, noClaimSince: 0, filler: true, tier: 0, players: 1,
-  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false };
+  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false, avgLt: 0, hostIq: 0.1 };
 function logEat(id) { online.eatLog.push({ id, t: performance.now() }); }
 const tierFor = (n) => (n <= 3 ? 0 : n <= 8 ? 1 : n <= 12 ? 2 : 3);
 function setTier(t) {
@@ -1246,6 +1327,8 @@ function computeRoomMeta() {
   const r = online.room; if (!r) return;
   let ps = []; try { ps = r.peers().filter((p) => p.presence && p.presence.g === 'nb1'); } catch (e) { ps = []; }
   online.players = Math.max(1, ps.length);
+  let ltSum = 0; for (const p of ps) ltSum += p.sameTab ? (player && player.alive ? run.time : 0) : clamp(num(p.presence.lt), 0, 36000);
+  online.avgLt = ps.length ? ltSum / ps.length : run.time;
   const now = performance.now();
   const claimants = ps.filter((p) => p.presence.h === 1).map((p) => p.peer).sort();
   let host = claimants[0] || null;
@@ -1268,7 +1351,7 @@ function computeRoomMeta() {
 function applyHost(pr) {
   if (online.lastHostPres === pr) return; online.lastHostPres = pr;
   const now = performance.now();
-  if (Array.isArray(pr.w)) { setTier(pr.w[0]); online.filler = pr.w[1] === 1; }
+  if (Array.isArray(pr.w)) { setTier(pr.w[0]); online.filler = pr.w[1] === 1; online.hostIq = clamp(num(pr.w[2], 10), 0, 100) / 100; }
   const seen = new Set();
   if (Array.isArray(pr.np)) for (const e of pr.np.slice(0, 24)) {
     if (!Array.isArray(e) || e.length < 7) continue;
@@ -1295,7 +1378,7 @@ function startHosting() {
   let maxId = npcIdNext;
   for (const [id, s] of online.rnpcs) {
     if (!s.alive) continue;
-    s.kind = 'npc'; s.npc = randomPersonality(); s.lastBin = 4; s.wantBoost = false; s.targetAng = s.ang; s.grace = 0;
+    s.kind = 'npc'; s.npc = newNpcMind(); s.npc.startMass = s.mass; s.peakMass = s.mass; s.thinkIn = 0; s.lastBin = 4; s.wantBoost = false; s.targetAng = s.ang; s.grace = 0;
     if (id >= maxId) maxId = id + 1;
   }
   online.rnpcs.clear(); npcIdNext = maxId;
@@ -1310,11 +1393,11 @@ function sendPresence(now) {
   if (online.eatLog.length > 70) online.eatLog.splice(0, online.eatLog.length - 70);
   online.nk = online.nk.filter((e) => now - e.t < 3000);
   const p = player, alive = !!(p && p.alive);
-  const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), p: 1, al: alive ? 1 : 0, d: myDeaths, bot: botDriving ? 1 : 0,
+  const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
     h: online.claim ? 1 : 0, e: online.eatLog.map((x) => x.id), kb: lastKiller, hid: document.hidden ? 1 : null };
   if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; }
   if (online.isHost) {
-    pr.w = [online.tier, online.filler ? 1 : 0];
+    pr.w = [online.tier, online.filler ? 1 : 0, Math.round(npcIQ * 100)];
     pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 20).map((s) => [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 100000 * s.nameIdx]);
     pr.nk = online.nk.map((e) => [e.id, e.peer]);
   } else { pr.w = null; pr.np = null; pr.nk = null; }
@@ -1343,7 +1426,7 @@ function updateCam(dt) {
     tgt = attractTarget;
   }
   if (tgt) { const k = 1 - Math.pow(0.0008, dt); cam.x += (tgt.x - cam.x) * k; cam.y += (tgt.y - cam.y) * k; }
-  const base = clamp(Math.min(W, H) / 820, 0.5, 1.35), r = tgt ? tgt.r : 14;
+  const base = clamp(Math.sqrt(W * H) / 900, 0.55, 1.35), r = tgt ? tgt.r : 14;
   const zt = base * 1.12 / (1 + (r - 9) / 36) * (mode === 'menu' ? 0.85 : 1);
   cam.z += (zt - cam.z) * (1 - Math.pow(0.05, dt));
 }
@@ -1508,6 +1591,12 @@ function render(now) {
     ctx.fillText(s.kind === 'remote' && s.bot ? s.name + ' (bot)' : s.name, h.x, h.y - lift);
   }
   ctx.globalAlpha = 1;
+  if (joy.active && mode === 'play') {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    let dx = joy.x - joy.ox, dy = joy.y - joy.oy; const d = Math.hypot(dx, dy); if (d > 46) { dx *= 46 / d; dy *= 46 / d; }
+    ctx.globalAlpha = 0.45; ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(joy.ox, joy.oy, 46, 0, TAU); ctx.stroke();
+    ctx.globalAlpha = 0.3; ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(joy.ox + dx, joy.oy + dy, 20, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+  }
 }
 function drawMini() {
   const w = mini.width, h = mini.height, R = Math.min(w, h) / 2 - 2 * DPR;
@@ -1561,7 +1650,7 @@ function startGame(opts = {}) {
   const pos = findSpawn(false);
   player = makeSnake({ kind: 'player', name: cleanName(profile.name), look: profile.look, mass: START_MASS, pos, ang: Math.atan2(-pos[1], -pos[0]) });
   snakes.push(player); cam.x = player.x; cam.y = player.y;
-  run = { max: 0 }; lastKiller = null; botDriving = false; botWatch = !!opts.watch; input.last = performance.now();
+  run = { max: 0, time: 0 }; lastKiller = null; botDriving = false; botWatch = !!opts.watch; input.last = performance.now();
   if (opts.watch && botReady()) setBot(true, 'watch');
   updateBanner(); updateDock(); updateRoomChip(); boardTick = 0; SFX.spawn();
 }
@@ -1581,7 +1670,7 @@ function onPlayerDeath(killer) {
     if (!botReady()) tip = sampCount >= MIN_TRAIN ? `Your bot has ${fmt(sampCount)} of your moves to study. Train it now.` : `Your bot is still watching you. ${fmt(sampCount)} of ${MIN_TRAIN} moves recorded so far.`;
     else if (wasBot) tip = `Bots copy their teacher. Every game you play gives it more to learn${profile.reflex ? '' : ', and Survival reflexes (in the menu) help it dodge'}.`;
     else tip = newSince > 0 ? `You have ${fmt(newSince)} new moves your bot hasn't studied yet.` : 'Your bot is up to date with your moves.';
-    $('deathTip').textContent = tip;
+    $('deathTip').textContent = `${tip} Arena bots reached ${Math.round(npcIQ * 100)}% smarts${gameKind === 'solo' ? '. They drop back to 10% when you respawn and get smarter the longer you last.' : '.'}`;
     $('againBtn').textContent = gameKind === 'online' ? 'Respawn' : 'Play again';
     $('deathMenuBtn').textContent = gameKind === 'online' ? 'Leave room' : 'Menu';
     $('deathTrainBtn').disabled = sampCount < MIN_TRAIN && !trainJob;
@@ -1607,11 +1696,13 @@ let boardTick = 0;
 function updateHud() {
   if (player && player.alive) $('lenVal').textContent = fmt(player.mass * 10);
   if (++boardTick % 12 !== 1) return;
+  const iqp = Math.round(npcIQ * 100); $('iqVal').textContent = `Bot smarts ${iqp}%`; $('iqFill').style.width = iqp + '%';
+  $('genVal').textContent = gameKind === 'solo' || online.isHost ? `· Gen ${fmt(profile.npcGen + 1)}` : '';
   const list = snakes.slice().sort((a, b) => b.mass - a.mass);
   const rank = player ? list.indexOf(player) + 1 : 0;
   $('rankVal').textContent = rank ? `Rank ${rank} of ${list.length}` : 'Rank –';
   const ol = $('boardList'); ol.textContent = '';
-  const top = list.slice(0, 6);
+  const topN = W < 640 ? 3 : 6, top = list.slice(0, topN);
   const addRow = (s, i) => {
     const li = document.createElement('li');
     if (s === player) { li.classList.add('me'); if (botDriving) li.classList.add('bot'); }
@@ -1622,7 +1713,7 @@ function updateHud() {
     li.append(a, b, c); ol.append(li);
   };
   top.forEach(addRow);
-  if (player && rank > 6) { const g = document.createElement('li'); g.className = 'gap'; g.textContent = '···'; ol.append(g); addRow(player, rank - 1); }
+  if (player && rank > topN) { const g = document.createElement('li'); g.className = 'gap'; g.textContent = '···'; ol.append(g); addRow(player, rank - 1); }
   if (boardTick % 120 === 1) updateDock();
 }
 function updateRoomChip() {
@@ -1868,36 +1959,64 @@ function drawThemeLayer(th, a, b, now) {
   ctx.fillRect(b.x0 - tx, b.y0 - ty, b.x1 - b.x0, b.y1 - b.y0); ctx.restore();
 }
 
-/* ================= sound effects (made with Web Audio, no sound files) ================= */
-const sfx = { ctx: null, master: null, noise: null, boostGain: null, boostOn: false, lastEat: 0, combo: 0 };
+/* ================= sound effects & music (made with Web Audio, no sound files) ================= */
+const sfx = { ctx: null, master: null, fx: null, noise: null, boostGain: null, boostOn: false, lastEat: 0, combo: 0, unlocked: false, tag: null };
+const music = { gain: null, bus: null, timer: 0, next: 0, chord: 0 };
+function silentWavURI() {
+  const n = 4000, buf = new Uint8Array(44 + n), dv = new DataView(buf.buffer), w = (o, t) => { for (let i = 0; i < t.length; i++) buf[o + i] = t.charCodeAt(i); };
+  w(0, 'RIFF'); dv.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, 8000, true); dv.setUint32(28, 8000, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true); w(36, 'data'); dv.setUint32(40, n, true); buf.fill(128, 44);
+  return 'data:audio/wav;base64,' + bytesToB64(buf);
+}
 function audioInit() {
   try {
-    if (sfx.ctx) { if (sfx.ctx.state === 'suspended') sfx.ctx.resume(); return; }
+    if (sfx.ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     const c = new AC(); sfx.ctx = c;
-    sfx.master = c.createGain(); sfx.master.gain.value = profile.sound ? profile.volume : 0; sfx.master.connect(c.destination);
+    sfx.master = c.createGain(); sfx.master.gain.value = profile.volume; sfx.master.connect(c.destination);
+    sfx.fx = c.createGain(); sfx.fx.gain.value = profile.sound ? 1 : 0; sfx.fx.connect(sfx.master);
     const buf = c.createBuffer(1, c.sampleRate, c.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     sfx.noise = buf;
     const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
     const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1100; bp.Q.value = 0.9;
-    const g = c.createGain(); g.gain.value = 0; src.connect(bp); bp.connect(g); g.connect(sfx.master); src.start(); sfx.boostGain = g;
+    const g = c.createGain(); g.gain.value = 0; src.connect(bp); bp.connect(g); g.connect(sfx.fx); src.start(); sfx.boostGain = g;
+    musicInit();
   } catch (e) { sfx.ctx = null; }
 }
-function applyVolume() { if (sfx.master) sfx.master.gain.setTargetAtTime(profile.sound ? profile.volume : 0, sfx.ctx.currentTime, 0.03); }
+// iPhones only start audio from a tap, and the silent switch mutes web audio unless the page asks to play like media.
+function audioUnlock() {
+  audioInit(); const c = sfx.ctx; if (!c) return;
+  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* ignore */ }
+  if (c.state !== 'running') { try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ } }
+  if (!sfx.unlocked) {
+    sfx.unlocked = true;
+    try { const b = c.createBuffer(1, 1, 22050), s0 = c.createBufferSource(); s0.buffer = b; s0.connect(c.destination); s0.start(0); } catch (e) { /* ignore */ }
+    if (!navigator.audioSession) {
+      try { sfx.tag = new Audio(silentWavURI()); sfx.tag.loop = true; sfx.tag.setAttribute('playsinline', ''); const p = sfx.tag.play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ }
+    }
+  }
+  if (!music.timer) music.timer = setInterval(musicSchedule, 250);
+}
+function applyVolume() {
+  if (!sfx.ctx) return; const t = sfx.ctx.currentTime;
+  sfx.master.gain.setTargetAtTime(profile.volume, t, 0.03);
+  sfx.fx.gain.setTargetAtTime(profile.sound ? 1 : 0, t, 0.03);
+  if (music.gain) music.gain.gain.setTargetAtTime(profile.music ? 0.5 : 0, t, 0.6);
+}
 function tone(freq, dur, type, vol, slideTo, delay) {
   const c = sfx.ctx; if (!c || !profile.sound || c.state !== 'running') return;
   const t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
   o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t); if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g); g.connect(sfx.master); o.start(t); o.stop(t + dur + 0.03);
+  o.connect(g); g.connect(sfx.fx); o.start(t); o.stop(t + dur + 0.03);
 }
 function noiseHit(dur, freq, vol, delay) {
   const c = sfx.ctx; if (!c || !profile.sound || c.state !== 'running' || !sfx.noise) return;
-  const t = c.currentTime + (delay || 0), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-  s.buffer = sfx.noise; f.type = 'lowpass'; f.frequency.setValueAtTime(freq, t); f.frequency.exponentialRampToValueAtTime(Math.max(60, freq * 0.2), t + dur);
+  const t = c.currentTime + (delay || 0), s0 = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s0.buffer = sfx.noise; f.type = 'lowpass'; f.frequency.setValueAtTime(freq, t); f.frequency.exponentialRampToValueAtTime(Math.max(60, freq * 0.2), t + dur);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(f); f.connect(g); g.connect(sfx.master); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.03);
+  s0.connect(f); f.connect(g); g.connect(sfx.fx); s0.start(t, Math.random() * 0.5); s0.stop(t + dur + 0.03);
 }
 const SFX = {
   eat(v) {
@@ -1921,11 +2040,50 @@ function setBoostSound(on) {
   on = !!on && profile.sound; if (on === sfx.boostOn || !sfx.boostGain) return; sfx.boostOn = on;
   sfx.boostGain.gain.setTargetAtTime(on ? 0.07 : 0, sfx.ctx.currentTime, on ? 0.04 : 0.08);
 }
-function syncSoundUI() {
-  $('soundChk').checked = !!profile.sound; $('volIn').value = String(Math.round(profile.volume * 100)); $('volIn').disabled = !profile.sound;
-  const m = $('muteBtn'); m.textContent = profile.sound ? 'Sound on' : 'Sound off'; m.setAttribute('aria-pressed', String(!profile.sound));
+/* calm generative music: slow pad chords, a soft bass note and gentle pentatonic plucks through an echo */
+const BAR = 8;
+const PROG = [[36, [60, 64, 67, 71]], [33, [57, 60, 64, 67]], [29, [57, 60, 65, 69]], [31, [55, 59, 62, 67]]];
+const PENTA = [72, 74, 76, 79, 81, 84, 86];
+const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+function musicInit() {
+  const c = sfx.ctx;
+  music.gain = c.createGain(); music.gain.gain.value = profile.music ? 0.5 : 0; music.gain.connect(sfx.master);
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200; lp.connect(music.gain);
+  const dl = c.createDelay(2); dl.delayTime.value = 0.48; const fb = c.createGain(); fb.gain.value = 0.42;
+  const dlp = c.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 1400;
+  dl.connect(dlp); dlp.connect(fb); fb.connect(dl); dlp.connect(lp);
+  music.bus = c.createGain(); music.bus.connect(lp); music.bus.connect(dl);
 }
-function toggleSound() { profile.sound = !profile.sound; audioInit(); applyVolume(); if (!profile.sound) setBoostSound(false); save(); syncSoundUI(); }
+function voice(freq, t, attack, hold, release, vol, type, detune) {
+  const c = sfx.ctx, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.value = freq; if (detune) o.detune.value = detune;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack);
+  g.gain.setValueAtTime(vol, t + attack + hold); g.gain.exponentialRampToValueAtTime(0.0001, t + attack + hold + release);
+  o.connect(g); g.connect(music.bus); o.start(t); o.stop(t + attack + hold + release + 0.05);
+}
+function scheduleBar(t) {
+  const [bass, notes] = PROG[music.chord];
+  for (const n of notes) { voice(mtof(n), t, 2.4, BAR - 2.4, 3, 0.022, 'sine', 0); voice(mtof(n), t, 2.8, BAR - 2.8, 3, 0.012, 'triangle', 6); }
+  voice(mtof(bass + 12), t, 1.5, BAR - 1.5, 2.5, 0.05, 'sine', 0);
+  for (let k = 0; k < BAR; k++) {
+    if (Math.random() < 0.42) {
+      const pool = Math.random() < 0.6 ? notes.map((n) => n + 12) : PENTA, n = pool[Math.floor(Math.random() * pool.length)];
+      voice(mtof(n), t + k + Math.random() * 0.4, 0.015, 0.05, 1.6, 0.035, 'triangle', 0);
+    }
+  }
+}
+function musicSchedule() {
+  const c = sfx.ctx; if (!c || c.state !== 'running' || !profile.music || document.hidden || !music.bus) return;
+  const now = c.currentTime; if (music.next < now + 0.05) music.next = now + 0.1;
+  while (music.next < now + 1.2) { scheduleBar(music.next); music.next += BAR; music.chord = (music.chord + 1) % PROG.length; }
+}
+function syncSoundUI() {
+  $('soundChk').checked = !!profile.sound; $('musicChk').checked = !!profile.music; $('volIn').value = String(Math.round(profile.volume * 100));
+  const m = $('muteBtn'); m.textContent = profile.sound ? 'Sound on' : 'Sound off'; m.setAttribute('aria-pressed', String(!profile.sound));
+  const mu = $('musicBtn'); mu.textContent = profile.music ? 'Music on' : 'Music off'; mu.setAttribute('aria-pressed', String(!profile.music));
+}
+function toggleSound() { profile.sound = !profile.sound; audioUnlock(); applyVolume(); if (!profile.sound) setBoostSound(false); save(); syncSoundUI(); }
+function toggleMusic() { profile.music = !profile.music; audioUnlock(); applyVolume(); save(); syncSoundUI(); }
 
 /* ================= save file (.zip) ================= */
 const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -2034,14 +2192,27 @@ async function importSave(file) {
 /* ================= input ================= */
 function activity() { input.last = performance.now(); }
 const blurIfPlaying = () => { if (mode === 'play' && document.activeElement && document.activeElement.blur) document.activeElement.blur(); };
-canvas.addEventListener('pointermove', (e) => { input.px = e.clientX - canvasRect.left; input.py = e.clientY - canvasRect.top; input.has = true; if (!(input.left || input.right)) input.mode = e.pointerType === 'touch' ? 'touch' : 'mouse'; activity(); });
-canvas.addEventListener('pointerdown', (e) => {
-  input.px = e.clientX - canvasRect.left; input.py = e.clientY - canvasRect.top; input.has = true; input.mode = e.pointerType === 'touch' ? 'touch' : 'mouse';
-  if (e.pointerType === 'mouse' && e.button === 0) input.mBoost = true;
-  if (e.pointerType === 'touch') { try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ } }
+const joy = { active: false, id: -1, ox: 0, oy: 0, x: 0, y: 0 };
+canvas.addEventListener('pointermove', (e) => {
+  const x = e.clientX - canvasRect.left, y = e.clientY - canvasRect.top;
+  if (e.pointerType === 'touch') {
+    if (joy.active && e.pointerId === joy.id) { joy.x = x; joy.y = y; const dx = x - joy.ox, dy = y - joy.oy; if (dx * dx + dy * dy > 100) { input.joyAng = Math.atan2(dy, dx); input.mode = 'joy'; } }
+  } else { input.px = x; input.py = y; input.has = true; if (!(input.left || input.right)) input.mode = 'mouse'; }
   activity();
 });
-const endPointer = (e) => { if (e.pointerType === 'mouse') input.mBoost = false; };
+canvas.addEventListener('pointerdown', (e) => {
+  const x = e.clientX - canvasRect.left, y = e.clientY - canvasRect.top;
+  if (e.pointerType === 'touch') {
+    if (!joy.active) { joy.active = true; joy.id = e.pointerId; joy.ox = joy.x = x; joy.oy = joy.y = y; }
+    else input.tBoost2 = true;
+    try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ }
+  } else { input.px = x; input.py = y; input.has = true; input.mode = 'mouse'; if (e.button === 0) input.mBoost = true; }
+  activity();
+});
+const endPointer = (e) => {
+  if (e.pointerType === 'mouse') input.mBoost = false;
+  else if (e.pointerType === 'touch') { if (e.pointerId === joy.id) { joy.active = false; joy.id = -1; } else input.tBoost2 = false; }
+};
 canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
 window.addEventListener('blur', () => { input.mBoost = input.kBoost = input.tBoost = input.left = input.right = false; });
 window.addEventListener('keydown', (e) => {
@@ -2052,6 +2223,7 @@ window.addEventListener('keydown', (e) => {
   else if (k === 'ArrowRight' || k === 'KeyD') { input.right = true; input.mode = 'keys'; }
   else if (k === 'KeyB') { if (mode === 'play' && !e.repeat) setBot(!botDriving, 'manual'); }
   else if (k === 'KeyM') { if (!e.repeat) toggleSound(); }
+  else if (k === 'KeyN') { if (!e.repeat) toggleMusic(); }
   else return;
   activity();
 });
@@ -2101,13 +2273,14 @@ $('trainDone').addEventListener('click', () => {
 });
 $('exportBtn').addEventListener('click', exportSave);
 $('importIn').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) importSave(f); e.target.value = ''; });
-$('soundChk').addEventListener('change', (e) => { profile.sound = e.target.checked; audioInit(); applyVolume(); if (!profile.sound) setBoostSound(false); save(); syncSoundUI(); });
-$('volIn').addEventListener('input', (e) => { profile.volume = clamp(Number(e.target.value) / 100, 0, 1); audioInit(); applyVolume(); saveSoon(); });
+$('soundChk').addEventListener('change', (e) => { profile.sound = e.target.checked; audioUnlock(); applyVolume(); if (!profile.sound) setBoostSound(false); save(); syncSoundUI(); });
+$('volIn').addEventListener('input', (e) => { profile.volume = clamp(Number(e.target.value) / 100, 0, 1); audioUnlock(); applyVolume(); saveSoon(); });
 $('volIn').addEventListener('change', () => SFX.eat(2));
 $('muteBtn').addEventListener('click', () => { toggleSound(); blurIfPlaying(); });
-document.addEventListener('pointerdown', audioInit, true);
-document.addEventListener('keydown', audioInit, true);
-document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn') SFX.click(); }, true);
+for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(ev, audioUnlock, true);
+$('musicChk').addEventListener('change', (e) => { profile.music = e.target.checked; audioUnlock(); applyVolume(); save(); syncSoundUI(); });
+$('musicBtn').addEventListener('click', () => { toggleMusic(); blurIfPlaying(); });
+document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn') SFX.click(); }, true);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); if (online.room) sendPresence(performance.now()); });
 window.addEventListener('pagehide', () => save());
 window.addEventListener('resize', resize);
