@@ -282,6 +282,13 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   .big{font-size:24px}
   .iqbar{width:30px}
   #roomText:empty{display:none}
+  .roomchip.has-invite{flex-wrap:wrap;row-gap:3px;border-radius:14px;padding:4px}
+  .roomchip.has-invite #roomText{flex-basis:100%;padding-left:5px}
+  .roomchip.has-invite #musicBtn{display:none}
+  .roomchip.has-invite .chipbtn.icon{width:26px;height:26px}
+  .roomchip.has-invite{gap:3px}
+  .roomchip.has-invite #exitBtn{font-size:0;width:26px;height:26px;padding:0;display:inline-grid;place-items:center}
+  .roomchip.has-invite #exitBtn::before{content:"\2715";font-size:12px;line-height:1}
   .roomchip{padding-left:3px}
   .me-row{grid-template-columns:minmax(0,1fr)}
   .preview{height:76px}
@@ -326,7 +333,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <p class="big" id="lenVal">0</p>
       <p class="sub"><span id="rankVal">Rank –</span><span class="chip" id="driverChip">You</span></p>
       <p class="iqline"><span class="iqbar" aria-hidden="true"><i id="iqFill"></i></span><span id="iqVal">Bot smarts 10%</span><span id="genVal"></span></p>
-      <div class="roomchip"><span id="roomText">Solo</span><button class="chipbtn icon" id="muteBtn" type="button" aria-pressed="true" aria-label="Sound effects" title="Sound effects (M)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg></button><button class="chipbtn icon" id="musicBtn" type="button" aria-pressed="true" aria-label="Calm music" title="Calm music (N)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg></button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
+      <div class="roomchip" id="roomChip"><span id="roomText">Solo</span><button class="chipbtn icon" id="inviteBtn" type="button" hidden aria-label="Invite friends" title="Invite friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M19 8v6"/><path d="M16 11h6"/></svg></button><button class="chipbtn icon" id="muteBtn" type="button" aria-pressed="true" aria-label="Sound effects" title="Sound effects (M)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg></button><button class="chipbtn icon" id="musicBtn" type="button" aria-pressed="true" aria-label="Calm music" title="Calm music (N)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg></button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
     </div>
     <div class="board"><p class="lbl">Biggest noodles</p><ol id="boardList"></ol></div>
     <div class="midstack">
@@ -468,7 +475,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
           <label class="lbl" for="codeIn">Join with a code</label>
           <div class="joinrow"><input id="codeIn" class="input code" maxlength="4" autocomplete="off" placeholder="ABCD" autocapitalize="characters"><button class="btn" id="joinBtn" type="button">Join</button></div>
         </div>
-        <div class="group"><p class="lbl">Rooms open now</p><ul class="roomlist" id="roomList"></ul></div>
+        <div class="group" id="roomListGroup"><p class="lbl">Rooms open now</p><ul class="roomlist" id="roomList"></ul></div>
       </div>
       </div>
       <div class="col">
@@ -1293,7 +1300,7 @@ function step(dt, now) {
 
 /* ================= online play (room capability) ================= */
 const online = { api: null, room: null, code: null, myPeer: null, isHost: false, claim: false, noClaimSince: 0, filler: true, tier: 0, players: 1,
-  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false, avgLt: 0, hostIq: 0.1 };
+  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false, avgLt: 0, hostIq: 0.1, kind: 'room', busy: false };
 function logEat(id) { online.eatLog.push({ id, t: performance.now() }); }
 const tierFor = (n) => (n <= 3 ? 0 : n <= 8 ? 1 : n <= 12 ? 2 : 3);
 function setTier(t) {
@@ -1306,8 +1313,193 @@ function setTier(t) {
 function seedFromCode(code) { let h = 2166136261; for (const ch of code) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 function newCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
 
+/* ---------- direct-connect rooms for the website (PeerJS) ----------
+   GitHub Pages has no game server, so the player who creates a room hosts it:
+   everyone connects straight to the host's browser, and the host passes each
+   player's state on to the others. A free public PeerJS service only helps
+   the browsers find each other. */
+const PEER_PREFIX = 'noodlebots-tt15-', PEER_MAX = 16, PEER_SEND_MS = 80, PEER_TIMEOUT_MS = 15000;
+const PEERJS_URLS = ['https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js', 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js'];
+let peerLib = null;
+function loadPeerLib() {
+  if (window.Peer) return Promise.resolve(window.Peer);
+  if (peerLib) return peerLib;
+  const urls = window.NB_PEERJS_URL ? [window.NB_PEERJS_URL] : PEERJS_URLS;
+  peerLib = new Promise((resolve, reject) => {
+    const tryAt = (i) => {
+      if (i >= urls.length) { peerLib = null; reject({ code: 'no_lib' }); return; }
+      const sc = document.createElement('script'); sc.src = urls[i]; sc.async = true;
+      sc.onload = () => (window.Peer ? resolve(window.Peer) : tryAt(i + 1));
+      sc.onerror = () => { sc.remove(); tryAt(i + 1); };
+      document.head.append(sc);
+    };
+    tryAt(0);
+  });
+  return peerLib;
+}
+const peerOpts = () => Object.assign({ debug: 0 }, window.NB_PEER_OPTS || {});
+function makePeerRoom() {
+  const R = { id: null, my: {}, pres: new Map(), peerH: new Set(), connH: new Set(), errH: new Set(), connected: false, cache: null, pending: false, last: new Map(), dead: false, sentAt: 0, trail: 0 };
+  R.snapshot = () => {
+    if (R.cache) return R.cache;
+    const arr = [];
+    for (const [id, v] of R.pres) arr.push(Object.freeze({ peer: id, by: null, isMe: id === R.id, sameTab: id === R.id, kind: 'viewer', guest: false, presence: v.p, updatedAt: v.t }));
+    return (R.cache = Object.freeze(arr));
+  };
+  R.flush = () => {
+    R.pending = false; R.cache = null;
+    const peers = R.snapshot(), joined = [], updated = [], left = [], ids = new Set();
+    for (const p of peers) { ids.add(p.peer); const before = R.last.get(p.peer); if (before === undefined) joined.push(p); else if (before !== p.presence) updated.push(p); }
+    for (const [id, pr] of R.last) if (!ids.has(id)) left.push({ peer: id, by: null, isMe: false, sameTab: false, kind: 'viewer', guest: false, presence: pr, updatedAt: 0 });
+    R.last = new Map(peers.map((p) => [p.peer, p.presence]));
+    if (!joined.length && !updated.length && !left.length) return;
+    const change = { peers, joined, left, updated };
+    for (const h of R.peerH) { try { h(change); } catch (e) { /* ignore */ } }
+  };
+  R.touch = () => { R.cache = null; if (!R.pending) { R.pending = true; setTimeout(R.flush, 16); } };
+  R.setPres = (id, pr) => { if (!pr || typeof pr !== 'object' || Array.isArray(pr)) return; R.pres.set(id, { p: pr, t: Date.now() }); R.touch(); };
+  R.drop = (id) => { if (R.pres.delete(id)) R.touch(); };
+  R.setConn = (c) => { if (R.connected === c) return; R.connected = c; for (const h of R.connH) { try { h(c); } catch (e) { /* ignore */ } } };
+  R.fail = (code) => { if (R.dead) return; R.dead = true; R.setConn(false); for (const h of R.errH) { try { h({ code, message: code }); } catch (e) { /* ignore */ } } };
+  R.makeApi = (send, close) => ({
+    presence(patch) {
+      if (!patch || typeof patch !== 'object') return Promise.resolve();
+      for (const k of Object.keys(patch)) { if (patch[k] === null) delete R.my[k]; else R.my[k] = patch[k]; }
+      const snap = Object.assign({}, R.my);
+      if (R.id) R.setPres(R.id, snap);
+      const now = Date.now(); clearTimeout(R.trail);
+      if (now - R.sentAt >= PEER_SEND_MS) { R.sentAt = now; send(snap); }
+      else R.trail = setTimeout(() => { R.sentAt = Date.now(); send(Object.assign({}, R.my)); }, PEER_SEND_MS - (now - R.sentAt));
+      return Promise.resolve();
+    },
+    peers: () => R.snapshot(),
+    onPeers(h, onErr) { R.peerH.add(h); if (onErr) R.errH.add(onErr); R.last = new Map(); R.touch(); return () => { R.peerH.delete(h); if (onErr) R.errH.delete(onErr); }; },
+    onConnection(h) { R.connH.add(h); setTimeout(() => { try { h(R.connected); } catch (e) { /* ignore */ } }, 0); return () => R.connH.delete(h); },
+    connected: () => R.connected,
+    leave() { R.dead = true; clearTimeout(R.trail); R.peerH.clear(); R.errH.clear(); R.connH.clear(); close(); return Promise.resolve(); },
+  });
+  return R;
+}
+function hostPeerRoom(Peer, code) {
+  return new Promise((resolve, reject) => {
+    const R = makePeerRoom(), clients = new Map(), seen = new Map(); let settled = false;
+    const peer = new Peer(PEER_PREFIX + code, peerOpts());
+    const relay = (msg, except) => { for (const [id, c] of clients) if (id !== except && c.open) { try { c.send(msg); } catch (e) { /* ignore */ } } };
+    const dog = setInterval(() => {
+      const now = Date.now();
+      for (const [id, c] of clients) if (now - (seen.get(id) || now) > PEER_TIMEOUT_MS) { try { c.send({ t: 'bye' }); } catch (e) { /* ignore */ } setTimeout(() => { try { c.close(); } catch (e) { /* ignore */ } }, 300); clients.delete(id); seen.delete(id); R.drop(id); relay({ t: 'x', id }); }
+    }, 2000);
+    const api = R.makeApi((pr) => relay({ t: 'p', id: R.id, p: pr }), () => { clearInterval(dog); relay({ t: 'end' }); setTimeout(() => { try { peer.destroy(); } catch (e) { /* ignore */ } }, 150); });
+    peer.on('open', (id) => { if (settled) return; R.id = id; R.setConn(true); settled = true; resolve(api); });
+    peer.on('connection', (conn) => {
+      conn.on('open', () => {
+        if (clients.size >= PEER_MAX - 1) { try { conn.send({ t: 'full' }); } catch (e) { /* ignore */ } setTimeout(() => { try { conn.close(); } catch (e) { /* ignore */ } }, 400); return; }
+        clients.set(conn.peer, conn); seen.set(conn.peer, Date.now());
+        const all = []; for (const [id, v] of R.pres) all.push([id, v.p]);
+        try { conn.send({ t: 'snap', all }); } catch (e) { /* ignore */ }
+      });
+      conn.on('data', (m) => {
+        if (!m || typeof m !== 'object' || !clients.has(conn.peer)) return;
+        seen.set(conn.peer, Date.now());
+        if (m.t === 'bye') { try { conn.close(); } catch (e) { /* ignore */ } gone(); return; }
+        if (m.t !== 'p' || !m.p || typeof m.p !== 'object') return;
+        let len = 0; try { len = JSON.stringify(m.p).length; } catch (e) { return; }
+        if (len > 6000) return;
+        R.setPres(conn.peer, m.p); relay({ t: 'p', id: conn.peer, p: m.p }, conn.peer);
+      });
+      function gone() { if (!clients.has(conn.peer)) return; clients.delete(conn.peer); seen.delete(conn.peer); R.drop(conn.peer); relay({ t: 'x', id: conn.peer }); }
+      conn.on('close', gone); conn.on('error', gone);
+    });
+    peer.on('disconnected', () => { if (!R.dead) setTimeout(() => { try { if (!R.dead && peer.disconnected && !peer.destroyed) peer.reconnect(); } catch (e) { /* ignore */ } }, 1500); });
+    peer.on('error', (e) => {
+      if (settled) return;
+      settled = true; try { peer.destroy(); } catch (er) { /* ignore */ }
+      const type = e && e.type;
+      clearInterval(dog);
+      reject({ code: type === 'unavailable-id' ? 'taken' : type === 'browser-incompatible' ? 'unsupported' : 'network' });
+    });
+    setTimeout(() => { if (!settled) { settled = true; clearInterval(dog); try { peer.destroy(); } catch (e) { /* ignore */ } reject({ code: 'network' }); } }, 12000);
+  });
+}
+function joinPeerRoom(Peer, code) {
+  return new Promise((resolve, reject) => {
+    const R = makePeerRoom(); let settled = false, conn = null, heard = Date.now();
+    const peer = new Peer(peerOpts());
+    const dog = setInterval(() => { if (settled && !R.dead && Date.now() - heard > PEER_TIMEOUT_MS) { R.fail('host_left'); clearInterval(dog); try { peer.destroy(); } catch (e) { /* ignore */ } } }, 2000);
+    const finish = (err) => { if (settled) return; settled = true; clearInterval(dog); try { peer.destroy(); } catch (e) { /* ignore */ } reject(err); };
+    const api = R.makeApi((pr) => { if (conn && conn.open) { try { conn.send({ t: 'p', p: pr }); } catch (e) { /* ignore */ } } }, () => {
+      clearInterval(dog);
+      if (conn && conn.open) { try { conn.send({ t: 'bye' }); } catch (e) { /* ignore */ } }
+      setTimeout(() => { try { peer.destroy(); } catch (e) { /* ignore */ } }, 150);
+    });
+    peer.on('open', (id) => {
+      R.id = id;
+      conn = peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' });
+      conn.on('data', (m) => {
+        if (!m || typeof m !== 'object') return;
+        heard = Date.now();
+        if (m.t === 'bye' || m.t === 'end') { if (settled) { R.fail(m.t === 'bye' ? 'kicked' : 'host_left'); clearInterval(dog); try { peer.destroy(); } catch (e) { /* ignore */ } } return; }
+        if (m.t === 'snap' && Array.isArray(m.all)) {
+          for (const e of m.all.slice(0, PEER_MAX)) if (Array.isArray(e) && typeof e[0] === 'string' && e[0] !== R.id) R.setPres(e[0], e[1]);
+          R.setConn(true); heard = Date.now(); if (!settled) { settled = true; resolve(api); }
+        } else if (m.t === 'p' && typeof m.id === 'string' && m.id !== R.id) R.setPres(m.id, m.p);
+        else if (m.t === 'x' && typeof m.id === 'string') R.drop(m.id);
+        else if (m.t === 'full') finish({ code: 'full' });
+      });
+      conn.on('close', () => { if (!settled) finish({ code: 'not_found' }); else { R.fail('host_left'); clearInterval(dog); } });
+      conn.on('error', () => { if (!settled) finish({ code: 'not_found' }); });
+    });
+    peer.on('disconnected', () => { if (!R.dead && settled) setTimeout(() => { try { if (!R.dead && peer.disconnected && !peer.destroyed) peer.reconnect(); } catch (e) { /* ignore */ } }, 1500); });
+    peer.on('error', (e) => {
+      const type = e && e.type;
+      if (!settled) finish({ code: type === 'peer-unavailable' ? 'not_found' : type === 'browser-incompatible' ? 'unsupported' : 'network' });
+    });
+    setTimeout(() => finish({ code: 'not_found' }), 15000);
+  });
+}
+function makePeerApi() {
+  return {
+    presence: () => Promise.resolve(),
+    peers: () => [],
+    onPeers: () => () => {},
+    onConnection: (h) => { setTimeout(() => h(true), 0); return () => {}; },
+    async join(code, create) { const Peer = await loadPeerLib(); return create ? hostPeerRoom(Peer, code) : joinPeerRoom(Peer, code); },
+  };
+}
+function setRoomHash(code) {
+  if (online.kind !== 'peer') return;
+  try { history.replaceState(null, '', code ? '#room=' + code : location.pathname + location.search); } catch (e) { /* ignore */ }
+}
+async function shareInvite() {
+  if (!online.code) return;
+  const code = online.code;
+  if (location.protocol === 'file:') { toast(`Room code: ${code}`); return; }
+  const url = location.origin + location.pathname + '#room=' + code;
+  try { if (navigator.share) { await navigator.share({ title: 'Noodle Bots', text: `Join my Noodle Bots room ${code}!`, url }); return; } }
+  catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(url); toast(`Invite link copied. Room code: ${code}`); }
+  catch (e) { toast(`Room code: ${code}`); }
+}
+function dropToSolo(msg) {
+  if (!online.room) return;
+  for (const [, rs] of online.remotes) if (rs.snake) { const i = snakes.indexOf(rs.snake); if (i >= 0) snakes.splice(i, 1); rs.snake.alive = false; }
+  if (!online.isHost) startHosting();
+  const r = online.room;
+  online.unsubs.forEach((u) => { try { u(); } catch (e) { /* ignore */ } });
+  online.unsubs = []; online.room = null; online.code = null; online.isHost = false; online.claim = false; online.lastHostPres = null;
+  online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear();
+  try { r.leave(); } catch (e) { /* ignore */ }
+  gameKind = 'solo'; worldTargetR = SOLO_R; activeSlots = SOLO_FOOD;
+  setRoomHash(null); updateRoomChip(); toast(msg);
+}
+
 function initOnline() {
   online.apiTried = false;
+  if (!(window.claude && typeof window.claude.use === 'function')) {
+    online.kind = 'peer'; online.api = makePeerApi(); online.apiTried = true; online.connected = true;
+    return;
+  }
+  online.kind = 'room';
   try {
     const p = window.claude && typeof window.claude.use === 'function' ? window.claude.use('room') : Promise.resolve(null);
     p.then((api) => {
@@ -1342,21 +1534,43 @@ async function joinRoom(code, create) {
   code = code.toUpperCase();
   if (!/^[A-Z]{4}$/.test(code)) { setOnlineStatus('Room codes are 4 letters, like KXPT.', true); return; }
   if (online.room) await leaveRoom(true);
-  setOnlineStatus(`Joining room ${code}…`);
+  if (online.busy) return;
+  online.busy = true; $('createBtn').disabled = $('joinBtn').disabled = true;
+  setOnlineStatus(create ? 'Opening your room…' : `Joining room ${code}…`);
   let r;
-  try { r = await online.api.join('nb-' + code.toLowerCase()); }
-  catch (e) { setOnlineStatus(e && e.code === 'limit_reached' ? 'Too many rooms open right now. Try again in a moment.' : `Couldn't join room ${code}. Check the code and try again.`, true); return; }
+  try {
+    if (online.kind === 'peer') {
+      for (let tries = 0; ; tries++) {
+        try { r = await online.api.join(code, !!create); break; }
+        catch (e) { if (create && e && e.code === 'taken' && tries < 4) { code = newCode(); continue; } throw e; }
+      }
+    } else r = await online.api.join('nb-' + code.toLowerCase());
+  } catch (e) {
+    const c = e && e.code;
+    setOnlineStatus(c === 'limit_reached' ? 'Too many rooms open right now. Try again in a moment.'
+      : c === 'full' ? `Room ${code} is full (${PEER_MAX} players max).`
+      : c === 'not_found' ? `Couldn't find room ${code}. Check the code, and make sure whoever made the room still has the game open.`
+      : c === 'network' || c === 'no_lib' ? "Couldn't reach the matchmaking service. Check your internet connection and try again."
+      : c === 'unsupported' ? "This browser can't do online play. Try Safari or Chrome."
+      : `Couldn't join room ${code}. Check the code and try again.`, true);
+    setRoomHash(null);
+    return;
+  } finally { online.busy = false; $('createBtn').disabled = $('joinBtn').disabled = false; }
   online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0;
   online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = [];
   online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear();
   gameKind = 'online'; myDeaths = 0;
   setupWorld(seedFromCode(code), TIERS[0].R, TIERS[0].food);
-  try { online.unsubs.push(r.onPeers(onRoomPeers, () => { toast('Lost the connection to the room.'); })); } catch (e) { /* ignore */ }
+  try { online.unsubs.push(r.onPeers(onRoomPeers, (err) => {
+    if (online.kind !== 'peer') { toast('Lost the connection to the room.'); return; }
+    dropToSolo(err && err.code === 'kicked' ? "You were away too long, so you left the room. You're playing solo now." : "The host left, so the room closed. You're playing solo now.");
+  })); } catch (e) { /* ignore */ }
   try { online.unsubs.push(r.onConnection((c) => { online.connected = c; updateRoomChip(); })); } catch (e) { /* ignore */ }
   setLobbyPresence();
   startGame({ watch: false });
   sendPresence(performance.now());
   toast(create ? `Room ${code} is open. Tell your friends the code!` : `You joined room ${code}`);
+  setRoomHash(code); updateRoomChip();
 }
 async function leaveRoom(silent) {
   const r = online.room;
@@ -1364,6 +1578,7 @@ async function leaveRoom(silent) {
   online.unsubs = []; online.room = null; online.code = null; online.isHost = false; online.claim = false;
   online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear();
   if (r) { try { await r.leave(); } catch (e) { /* ignore */ } }
+  setRoomHash(null);
   setLobbyPresence();
   if (!silent) { setupSoloWorld(); showMenu(); }
 }
@@ -1826,6 +2041,8 @@ function updateRoomChip() {
     t.textContent = W <= 360 ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${TIERS[online.tier].name}${online.room && !online.connected ? ' · reconnecting' : ''}`;
     $('exitBtn').textContent = 'Leave';
   } else { t.textContent = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
+  const inv = gameKind === 'online' && !!online.code && online.kind === 'peer';
+  $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv);
 }
 function updateDock() {
   const top = $('dockTop'), sub = $('dockSub'), meter = $('dockMeter');
@@ -1980,6 +2197,14 @@ function updateOnlineScreen() {
     body.hidden = true; return;
   }
   body.hidden = false;
+  if (online.kind === 'peer') {
+    $('roomListGroup').hidden = true;
+    if (!online.busy) setOnlineStatus(location.protocol === 'file:'
+      ? 'Create a room and tell your friends the 4-letter code. Online play works best on the website version of the game.'
+      : "Create a room, then send your friends the 4-letter code or the invite link. You're the host, so keep the game open on your screen while friends play.");
+    return;
+  }
+  $('roomListGroup').hidden = false;
   const { rooms, here } = lobbyRooms();
   setOnlineStatus(online.connected === false ? 'Connecting to the lobby…' : here.length ? `Here now and not in a room: ${here.slice(0, 6).join(', ')}${here.length > 6 ? '…' : ''}` : 'Create a room, then tell your friends the 4-letter code. Rooms open now show up below.');
   const ul = $('roomList'); ul.textContent = '';
@@ -2380,12 +2605,13 @@ $('soundChk').addEventListener('change', (e) => { profile.sound = e.target.check
 $('volIn').addEventListener('input', (e) => { profile.volume = clamp(Number(e.target.value) / 100, 0, 1); audioUnlock(); applyVolume(); saveSoon(); });
 $('volIn').addEventListener('change', () => SFX.eat(2));
 $('muteBtn').addEventListener('click', () => { toggleSound(); blurIfPlaying(); });
+$('inviteBtn').addEventListener('click', () => { shareInvite(); blurIfPlaying(); });
 for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(ev, audioUnlock, true);
 $('musicChk').addEventListener('change', (e) => { profile.music = e.target.checked; audioUnlock(); applyVolume(); save(); syncSoundUI(); });
 $('musicBtn').addEventListener('click', () => { toggleMusic(); blurIfPlaying(); });
-document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn') SFX.click(); }, true);
+document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn' && t.id !== 'inviteBtn') SFX.click(); }, true);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); if (online.room) sendPresence(performance.now()); });
-window.addEventListener('pagehide', () => save());
+window.addEventListener('pagehide', () => { save(); if (online.kind === 'peer' && online.room) { try { online.room.leave(); } catch (e) { /* ignore */ } } });
 window.addEventListener('resize', () => { resize(); updateDock(); updateRoomChip(); boardTick = 0; });
 
 /* ================= main loop ================= */
@@ -2422,6 +2648,11 @@ function boot() {
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
   showScreen('menu');
   initOnline();
+  if (online.kind === 'peer') {
+    const m = /^#(?:room=)?([A-Za-z]{4})$/.exec(location.hash || '');
+    if (m) { showScreen('online'); updateOnlineScreen(); $('codeIn').value = m[1].toUpperCase(); joinRoom(m[1], false); }
+  }
+  if (window.NB_DEBUG) window.__nb = { info: () => ({ kind: gameKind, mode, players: online.players, isHost: online.isHost, code: online.code, me: online.myPeer, snakes: snakes.map((sn) => [sn.kind, sn.name, Math.round(sn.x), Math.round(sn.y)]) }) };
   requestAnimationFrame((t) => { last = t; loop(t); });
 }
 const hot = window.claude && window.claude.hot;
