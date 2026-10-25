@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#17122c">
-<style>html{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);box-sizing:border-box;background:#17122c}</style>
+<style>html{background:#17122c}</style>
 <title>Noodle Bots</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -354,6 +354,12 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 @media (max-height:500px) and (orientation:landscape){.modebar{position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));padding:5px 10px;gap:2px}.mb-role{font-size:12px}.modebar .pips{display:none}}
 @media (prefers-reduced-motion:reduce){.mb-team.low .pips i.on{animation:none}}
 @media (prefers-reduced-motion:reduce){.pulse,.toast{animation:none}.btn,.meter > div{transition:none}}
+/* iPhones fade the top of a full-screen web app a little below the clock, so the arena runs under it and the HUD and menus sit clear of it */
+#hud{padding-top:max(14px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
+.screen{padding-top:max(24px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(24px,calc(env(safe-area-inset-bottom,0px) + 8px))}
+@media (max-width:640px) and (orientation:portrait){#hud{padding-top:max(10px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(18px,env(safe-area-inset-bottom,0px))}}
+@media (max-height:500px) and (orientation:landscape){#hud{padding-top:max(8px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}.screen{padding-top:max(12px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}}
+@media (max-height:320px) and (orientation:landscape){#hud{padding-top:max(6px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(6px,env(safe-area-inset-bottom,0px))}}
 /* ---------- abilities ---------- */
 @media (min-width:1000px){.modetabs{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .abils{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
