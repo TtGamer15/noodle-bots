@@ -50,7 +50,10 @@ h1,h2,p{margin:0}
 /* ---------- HUD ---------- */
 #hud{position:absolute;inset:0;pointer-events:none;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;gap:10px;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));transition:opacity .25s}
 #app:not(.playing) #hud{opacity:0;visibility:hidden}
-.stats{grid-column:1;grid-row:1;align-self:start;justify-self:start;display:grid;gap:3px;min-width:0}
+.stats{grid-column:1;grid-row:1;align-self:start;justify-self:stretch;display:grid;grid-template-columns:minmax(0,1fr);justify-items:start;gap:3px;min-width:0}
+.stats > *{max-width:100%;min-width:0}
+.iqline{overflow:hidden}
+.iqline span:last-child{overflow:hidden;text-overflow:ellipsis}
 .big{font-family:var(--f-num);font-weight:700;font-size:clamp(28px,5vw,40px);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 2px 0 rgba(0,0,0,.35)}
 .sub{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--muted)}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(244,239,254,.1);color:var(--ink)}
@@ -94,7 +97,7 @@ h1,h2,p{margin:0}
 .btn.bot:hover:not(:disabled){background:color-mix(in srgb,var(--bot) 86%,white)}
 .btn.bot.driving{background:transparent;color:var(--bot);border-color:var(--bot)}
 .btn.danger{background:var(--danger);color:var(--danger-ink);border-color:transparent}
-.btn.big{font-size:17px;padding:15px 18px;border-radius:14px;width:100%}
+.btn.big{font-size:17px;padding:15px 18px;border-radius:14px;width:100%;white-space:normal;line-height:1.2;text-align:center}
 .btn.small{font-size:13px;padding:8px 12px;border-radius:10px}
 .btn svg{flex:none}
 kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.2)}
@@ -125,8 +128,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .chipbtn.icon[aria-pressed="false"] .i-on,.chipbtn.icon[aria-pressed="true"] .i-off{display:none}
 .chipbtn.icon[aria-pressed="false"]{color:var(--muted)}
 .roomchip .chipbtn{flex:none}
-.menu-grid{display:grid;gap:16px;min-width:0}
-.menu-grid > .col{display:grid;gap:16px;align-content:start;min-width:0}
+.menu-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+.menu-grid > .col{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-content:start;min-width:0}
 @media (min-width:700px){.menu-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}}
 @media (min-width:1500px) and (min-height:860px){.card,.stats,.board,.dock,.midstack,#minimap{zoom:1.2}}
 .opt .sw{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px;border:1px solid var(--line)}
@@ -137,7 +140,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 
 /* ---------- screens ---------- */
 .screen{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:radial-gradient(ellipse at center,rgba(23,18,44,.3),rgba(12,9,26,.84))}
-.card{width:100%;max-width:460px;margin-block:auto;box-sizing:border-box;background:var(--panel-strong);border:1px solid var(--line);border-radius:22px;padding:22px;display:grid;gap:16px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.card{width:100%;max-width:460px;margin-block:auto;box-sizing:border-box;background:var(--panel-strong);border:1px solid var(--line);border-radius:22px;padding:22px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
 .card h2{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.02em;text-wrap:balance}
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .logo{font-family:var(--f-display);font-weight:400;font-size:clamp(44px,12vw,64px);line-height:.92;letter-spacing:.01em;color:var(--ink);text-shadow:4px 4px 0 var(--accent);text-wrap:balance}
@@ -147,7 +150,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .preview{width:100%;height:96px;display:block;border-radius:14px;background:var(--floor);border:1px solid var(--line)}
 .preview.big{height:140px}
 .me-info{display:grid;gap:8px;min-width:0}
-.play-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.play-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .botcard{border:1px solid color-mix(in srgb,var(--bot) 35%,transparent);background:color-mix(in srgb,var(--bot) 6%,transparent);border-radius:16px;padding:14px;display:grid;gap:10px}
 .botcard-head{display:flex;align-items:center;gap:10px}
 .botface{width:40px;height:40px;border-radius:12px;background:var(--bot);color:var(--bot-ink);display:grid;place-items:center;flex:none}
@@ -209,7 +212,12 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .result b{font-family:var(--f-num);font-size:40px;line-height:1;color:var(--bot);font-variant-numeric:tabular-nums}
 .result span{font-size:13px;color:var(--muted);line-height:1.45}
 /* Phones held upright */
-@media (max-width:640px){
+@media (max-width:640px) and (orientation:portrait){
+  .bottom{grid-template-columns:minmax(0,1fr);gap:6px}
+  #minimap{grid-row:1;justify-self:end}
+  .dock{grid-row:2;justify-self:stretch}
+  .dock .btn{flex:1 1 0;min-width:0}
+  .boost{min-width:0}
   #hud{gap:8px;padding-block:10px}
   .stats{gap:2px}
   .big{font-size:28px}
@@ -237,7 +245,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 }
 @media (pointer:coarse) and (orientation:portrait){#hud{padding-bottom:max(18px,env(safe-area-inset-bottom,0px))}}
 /* Phones turned sideways */
-@media (max-height:500px){
+@media (max-height:500px) and (orientation:landscape){
   #hud{gap:6px;padding-block:8px}
   .stats{gap:1px}
   .lbl{font-size:10px}
@@ -265,6 +273,44 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   #accChart{height:80px}
   .result b{font-size:30px}
   .btn.big{padding:12px 16px;font-size:16px}
+}
+/* Very narrow upright screens (small phones, or zoomed-in Safari) */
+@media (max-width:360px) and (orientation:portrait){
+  .board{width:118px;padding:6px 8px}
+  .board ol{font-size:11px}
+  .board li{gap:4px}
+  .big{font-size:24px}
+  .iqbar{width:30px}
+  #roomText:empty{display:none}
+  .roomchip{padding-left:3px}
+  .me-row{grid-template-columns:minmax(0,1fr)}
+  .preview{height:76px}
+  .play-row{grid-template-columns:minmax(0,1fr)}
+  .slots{grid-template-columns:minmax(0,1fr)}
+  .trio b{font-size:16px}
+  .card{padding:14px}
+  .logo{font-size:40px}
+  .btn.big{font-size:16px;padding:13px 14px}
+  .dock .btn{padding:10px 6px;gap:6px;font-size:12.5px}
+}
+/* Very short sideways screens */
+@media (max-height:320px) and (orientation:landscape){
+  #hud{padding-block:6px;gap:4px}
+  .stats > .lbl,.board .lbl{display:none}
+  .big{font-size:20px}
+  .sub,.iqline{font-size:11px}
+  .board{padding:5px 9px;width:158px}
+  .board ol{margin-top:0;font-size:11px}
+  #minimap{width:56px;height:56px}
+  .roomchip{margin-top:2px}
+  .chipbtn.icon{width:26px;height:24px}
+  .dock{padding:4px;gap:5px}
+  .dock .btn{padding:7px 10px;font-size:12px}
+  .boost{min-height:34px;min-width:66px}
+  .teach{width:140px}
+  .teach-sub{display:none}
+  .logo{font-size:32px}
+  .card{padding:12px;gap:10px}
 }
 @media (prefers-reduced-motion:reduce){.pulse,.toast{animation:none}.btn,.meter > div{transition:none}}
 </style>
@@ -1753,7 +1799,7 @@ let boardTick = 0;
 function updateHud() {
   if (player && player.alive) $('lenVal').textContent = fmt(player.mass * 10);
   if (++boardTick % 12 !== 1) return;
-  const iqp = Math.round(npcIQ * 100); $('iqVal').textContent = `Bot smarts ${iqp}%`; $('iqFill').style.width = iqp + '%';
+  const iqp = Math.round(npcIQ * 100); $('iqVal').textContent = W <= 360 ? `Smarts ${iqp}%` : `Bot smarts ${iqp}%`; $('iqFill').style.width = iqp + '%';
   $('genVal').textContent = gameKind === 'solo' || online.isHost ? `· Gen ${fmt(profile.npcGen + 1)}` : '';
   const list = snakes.slice().sort((a, b) => b.mass - a.mass);
   const rank = player ? list.indexOf(player) + 1 : 0;
@@ -1777,9 +1823,9 @@ function updateRoomChip() {
   const t = $('roomText');
   if (gameKind === 'online' && online.code) {
     const n = online.players;
-    t.textContent = `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${TIERS[online.tier].name}${online.room && !online.connected ? ' · reconnecting' : ''}`;
+    t.textContent = W <= 360 ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${TIERS[online.tier].name}${online.room && !online.connected ? ' · reconnecting' : ''}`;
     $('exitBtn').textContent = 'Leave';
-  } else { t.textContent = botWatch ? 'Solo · watching your bot' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
+  } else { t.textContent = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
 }
 function updateDock() {
   const top = $('dockTop'), sub = $('dockSub'), meter = $('dockMeter');
@@ -1788,7 +1834,7 @@ function updateDock() {
     top.textContent = 'Training your bot…'; sub.textContent = `${pct}% · keep playing`; meter.style.width = pct + '%';
   } else if (!botReady()) {
     top.textContent = 'Bot: not trained yet';
-    sub.textContent = sampCount >= MIN_TRAIN ? `${fmt(sampCount)} moves recorded · ready to train` : `${fmt(sampCount)} / ${MIN_TRAIN} moves recorded`;
+    sub.textContent = sampCount >= MIN_TRAIN ? `${fmt(sampCount)} moves · ready to train` : `${fmt(sampCount)} / ${MIN_TRAIN} moves recorded`;
     meter.style.width = Math.min(100, sampCount / MIN_TRAIN * 100) + '%';
   } else {
     const lv = botLevel(); top.textContent = `Level ${lv.n} ${lv.name}`;
@@ -2340,7 +2386,7 @@ $('musicBtn').addEventListener('click', () => { toggleMusic(); blurIfPlaying(); 
 document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn') SFX.click(); }, true);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); if (online.room) sendPresence(performance.now()); });
 window.addEventListener('pagehide', () => save());
-window.addEventListener('resize', () => { resize(); updateDock(); boardTick = 0; });
+window.addEventListener('resize', () => { resize(); updateDock(); updateRoomChip(); boardTick = 0; });
 
 /* ================= main loop ================= */
 let last = performance.now(), saveT = 0;
