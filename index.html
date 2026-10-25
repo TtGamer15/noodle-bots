@@ -44,7 +44,7 @@
 html,body{height:100%}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
-#app{position:relative;height:100%;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#app{position:fixed;left:0;top:0;right:0;height:var(--app-h,100%);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #app input,#app textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
 h1,h2,p{margin:0}
@@ -121,6 +121,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .soundrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .savebox{display:grid;gap:10px;padding:14px;border-radius:16px;border:1px solid var(--line)}
 .savemsg{font-size:13px;color:var(--muted);min-height:1.2em}
+.version{font:500 12px var(--f-num);color:var(--muted);text-align:center;letter-spacing:.08em;opacity:.8}
 .card.wide{max-width:980px}
 .btn,.opt,.swatch,.chipbtn,.switch{touch-action:manipulation}
 .iqline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -526,6 +527,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       </div>
       </div>
       </div>
+      <p class="version" id="versionLine">Noodle Bots</p>
     </div>
   </section>
 
@@ -675,7 +677,8 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const STORE_KEY = 'noodlebots.v2';
+const GAME_VERSION = '2.0';
+const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
 const PATTERNS = [
@@ -776,7 +779,7 @@ function applyProfileData(p) {
   if (typeof p.npcGen === 'number' && isFinite(p.npcGen)) profile.npcGen = clamp(Math.floor(p.npcGen), 0, 1e9);
 }
 let saveTimer = 0;
-function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 500); }
+function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => save(false), 500); }
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY); if (!raw) return;
@@ -785,18 +788,25 @@ function load() {
     newSince = clamp(int(d.newSince), 0, 1e7);
     if (d.weights) { const b = makeBrain(); if (setWeights(b, b64ToBytes(d.weights))) brain = b; }
     if (d.samples) loadSamples(b64ToBytes(d.samples));
+    else { const mv = localStorage.getItem(MOVES_KEY); if (mv) loadSamples(b64ToBytes(mv)); }
   } catch (e) { /* storage unavailable or corrupt: start fresh */ }
 }
-function save() {
+// Your settings, stats and bot brain are small and get saved often. The list of recorded moves is big
+// (a few megabytes), so it's only saved when you're not in the middle of a game, which keeps play smooth.
+function save(withMoves) {
   const p = Object.assign({}, profile, { look: packLook(profile.look) });
-  const base = { v: 2, profile: p, newSince, weights: brain && profile.sessions > 0 ? bytesToB64(getWeightBytes(brain)) : null };
+  const d = { v: 3, profile: p, newSince, weights: brain && profile.sessions > 0 ? bytesToB64(getWeightBytes(brain)) : null };
+  let ok = false;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); ok = true; } catch (e) { /* storage full or blocked */ }
+  if (withMoves !== false) saveMoves();
+  return ok;
+}
+function saveMoves() {
   for (const keep of [SAVE_SAMPLES, 4000, 0]) {
     try {
-      const d = Object.assign({}, base);
-      if (keep > 0 && sampCount > 0) d.samples = bytesToB64(packSamples(keep));
-      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+      if (keep > 0 && sampCount > 0) localStorage.setItem(MOVES_KEY, bytesToB64(packSamples(keep))); else localStorage.removeItem(MOVES_KEY);
       return true;
-    } catch (e) { /* try smaller */ }
+    } catch (e) { try { localStorage.removeItem(MOVES_KEY); } catch (er) { /* ignore */ } }
   }
   return false;
 }
@@ -1189,7 +1199,47 @@ function moveRemote(s, dt, now) {
   s.ang = wrapA(s.ang + wrapA(ah - s.ang) * Math.min(1, dt * 14));
   s.targetAng = ah; s.boosting = s.netB;
   s.ghost = s.hid || now - s.netT > 2500;
-  bodyFollow(s);
+  if (s.netPath && now - s.netPathT < 1500) bodyFromPath(s); else bodyFollow(s);
+}
+// Rebuild a friend's body from the shape their own screen sent, so everyone sees (and bumps into) the same snake.
+function bodyFromPath(s) {
+  updateSize(s);
+  const segs = s.segs, target = segCount(s.mass), P = s.netPath, np = s.netPathN, sp = s.spacing;
+  while (segs.length < target) segs.push({ x: s.x, y: s.y });
+  if (segs.length > target) segs.length = Math.max(2, target);
+  const ca = Math.cos(s.ang), sa = Math.sin(s.ang);
+  let k = 0; while (k < np - 1 && (P[2 * k] - s.x) * ca + (P[2 * k + 1] - s.y) * sa > 0) k++;
+  let ax = s.x, ay = s.y, bx = P[2 * k], by = P[2 * k + 1], ux = -ca, uy = -sa;
+  segs[0].x = ax; segs[0].y = ay;
+  for (let i = 1; i < segs.length; i++) {
+    let rem = sp;
+    for (;;) {
+      const dx = bx - ax, dy = by - ay, d = Math.sqrt(dx * dx + dy * dy);
+      if (d >= rem) { ux = dx / d; uy = dy / d; ax += ux * rem; ay += uy * rem; break; }
+      rem -= d; ax = bx; ay = by;
+      if (k >= np - 1) { ax += ux * rem; ay += uy * rem; break; }
+      k++; bx = P[2 * k]; by = P[2 * k + 1];
+    }
+    segs[i].x = ax; segs[i].y = ay;
+  }
+}
+function setNetPath(s, pr, now) {
+  const d = pr.bd; if (!Array.isArray(d) || d.length < 2 || d.length > 200) { s.netPath = null; return; }
+  const n = d.length >> 1, need = (n + 1) * 2, P = s.netPath && s.netPath.length >= need ? s.netPath : new Float32Array(need + 16);
+  let x = clamp(num(pr.x), -GRID_R, GRID_R), y = clamp(num(pr.y), -GRID_R, GRID_R); P[0] = x; P[1] = y;
+  for (let i = 0; i < n; i++) { x += clamp(num(d[2 * i]), -900, 900); y += clamp(num(d[2 * i + 1]), -900, 900); P[2 * i + 2] = x; P[2 * i + 3] = y; }
+  s.netPath = P; s.netPathN = n + 1; s.netPathT = now;
+}
+// Our own body shape, as small steps from the head, for everyone else's screen.
+function bodyDeltas(s) {
+  const segs = s.segs, n = segs.length; if (n < 3) return null;
+  const step = Math.max(2 * s.r, 36), out = [];
+  let lx = Math.round(s.x), ly = Math.round(s.y), acc = 0, pts = 0;
+  for (let i = 1; i < n && pts < 64; i++) {
+    const a = segs[i - 1], b = segs[i]; acc += Math.hypot(b.x - a.x, b.y - a.y);
+    if (acc >= step || i === n - 1) { const x = Math.round(b.x), y = Math.round(b.y); out.push(x - lx, y - ly); lx = x; ly = y; acc = 0; pts++; }
+  }
+  return out;
 }
 function setNet(s, x, y, a, m, b, now, w, sp) {
   const dispX = s.x, dispY = s.y;
@@ -1197,7 +1247,11 @@ function setNet(s, x, y, a, m, b, now, w, sp) {
   s.netX = clamp(x, -GRID_R, GRID_R); s.netY = clamp(y, -GRID_R, GRID_R); s.netA = wrapA(a); s.netB = b; s.netT = now;
   const mm = clamp(m, 1, 6000); if (mm !== s.mass) s.mass = mm;
   s.errX = dispX - s.netX; s.errY = dispY - s.netY;
-  if (s.errX * s.errX + s.errY * s.errY > 160000) { s.errX = 0; s.errY = 0; s.x = s.netX; s.y = s.netY; for (const p of s.segs) { p.x = s.x; p.y = s.y; } }
+  if (s.errX * s.errX + s.errY * s.errY > 160000) {
+    // A big jump (a lag spike): slide the whole snake over instead of squashing its body into one spot.
+    const dx = s.netX - dispX, dy = s.netY - dispY; s.errX = 0; s.errY = 0; s.x = s.netX; s.y = s.netY;
+    for (const p of s.segs) { p.x += dx; p.y += dy; }
+  }
 }
 
 /* ---------- sensing: what the bot (and NPCs) can "see" ---------- */
@@ -1700,6 +1754,12 @@ function setupTag(humans) {
 function placeLocal() {
   const k = myKey(), tr = match.tm[k];
   if (player) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
+  // Online, wait until the host puts us on a team. Spawning early dropped us into the other team's base.
+  if (match.m === 'ctl' && !tr && gameKind === 'online') {
+    player = null; mode = 'play'; showScreen(null); match.myRespawnAt = performance.now() + 400;
+    if (!match.waitToast) { match.waitToast = true; toast('Joining a team…'); }
+    return;
+  }
   let pos, ang, mass;
   if (match.m === 'ctl') {
     const t = tr ? tr[0] : 0, b = match.bases[t];
@@ -1973,7 +2033,7 @@ function updateModeBar() {
     $('boostBtn').style.setProperty('--stam', Math.round(st * 100) + '%');
   }
 }
-function setModeSel(patch) { Object.assign(profile.modeSel, patch); save(); renderModeSel(); }
+function setModeSel(patch) { Object.assign(profile.modeSel, patch); save(false); renderModeSel(); }
 function renderModeSel() {
   const ms = profile.modeSel, ab = ms.m === 'abil', tagLike = ms.m === 'tag' || (ab && ms.base === 'tag');
   for (const b of document.querySelectorAll('.modetab')) b.setAttribute('aria-pressed', String(b.dataset.mode === ms.m));
@@ -2022,7 +2082,7 @@ function showResult() {
   $('resMenu').textContent = gameKind === 'online' ? 'Leave room' : 'Menu';
   $('resNext').hidden = gameKind !== 'online';
   updateResultNext(performance.now());
-  profile.games++; save(); checkUnlocks();
+  profile.games++; save(false); checkUnlocks();
   if (r.won) SFX.trainDone(); else SFX.death();
   mode = 'dead'; botDriving = false; updateBanner(); setBoostSound(false);
   showScreen('result');
@@ -2199,13 +2259,10 @@ function step(dt, now) {
     for (let q = 0; q < n; q++) {
       const i = qbuf[q], o = segOwner[i]; if (o === s || friendly(s, o)) continue;
       if (!headBoxHit(hx, hy, ca, sa, s.r, segX[i], segY[i], segR[i])) continue;
-      // Heads never knock each other out: touching anywhere near another snake's head lets you slide through.
-      // You only crash when the front of your head runs into someone's body.
-      const oh = o.segs[0], hdx = segX[i] - oh.x, hdy = segY[i] - oh.y, hz = 0.9 * (s.r + o.r);
-      if (hdx * hdx + hdy * hdy < hz * hz) continue;
+      // Whoever drives the front of their head into another snake (its body or the side of its head) crashes.
       dying.push([s, o]);
-      // Straight face to face: we both crash together, so it's never a coin flip about who goes first.
-      if ((o.kind === 'player' || (o.kind === 'npc' && npcHost)) && o.alive && !o.phase && o.grace <= 0 && ca * Math.cos(o.ang) + sa * Math.sin(o.ang) < -0.6 && Math.hypot(hx - o.x, hy - o.y) < 1.6 * (s.r + o.r)) headOn.push([o, s]);
+      // Two faces meeting head-on: both crash together, so it's never a coin flip about who goes first.
+      if ((o.kind === 'player' || (o.kind === 'npc' && npcHost)) && o.alive && !o.phase && o.grace <= 0 && ca * Math.cos(o.ang) + sa * Math.sin(o.ang) < -0.5 && Math.hypot(hx - o.x, hy - o.y) < 1.6 * (s.r + o.r)) headOn.push([o, s]);
       break;
     }
   }
@@ -2247,7 +2304,7 @@ function step(dt, now) {
   }
   setBoostSound(!!(player && player.alive && mode === 'play' && player.boosting));
   if (gameKind === 'online') {
-    if (frame % 2 === 0) sendPresence(now);
+    sendPresence(now);
     if (frame % 30 === 0) { computeRoomMeta(); for (const [id, t] of eatenDrops) if (now - t > 60000) eatenDrops.delete(id); }
   }
 }
@@ -2582,7 +2639,7 @@ async function joinRoom(code, create) {
   setLobbyPresence();
   if (create) startGame({ watch: false });
   else { if (player) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); } player = null; mode = 'play'; showScreen(null); online.awaitSpawnAt = performance.now(); }
-  sendPresence(performance.now());
+  sendPresence(performance.now(), true);
   toast(create ? `Room ${code} is open. Tell your friends the code!` : `You joined room ${code}`);
   setRoomHash(code); updateRoomChip();
 }
@@ -2644,6 +2701,7 @@ function applyPeer(peer, pr, now) {
     s.name = rs.name; const sk = typeof pr.sk === 'string' ? pr.sk : null;
     if (s.lookCode !== pr.s || s.skinCode !== sk) { s.lookCode = pr.s; s.skinCode = sk; applyLook(s, unpackLook(pr.s), parseSkin(sk)); }
   }
+  if (aliveNow && rs.snake) setNetPath(rs.snake, pr, now);
   if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; const f = Array.isArray(pr.fx) ? pr.fx : null; applyNetFx(rs.snake, f ? int(f[0]) : 0, f ? num(f[1]) : 0, f ? int(f[2]) : rs.snake.fxUse, num(pr.sl), now, !!f && f[3] === 1); }
   if (Array.isArray(pr.fz)) {
     const cur = new Set();
@@ -2741,15 +2799,17 @@ function stopHosting() {
   snakes = snakes.filter((s) => s.kind !== 'npc');
   online.lastHostPres = null;
 }
-function sendPresence(now) {
+function sendPresence(now, force) {
   const r = online.room; if (!r) return;
+  if (!force && now - (online.lastSend || 0) < NET_SEND_MS - 8) return;
+  online.lastSend = now;
   while (online.eatLog.length && now - online.eatLog[0].t > 2500) online.eatLog.shift();
   if (online.eatLog.length > 70) online.eatLog.splice(0, online.eatLog.length - 70);
   online.nk = online.nk.filter((e) => now - e.t < 3000);
   const p = player, alive = !!(p && p.alive);
   const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
     h: online.claim ? 1 : 0, e: online.eatLog.map((x) => x.id), kb: lastKiller, hid: document.hidden ? 1 : null };
-  if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
+  if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; pr.bd = bodyDeltas(p); const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
     pr.fx = p.fx ? [FX_CODE[p.fx] || 0, Math.round(p.fxEnd - now), p.fxUse || 0, p.hold ? 1 : 0] : null; pr.sl = p.slowEnd > now ? Math.round(p.slowEnd - now) : null; }
   pr.sk = skinStr();
   online.fzOut = online.fzOut.filter((e) => now - e.t < 1500); pr.fz = online.fzOut.length ? online.fzOut.map((e) => [e.id, e.x, e.y, e.it]) : null;
@@ -2769,7 +2829,9 @@ function sendPresence(now) {
   let txt = JSON.stringify(pr);
   while (txt.length > 3900 && pr.e.length) { pr.e = pr.e.slice(Math.ceil(pr.e.length / 2)); txt = JSON.stringify(pr); }
   while (txt.length > 3900 && pr.np && pr.np.length) { pr.np.pop(); txt = JSON.stringify(pr); }
-  if (txt.length > 3900 && pr.bw) { pr.bw = null; }
+  if (txt.length > 3900 && pr.bw) { pr.bw = null; txt = JSON.stringify(pr); }
+  if (txt.length > 3900 && pr.bd) { pr.bd = pr.bd.slice(0, 40); txt = JSON.stringify(pr); }
+  if (txt.length > 3900) pr.bd = null;
   r.presence(pr).catch(() => {});
 }
 
@@ -2779,13 +2841,32 @@ const mini = $('minimap'), mctx = mini.getContext('2d');
 let W = 0, H = 0, DPR = 1, canvasRect = { left: 0, top: 0 };
 const cam = { x: 0, y: 0, z: 1 };
 let attractTarget = null;
+// iPhone home-screen apps sometimes start up thinking the screen is shorter than it is, leaving a bar at the bottom.
+// Size the game to the real screen ourselves instead of trusting that first measurement.
+function fitApp() {
+  let h = window.innerHeight || document.documentElement.clientHeight || 0;
+  try {
+    if (navigator.standalone === true && window.screen) {
+      const port = window.matchMedia('(orientation: portrait)').matches;
+      const full = port ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+      if (full > h && full - h < 200) h = full;
+    }
+  } catch (e) { /* ignore */ }
+  if (h > 0) { const v = Math.round(h) + 'px'; if (document.documentElement.style.getPropertyValue('--app-h') !== v) document.documentElement.style.setProperty('--app-h', v); }
+}
+let booted = false;
 function resize() {
+  fitApp();
   const r = canvas.getBoundingClientRect(); W = r.width; H = r.height;
   const dev = Math.min(2, window.devicePixelRatio || 1), cap = Math.min(1, Math.sqrt(4.2e6 / Math.max(1, W * H * dev * dev)));
   DPR = Math.max(0.75, dev * Math.min(cap, typeof dprScale === 'number' ? dprScale : 1));
   canvasRect = { left: r.left, top: r.top };
-  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
-  const m = mini.getBoundingClientRect(); mini.width = Math.max(1, Math.round(m.width * DPR)); mini.height = Math.max(1, Math.round(m.height * DPR));
+  const cw = Math.round(W * DPR), ch = Math.round(H * DPR); let changed = false;
+  if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; changed = true; }
+  const m = mini.getBoundingClientRect(), mw = Math.max(1, Math.round(m.width * DPR)), mh = Math.max(1, Math.round(m.height * DPR));
+  if (mini.width !== mw || mini.height !== mh) { mini.width = mw; mini.height = mh; changed = true; }
+  // Changing a canvas's size wipes it, so draw again right away instead of showing a blank frame (that was the flash).
+  if (changed && booted) { try { render(performance.now()); if (mode === 'play') drawMini(); } catch (e) { /* it gets drawn next frame */ } }
 }
 function updateCam(dt) {
   let tgt = player && player.alive ? player : null;
@@ -3065,6 +3146,7 @@ const app = $('app');
 const screens = ['menu', 'locker', 'online', 'death', 'train', 'result'];
 function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', mode === 'play' && !name); }
 function showMenu() {
+  if (mode !== 'menu') save();
   if (gameKind === 'solo') abilClassic = false;
   if (inModes() && gameKind === 'solo') { match = { m: 'classic' }; setupSoloWorld(); }
   mode = 'menu'; if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
@@ -3085,7 +3167,7 @@ function onPlayerDeath(killer) {
   if (inModes()) { if (match.m === 'ctl' && match.st === 'play') onModePlayerDeath(killer); return; }
   const wasBot = botDriving; botDriving = false; updateBanner(); SFX.death(); setBoostSound(false);
   lastKiller = killer === 'edge' ? 'edge' : killer && killer.kind === 'remote' ? killer.peer : killer && (killer.kind === 'rnpc' || killer.kind === 'npc') ? 'n' + killer.npcId : null;
-  profile.games++; save(); checkUnlocks();
+  profile.games++; save(false); checkUnlocks();
   const name = killer === 'edge' ? null : killer && killer.name;
   setTimeout(() => { try { showDeathScreen(); } catch (e) { reportGlitch('death screen', e); showScreen('death'); } }, 900);
   function showDeathScreen() {
@@ -3148,16 +3230,17 @@ function updateHud() {
   if (boardTick % 120 === 1) updateDock();
 }
 function updateRoomChip() {
-  const t = $('roomText');
+  const t = $('roomText'); let txt, ex;
   if (gameKind === 'online' && online.code) {
     const n = online.players;
-    t.textContent = W <= 360 ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${TIERS[online.tier].name}${online.room && !online.connected ? ' · reconnecting' : ''}`;
-    $('exitBtn').textContent = 'Leave';
-  } else { t.textContent = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : abilClassic ? 'Solo · Abilities' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
-  if (gameKind === 'online' && online.code && !inModes() && abilClassic && W > 360) t.textContent += ' · Abilities';
-  if (gameKind === 'online' && online.code && inModes() && W > 360) t.textContent = `Room ${online.code} · ${online.players} player${online.players === 1 ? '' : 's'} · ${modeName(match)}`;
+    txt = W <= 360 ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${inModes() ? modeName(match) : TIERS[online.tier].name + (abilClassic ? ' · Abilities' : '')}${online.room && !online.connected ? ' · reconnecting' : ''}`;
+    ex = 'Leave';
+  } else { txt = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : abilClassic ? 'Solo · Abilities' : 'Solo'; ex = 'Exit'; }
+  // Only touch the page when something changed: this runs many times a second online.
+  if (t.textContent !== txt) t.textContent = txt;
+  if ($('exitBtn').textContent !== ex) $('exitBtn').textContent = ex;
   const inv = gameKind === 'online' && !!online.code && online.kind === 'web';
-  $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv);
+  if ($('inviteBtn').hidden !== !inv) { $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv); }
 }
 function updateDock() {
   const top = $('dockTop'), sub = $('dockSub'), meter = $('dockMeter');
@@ -3847,7 +3930,8 @@ document.addEventListener('click', (e) => { const t = e.target && e.target.close
 const clearTouches = () => { joy.active = false; joy.id = -1; input.tBoost = input.tBoost2 = false; };
 // If every finger is off the screen, nothing can still be held down, whatever pointer events got lost.
 for (const ev of ['touchend', 'touchcancel']) window.addEventListener(ev, (e) => { if (!e.touches || e.touches.length === 0) clearTouches(); }, { passive: true });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); clearTouches(); input.mBoost = input.kBoost = input.left = input.right = false; } if (online.room) sendPresence(performance.now()); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); clearTouches(); input.mBoost = input.kBoost = input.left = input.right = false; } if (online.room) sendPresence(performance.now(), true); });
+window.addEventListener('pageshow', () => setTimeout(onViewChange, 50));
 window.addEventListener('pagehide', () => { save(); if (online.kind === 'web' && online.room) { try { online.room.leave(); } catch (e) { /* ignore */ } } });
 // Phones can turn sideways without a resize event arriving in time (or at all inside an app). If the
 // canvas kept its old shape the browser would stretch the picture, so watch the canvas itself too.
@@ -3890,7 +3974,7 @@ function loop(now) {
   try { step(dt, now); } catch (e) { reportGlitch('game', e); }
   try {
     updateTheme(dt);
-    if (frame % 10 === 0 && sizeOff()) onViewChange();
+    if (frame % 10 === 0) { fitApp(); if (sizeOff()) onViewChange(); }
     updateCam(dt);
     render(now);
     if (mode === 'play') { updateHud(); if (frame % 10 === 0) drawMini(); }
@@ -3900,7 +3984,7 @@ function loop(now) {
       if (frame % 3 === 0) for (const cv of document.querySelectorAll('#slotRow canvas')) { const code = profile.slots[+cv.dataset.slot]; if (code != null) { const sl = slotToLook(code); drawPreview(cv, sl.look, now, sl.skin); } }
     }
   } catch (e) { reportGlitch('drawing', e); }
-  try { adaptQuality(ft, now); saveT += dt; if (saveT > 60 && mode === 'play') { saveT = 0; save(); } } catch (e) { reportGlitch('saving', e); }
+  try { adaptQuality(ft, now); saveT += dt; if (saveT > 60 && mode === 'play') { saveT = 0; save(false); } } catch (e) { reportGlitch('saving', e); }
   requestAnimationFrame(loop);
 }
 
@@ -3911,6 +3995,7 @@ function boot() {
   cam.x = 0; cam.y = 0;
   checkUnlocks();
   $('nameIn').value = profile.name;
+  $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}`;
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
@@ -3936,6 +4021,10 @@ function boot() {
     brains: () => [...online.brains.entries()].map(([k, e]) => [k, !!e.done]),
     fillSamples: (n) => { const f = new Float32Array(FEAT); for (let i = 0; i < n; i++) { for (let k = 0; k < FEAT; k++) f[k] = Math.random() * 2 - 1; pushSample(f, (Math.random() * 18) | 0, true); } return sampCount; },
     timeSave: () => { const t = performance.now(); save(); return Math.round(performance.now() - t); },
+    timeSaves: () => { let t = performance.now(); save(false); const quick = performance.now() - t; t = performance.now(); save(); return { quick: +quick.toFixed(1), full: +(performance.now() - t).toFixed(1), movesSaved: !!localStorage.getItem(MOVES_KEY), samples: sampCount }; },
+    bodyOf: (name) => { const sn = snakes.find((x) => x.name === name && (x.kind === 'player' || x.kind === 'remote') && x.alive); return sn ? sn.segs.map((p) => [Math.round(p.x), Math.round(p.y)]) : null; },
+    flashTest: () => { dprScale = dprScale === 1 ? 0.85 : 1; resize(); const px = ctx.getImageData(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 1, 1).data; return [px[0], px[1], px[2], px[3]]; },
+    appH: () => ({ app: Math.round(document.getElementById('app').getBoundingClientRect().height), inner: innerHeight, version: GAME_VERSION }),
     size: () => ({ W: Math.round(W), H: Math.round(H), cw: canvas.width, ch: canvas.height, css: [canvas.clientWidth, canvas.clientHeight], dpr: +DPR.toFixed(2) }),
     state: () => ({ alive: !!(player && player.alive), boosting: !!(player && player.boosting), wantBoost: !!(player && player.wantBoost), tAng: player ? +player.targetAng.toFixed(2) : null, bot: botDriving, botReason, dpr: +DPR.toFixed(2), inputMode: input.mode }),
     autoBot: () => { setBot(true, 'auto'); return botDriving; },
@@ -3968,10 +4057,10 @@ function boot() {
       o.segs = []; for (let i = 0; i < n; i++) o.segs.push({ x: hx - Math.cos(oa) * i * o.spacing, y: hy - Math.sin(oa) * i * o.spacing });
       o.x = hx; o.y = hy; o.ang = o.targetAng = oa; o.thinkIn = 1e9; o.grace = 0; o.ab = ''; endFx(o); o.slowEnd = 0; o.wantBoost = false; return o.name;
     },
-    sideBot: (dist, wm) => {
+    sideBot: (dist, wm, lead0) => {
       const o = snakes.find((sn) => sn.kind === 'npc' && !sn.role); if (!o || !player) return 0;
       o.mass = wm || player.mass; updateSize(o); const n = segCount(o.mass), a = player.ang, px = -Math.sin(a), py = Math.cos(a), oa = Math.atan2(-py, -px);
-      const lead = (player.r + o.r) * 0.2 + 230 * 0.3, hx = player.x + Math.cos(a) * lead + px * dist, hy = player.y + Math.sin(a) * lead + py * dist;
+      const lead = lead0 != null ? lead0 : (player.r + o.r) * 0.2 + 230 * 0.3, hx = player.x + Math.cos(a) * lead + px * dist, hy = player.y + Math.sin(a) * lead + py * dist;
       o.segs = []; for (let i = 0; i < n; i++) o.segs.push({ x: hx - Math.cos(oa) * i * o.spacing, y: hy - Math.sin(oa) * i * o.spacing });
       o.x = hx; o.y = hy; o.ang = o.targetAng = oa; o.thinkIn = 1e9; o.grace = 0; o.ab = ''; endFx(o); o.slowEnd = 0; o.wantBoost = false; return o.name;
     },
@@ -3994,6 +4083,7 @@ function boot() {
     me: () => (player ? { x: Math.round(player.x), y: Math.round(player.y), ang: +player.ang.toFixed(2), alive: player.alive, fx: player.fx, slow: player.slowEnd > curNow, skin: player.skin ? player.skin.join('') : '' } : null),
     tagNow: () => { const a = snakes.find((sn) => sn.it && sn.alive), b = snakes.find((sn) => !sn.it && sn.alive); if (!a || !b) return false; match.started = 0; const mv = b.kind === 'remote' ? a : b, to = mv === a ? b : a; mv.x = to.x + 2; mv.y = to.y; for (const p of mv.segs) { p.x = mv.x; p.y = mv.y; } return true; },
   };
+  booted = true; for (const ms of [300, 1000, 2500]) setTimeout(onViewChange, ms);
   requestAnimationFrame((t) => { last = t; loop(t); });
 }
 const hot = window.claude && window.claude.hot;
