@@ -10,7 +10,7 @@
 <meta name="application-name" content="Noodle Bots">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#17122c">
 <style>html{background:#17122c}</style>
 <title>Noodle Bots</title>
@@ -677,7 +677,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.0';
+const GAME_VERSION = '2.1';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -2841,17 +2841,10 @@ const mini = $('minimap'), mctx = mini.getContext('2d');
 let W = 0, H = 0, DPR = 1, canvasRect = { left: 0, top: 0 };
 const cam = { x: 0, y: 0, z: 1 };
 let attractTarget = null;
-// iPhone home-screen apps sometimes start up thinking the screen is shorter than it is, leaving a bar at the bottom.
-// Size the game to the real screen ourselves instead of trusting that first measurement.
+// Keep the game exactly as tall as the area the browser lets it draw in, so nothing ends up hidden off the bottom.
+// (An iPhone bug sometimes covers the bottom of home-screen apps with a bar the page can't draw under.)
 function fitApp() {
-  let h = window.innerHeight || document.documentElement.clientHeight || 0;
-  try {
-    if (navigator.standalone === true && window.screen) {
-      const port = window.matchMedia('(orientation: portrait)').matches;
-      const full = port ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
-      if (full > h && full - h < 200) h = full;
-    }
-  } catch (e) { /* ignore */ }
+  const h = window.innerHeight || document.documentElement.clientHeight || 0;
   if (h > 0) { const v = Math.round(h) + 'px'; if (document.documentElement.style.getPropertyValue('--app-h') !== v) document.documentElement.style.setProperty('--app-h', v); }
 }
 let booted = false;
