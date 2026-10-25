@@ -44,7 +44,8 @@
 html,body{height:100%}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
-#app{position:relative;height:100%;overflow:hidden}
+#app{position:relative;height:100%;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#app input,#app textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
 h1,h2,p{margin:0}
 .lbl{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -1321,6 +1322,13 @@ function humanControl(s) {
 function record(s) { sense(s, recBuf); pushSample(recBuf, nearestBin(wrapA(s.targetAng - s.ang)) * 2 + (s.wantBoost ? 1 : 0), true); }
 
 /* ---------- deaths & food ---------- */
+// The front of a head is a flat-faced box, not a ball, so brushing past a snake while curving doesn't count.
+function headBoxHit(hx, hy, ca, sa, r, px, py, pr) {
+  const dx = px - hx, dy = py - hy, lx = dx * ca + dy * sa, ly = -dx * sa + dy * ca;
+  const cx = lx < 0 ? 0 : lx > r * 0.72 ? r * 0.72 : lx, hw = r * 0.5, cy = ly < -hw ? -hw : ly > hw ? hw : ly;
+  const ex = lx - cx, ey = ly - cy, rr = pr * 0.85;
+  return ex * ex + ey * ey < rr * rr;
+}
 function dropBody(s, key) {
   const segs = s.segs, count = clamp(Math.floor(segs.length / 2), 4, 120);
   const per = (s.mass * 0.8) / count, step = segs.length / count, r = clamp(5 + Math.sqrt(per) * 2.4, 5, 16);
@@ -1333,8 +1341,10 @@ function dropBody(s, key) {
     drops.push({ x, y, v: per, r, c: s.skin ? s.skin[k % s.skin.length] : s.look.c1, ph: Math.random() * TAU, life: rand(35, 50), id, eaten: false });
   }
 }
+const deathLog = [];
 function killSnake(s, killer) {
   if (s.dead) return;
+  if (deathLog.length > 30) deathLog.shift(); deathLog.push([s.name, s.kind, killer === 'edge' ? 'edge' : killer && killer.name || null, Math.round(s.x), Math.round(s.y), Math.round(performance.now())]);
   s.alive = false; s.dead = true;
   let key = null;
   if (s.kind === 'player') { myDeaths++; if (gameKind === 'online' && online.myPeer) key = online.myPeer.slice(0, 8) + '.' + myDeaths; }
@@ -1384,6 +1394,7 @@ const ABIL = {
   freeze: { name: 'Freeze', cost: 2500, dur: 0.6, tag: true, info: 'Every snake close to you slows way down for 3 seconds.' },
 };
 const ABIL_IDS = Object.keys(ABIL);
+const GHOST_PATH = typeof Path2D === 'function' ? new Path2D('M5 21V10a7 7 0 0 1 14 0v11l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z') : null;
 const FX_NAME = ['', 'jump', 'dash', 'ghost', 'magnet', 'shield', 'freeze', 'saved'], FX_CODE = {};
 FX_NAME.forEach((n, i) => { if (n) FX_CODE[n] = i; });
 const FREEZE_R = 520, FREEZE_MS = 3000;
@@ -1411,21 +1422,38 @@ function botPick(s) {
 function speedOf(s, now) {
   let v = s.fx === 'dash' ? BOOST_SPEED * 1.4 : s.boosting ? BOOST_SPEED : BASE_SPEED;
   v *= s.spd || 1;
-  if (s.fx === 'jump') v *= 1.3;
+  if (s.fx === 'jump') v *= 1.4;
   if (s.slowEnd > now) v *= 0.5;
   return v;
 }
 function startFx(s, id, now, remMs) {
   const dur = fxDur(id) * 1000; if (!dur) return;
   const rem = remMs == null ? dur : clamp(remMs, 0, dur);
-  s.fx = id; s.fxStart = now - (dur - rem); s.fxEnd = s.fxStart + dur;
+  s.fx = id; s.fxStart = now - (dur - rem); s.fxEnd = s.fxStart + dur; s.fxBase = dur; s.fxT0 = s.fxStart; s.hold = false;
   s.phase = id === 'jump' || id === 'ghost' || id === 'saved'; s.shieldOn = id === 'shield';
 }
-function endFx(s) { s.fx = ''; s.phase = false; s.shieldOn = false; }
+function endFx(s) { s.fx = ''; s.phase = false; s.shieldOn = false; s.hold = false; }
+// "Hold" keeps a jumping (or ghost) snake up in the air while it's still over somebody, so it never lands on a body.
+function setHold(s, on, now) {
+  if (on && !s.hold) { s.hold = true; s.holdP = clamp((now - s.fxStart) / (s.fxBase || 1), 0, 0.9); }
+  else if (!on && s.hold) { s.hold = false; s.fxStart = now - s.holdP * s.fxBase; s.fxEnd = s.fxStart + s.fxBase; }
+}
+function landingBlocked(s) {
+  const ax = s.x + Math.cos(s.ang) * (s.r + 30), ay = s.y + Math.sin(s.ang) * (s.r + 30);
+  const n = queryNear(segHead, segNext, (s.x + ax) / 2, (s.y + ay) / 2, s.r * 2 + 80, qbuf);
+  for (let q = 0; q < n; q++) {
+    const i = qbuf[q], o = segOwner[i]; if (o === s || friendly(s, o)) continue;
+    const rr = s.r * 0.72 + segR[i] * 0.88 + 6, r2 = rr * rr;
+    let dx = segX[i] - s.x, dy = segY[i] - s.y; if (dx * dx + dy * dy < r2) return true;
+    dx = segX[i] - ax; dy = segY[i] - ay; if (dx * dx + dy * dy < r2) return true;
+  }
+  return false;
+}
 // Other screens tell us what power a snake is using; start it once per use so the animation stays smooth.
-function applyNetFx(s, code, rem, use, slowMs, now) {
+function applyNetFx(s, code, rem, use, slowMs, now, hold) {
   const id = FX_NAME[code] || '';
   if (id && use !== s.fxUse) { s.fxUse = use; startFx(s, id, now, rem); }
+  else if (id && (s.fx === id || (hold && !s.fx))) { if (s.fx !== id) startFx(s, id, now, rem); setHold(s, !!hold, now); if (rem > 0) s.fxEnd = Math.max(s.fxEnd, now + Math.min(rem, 4000)); }
   else if (!id && s.fx) endFx(s);
   s.slowEnd = slowMs > 0 ? now + Math.min(slowMs, FREEZE_MS) : 0;
 }
@@ -1484,6 +1512,10 @@ function botAbility(s, buf, hint) {
 function abilTick(dt, now) {
   const on = abilOn(), rate = match.m === 'tag' ? 45 : 30;
   for (const s of snakes) {
+    if (s.fx && on && s.phase && match.m !== 'tag' && (s.kind === 'player' || s.kind === 'npc')) {
+      if (s.fxEnd - now < 260 && now - s.fxT0 < s.fxBase + 2500 && landingBlocked(s)) { setHold(s, true, now); s.fxEnd = Math.max(s.fxEnd, now + 260); }
+      else if (s.hold) setHold(s, false, now);
+    }
     if (s.fx && (now >= s.fxEnd || !on)) { if (s === player && s.fx === 'jump') SFX.land(); endFx(s); }
     if (s.kind !== 'player' && s.kind !== 'npc') continue;
     if (!on) { if (s.ab) { s.ab = ''; s.charge = 0; } continue; }
@@ -2151,19 +2183,27 @@ function step(dt, now) {
   for (const s of snakes) { if (s.kind === 'remote' || s.kind === 'rnpc') moveRemote(s, dt, now); else moveSnake(s, dt); }
   buildSegGrid();
 
-  const dying = [];
+  const dying = [], headOn = [];
   for (const s of snakes) {
     if (!s.alive || s.grace > 0 || match.m === 'tag' || s.phase) continue;
     if (s.kind !== 'player' && !(s.kind === 'npc' && npcHost)) continue;
     const hx = s.x, hy = s.y;
     if (hx * hx + hy * hy > (worldR - s.r * 0.6) ** 2) { dying.push([s, 'edge']); continue; }
-    const n = queryNear(segHead, segNext, hx, hy, s.r + 50, qbuf);
+    const n = queryNear(segHead, segNext, hx, hy, s.r + 50, qbuf), ca = Math.cos(s.ang), sa = Math.sin(s.ang);
     for (let q = 0; q < n; q++) {
       const i = qbuf[q], o = segOwner[i]; if (o === s || friendly(s, o)) continue;
-      const dx = segX[i] - hx, dy = segY[i] - hy, rr = s.r * 0.72 + segR[i] * 0.88;
-      if (dx * dx + dy * dy < rr * rr) { if (segIdx[i] < 3 && s.mass > o.mass) continue; dying.push([s, o]); break; }
+      if (!headBoxHit(hx, hy, ca, sa, s.r, segX[i], segY[i], segR[i])) continue;
+      // Heads never knock each other out: touching anywhere near another snake's head lets you slide through.
+      // You only crash when the front of your head runs into someone's body.
+      const oh = o.segs[0], hdx = segX[i] - oh.x, hdy = segY[i] - oh.y, hz = 0.9 * (s.r + o.r);
+      if (hdx * hdx + hdy * hdy < hz * hz) continue;
+      dying.push([s, o]);
+      // Straight face to face: we both crash together, so it's never a coin flip about who goes first.
+      if ((o.kind === 'player' || (o.kind === 'npc' && npcHost)) && o.alive && !o.phase && o.grace <= 0 && ca * Math.cos(o.ang) + sa * Math.sin(o.ang) < -0.6 && Math.hypot(hx - o.x, hy - o.y) < 1.6 * (s.r + o.r)) headOn.push([o, s]);
+      break;
     }
   }
+  for (const [o, k] of headOn) if (!dying.some((e) => e[0] === o)) dying.push([o, k]);
   for (let i = dying.length - 1; i >= 0; i--) if (dying[i][0].shieldOn) { shieldSave(dying[i][0], dying[i][1], now); dying.splice(i, 1); }
   for (const [s] of dying) s.alive = false;
   for (const s of snakes) if (s.alive && (s.kind === 'player' || s.kind === 'npc')) eatAround(s, dt);
@@ -2585,7 +2625,7 @@ function applyPeer(peer, pr, now) {
     s.name = rs.name; const sk = typeof pr.sk === 'string' ? pr.sk : null;
     if (s.lookCode !== pr.s || s.skinCode !== sk) { s.lookCode = pr.s; s.skinCode = sk; applyLook(s, unpackLook(pr.s), parseSkin(sk)); }
   }
-  if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; const f = Array.isArray(pr.fx) ? pr.fx : null; applyNetFx(rs.snake, f ? int(f[0]) : 0, f ? num(f[1]) : 0, f ? int(f[2]) : rs.snake.fxUse, num(pr.sl), now); }
+  if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; const f = Array.isArray(pr.fx) ? pr.fx : null; applyNetFx(rs.snake, f ? int(f[0]) : 0, f ? num(f[1]) : 0, f ? int(f[2]) : rs.snake.fxUse, num(pr.sl), now, !!f && f[3] === 1); }
   if (Array.isArray(pr.fz)) {
     const cur = new Set();
     for (const e of pr.fz.slice(0, 12)) {
@@ -2656,7 +2696,7 @@ function applyHost(pr) {
       online.rnpcs.set(id, s); snakes.push(s);
     } else setNet(s, x, y, a, m, b, now, num(e[9]) / 100, num(e[10], 100) / 100);
     s.team = e[7] === 0 || e[7] === 1 ? e[7] : -1; s.role = CODE_ROLE[int(e[8])] || ''; s.it = match.m === 'tag' && match.it.has('b' + id);
-    if (e.length >= 15) applyNetFx(s, int(e[11]), num(e[12]), int(e[13]), num(e[14]), now); else if (s.fx || s.slowEnd) applyNetFx(s, 0, 0, s.fxUse, 0, now);
+    if (e.length >= 15) applyNetFx(s, int(e[11]), num(e[12]), int(e[13]), num(e[14]), now, e[15] === 1); else if (s.fx || s.slowEnd) applyNetFx(s, 0, 0, s.fxUse, 0, now);
     if (s.role === 'M' && s.lookCode !== code) { s.lookCode = code; applyLook(s, unpackLook(code % 100000)); }
   }
   const quiet = new Set(Array.isArray(pr.rm) ? pr.rm.slice(0, 60).map((x) => int(x)) : []);
@@ -2691,7 +2731,7 @@ function sendPresence(now) {
   const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
     h: online.claim ? 1 : 0, e: online.eatLog.map((x) => x.id), kb: lastKiller, hid: document.hidden ? 1 : null };
   if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
-    pr.fx = p.fx ? [FX_CODE[p.fx] || 0, Math.round(p.fxEnd - now), p.fxUse || 0] : null; pr.sl = p.slowEnd > now ? Math.round(p.slowEnd - now) : null; }
+    pr.fx = p.fx ? [FX_CODE[p.fx] || 0, Math.round(p.fxEnd - now), p.fxUse || 0, p.hold ? 1 : 0] : null; pr.sl = p.slowEnd > now ? Math.round(p.slowEnd - now) : null; }
   pr.sk = skinStr();
   online.fzOut = online.fzOut.filter((e) => now - e.t < 1500); pr.fz = online.fzOut.length ? online.fzOut.map((e) => [e.id, e.x, e.y, e.it]) : null;
   if (online.isHost) {
@@ -2699,7 +2739,7 @@ function sendPresence(now) {
     const abOn = abilOn();
     pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 36).map((s) => {
       const e = [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 100000 * s.nameIdx, s.team, ROLE_CODE[s.role] || 0, Math.round((s.w || 0) * 100), Math.round(speedOf(s, now) / (s.boosting ? BOOST_SPEED : BASE_SPEED) * 100)];
-      if (abOn && (s.fx || s.slowEnd > now)) e.push(s.fx ? FX_CODE[s.fx] || 0 : 0, s.fx ? Math.round(s.fxEnd - now) : 0, s.fxUse || 0, s.slowEnd > now ? Math.round(s.slowEnd - now) : 0);
+      if (abOn && (s.fx || s.slowEnd > now)) e.push(s.fx ? FX_CODE[s.fx] || 0 : 0, s.fx ? Math.round(s.fxEnd - now) : 0, s.fxUse || 0, s.slowEnd > now ? Math.round(s.slowEnd - now) : 0, s.hold ? 1 : 0);
       return e;
     });
     pr.md = packMatch(now);
@@ -2770,8 +2810,9 @@ function drawSnake(c, s, b, t, now, z) {
   if (slow) halo('#bff3ff', 0.3 + 0.1 * Math.sin(now * 0.01), r + 9, 2);
   if (fx === 'dash') { halo('#52e5ff', 0.22, r * 2, 2); halo('#ffffff', 0.16, r * 1.35, 3); }
   if (fx === 'jump' && n > 1) {
-    const p = clamp((now - s.fxStart) / Math.max(1, s.fxEnd - s.fxStart), 0, 1), Hh = 40 + r * 1.3, K = 0.6;
-    const L = (i) => Math.sin(Math.PI * clamp(p * (1 + K) - K * i / (n - 1), 0, 1)) * Hh;
+    const base = s.fxBase || Math.max(1, s.fxEnd - s.fxStart), p = s.hold ? s.holdP : clamp((now - s.fxStart) / base, 0, 1), Hh = 40 + r * 1.3, K = 0.6;
+    // The head stays up for the whole jump; the rest of the body follows a moment later and everything lands together.
+    const L = (i) => { const d = K * i / (n - 1); return Math.sin(Math.PI * clamp((p - d) / (1 - d), 0, 1)) * Hh; };
     c.fillStyle = 'rgba(4,2,12,0.32)'; c.beginPath();
     for (let i = n - 1; i >= 0; i -= 2) { const q = segs[i]; if (!vis(q)) continue; const rr = r * (1 - 0.35 * L(i) / Hh); c.moveTo(q.x + rr, q.y + r * 0.25); c.arc(q.x, q.y + r * 0.25, rr, 0, TAU); }
     c.fill();
@@ -2790,6 +2831,11 @@ function drawSnake(c, s, b, t, now, z) {
       c.beginPath(); c.arc(h.x, h.y, R, 0, TAU); c.fill(); c.stroke();
       c.globalAlpha = 0.65; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1.5, r * 0.1); c.beginPath(); c.arc(h.x, h.y, R * 0.78, -2.4, -1.4); c.stroke(); c.globalAlpha = 1;
     }
+  }
+  if ((fx === 'ghost' || fx === 'saved') && vis(h) && GHOST_PATH) {
+    const k = Math.max(0.8, r / 13), gx = h.x - 12 * k, gy = h.y - r - 30 * k - (s.drawLift || 0) + Math.sin(now * 0.006) * 3 * k;
+    c.save(); c.translate(gx, gy); c.scale(k, k); c.globalAlpha = 0.9; c.fillStyle = '#f4effe'; c.fill(GHOST_PATH);
+    c.fillStyle = '#17122c'; c.beginPath(); c.arc(9.5, 10.5, 1.4, 0, TAU); c.arc(14.5, 10.5, 1.4, 0, TAU); c.fill(); c.restore();
   }
   if (fx === 'magnet' && vis(h)) {
     c.strokeStyle = '#b28cff'; c.lineWidth = Math.max(2, 3 / Math.max(0.5, z));
@@ -3646,12 +3692,16 @@ const isTouchLike = (e) => e.pointerType === 'touch' || e.pointerType === 'pen';
 const anyInputHeld = () => input.mBoost || input.kBoost || input.tBoost || input.tBoost2 || input.left || input.right || joy.active;
 // Any real input counts as being here, and takes the snake back from an "away" bot.
 function humanInput() { activity(); if (botDriving && botReason === 'auto') setBot(false); }
+// Holding a finger down on a phone shouldn't select the leaderboard or other text, or pop up a menu.
+document.addEventListener('selectstart', (e) => { const t = e.target, el = t && t.nodeType === 3 ? t.parentElement : t; if (!(el && el.closest && el.closest('input,textarea'))) e.preventDefault(); });
+document.addEventListener('contextmenu', (e) => { const el = e.target; if (mode === 'play' || el === canvas) e.preventDefault(); });
 canvas.addEventListener('pointerdown', (e) => {
   const x = e.clientX - canvasRect.left, y = e.clientY - canvasRect.top;
   try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ }
   if (isTouchLike(e)) {
     // First finger steers: hold it where you want to go, or drag it like a joystick. Another finger boosts.
-    if (!joy.active) { joy.active = true; joy.id = e.pointerId; joy.ox = joy.x = x; joy.oy = joy.y = y; joy.dragged = false; input.px = x; input.py = y; input.has = true; input.mode = 'touch'; }
+    // A first finger always steers, even if the browser never told us the last one lifted (that used to leave you unable to move).
+    if (!joy.active || e.isPrimary) { if (e.isPrimary) input.tBoost2 = false; joy.active = true; joy.id = e.pointerId; joy.ox = joy.x = x; joy.oy = joy.y = y; joy.dragged = false; input.px = x; input.py = y; input.has = true; input.mode = 'touch'; }
     else input.tBoost2 = true;
   } else { input.px = x; input.py = y; input.has = true; input.mode = 'mouse'; if (e.button === 0) input.mBoost = true; }
   humanInput();
@@ -3775,7 +3825,10 @@ for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) d
 $('musicChk').addEventListener('change', (e) => { profile.music = e.target.checked; audioUnlock(); applyVolume(); save(); syncSoundUI(); });
 tapButton($('musicBtn'), () => { toggleMusic(); blurIfPlaying(); });
 document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn' && t.id !== 'inviteBtn') SFX.click(); }, true);
-document.addEventListener('visibilitychange', () => { if (document.hidden) save(); if (online.room) sendPresence(performance.now()); });
+const clearTouches = () => { joy.active = false; joy.id = -1; input.tBoost = input.tBoost2 = false; };
+// If every finger is off the screen, nothing can still be held down, whatever pointer events got lost.
+for (const ev of ['touchend', 'touchcancel']) window.addEventListener(ev, (e) => { if (!e.touches || e.touches.length === 0) clearTouches(); }, { passive: true });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); clearTouches(); input.mBoost = input.kBoost = input.left = input.right = false; } if (online.room) sendPresence(performance.now()); });
 window.addEventListener('pagehide', () => { save(); if (online.kind === 'web' && online.room) { try { online.room.leave(); } catch (e) { /* ignore */ } } });
 // Phones can turn sideways without a resize event arriving in time (or at all inside an app). If the
 // canvas kept its old shape the browser would stretch the picture, so watch the canvas itself too.
@@ -3886,14 +3939,33 @@ function boot() {
     botAbs: () => snakes.filter((sn) => sn.kind !== 'player').map((sn) => [sn.kind, sn.ab || '', Math.round(sn.charge || 0), sn.fx || '', sn.slowEnd > curNow ? 1 : 0, sn.skin ? sn.skin.join('') : '']),
     skin: () => ({ skin: profile.skin.slice(), pat: profile.look.pat, slots: profile.slots.slice() }),
     grace: (sec) => { if (player) player.grace = sec; },
+    aim: (a) => { if (player) { player.ang = player.targetAng = a; } },
+    clearBots: () => { let keep = true; for (const sn of [...snakes]) if (sn.kind === 'npc') { if (keep && !sn.role) { keep = false; continue; } snakes.splice(snakes.indexOf(sn), 1); } if (keep) spawnNpc(true); respawnT = 99; },
+    hold: () => (player ? !!player.hold : false),
+    faceBot: (dist, rel, wm) => {
+      const o = snakes.find((sn) => sn.kind === 'npc' && !sn.role); if (!o || !player) return 0;
+      o.mass = wm || player.mass; updateSize(o); const n = segCount(o.mass), a = player.ang, oa = a + rel;
+      const hx = player.x + Math.cos(a) * dist, hy = player.y + Math.sin(a) * dist;
+      o.segs = []; for (let i = 0; i < n; i++) o.segs.push({ x: hx - Math.cos(oa) * i * o.spacing, y: hy - Math.sin(oa) * i * o.spacing });
+      o.x = hx; o.y = hy; o.ang = o.targetAng = oa; o.thinkIn = 1e9; o.grace = 0; o.ab = ''; endFx(o); o.slowEnd = 0; o.wantBoost = false; return o.name;
+    },
+    sideBot: (dist, wm) => {
+      const o = snakes.find((sn) => sn.kind === 'npc' && !sn.role); if (!o || !player) return 0;
+      o.mass = wm || player.mass; updateSize(o); const n = segCount(o.mass), a = player.ang, px = -Math.sin(a), py = Math.cos(a), oa = Math.atan2(-py, -px);
+      const lead = (player.r + o.r) * 0.2 + 230 * 0.3, hx = player.x + Math.cos(a) * lead + px * dist, hy = player.y + Math.sin(a) * lead + py * dist;
+      o.segs = []; for (let i = 0; i < n; i++) o.segs.push({ x: hx - Math.cos(oa) * i * o.spacing, y: hy - Math.sin(oa) * i * o.spacing });
+      o.x = hx; o.y = hy; o.ang = o.targetAng = oa; o.thinkIn = 1e9; o.grace = 0; o.ab = ''; endFx(o); o.slowEnd = 0; o.wantBoost = false; return o.name;
+    },
+    deaths: () => deathLog.slice(-6),
+    botAlive: () => snakes.filter((sn) => sn.kind === 'npc').length,
     grow: (m) => { if (player) { player.mass = m; bodyFollow(player); } },
     tp: (x, y) => { if (!player) return false; player.x = x; player.y = y; for (const p of player.segs) { p.x = x; p.y = y; } player.grace = 3; return true; },
     straight: () => { input.mode = 'keys'; input.left = input.right = false; if (player) player.targetAng = player.ang; },
-    wall: (dist) => {
+    wall: (dist, wm, tilt) => {
       const o = snakes.find((sn) => sn.kind === 'npc' && !sn.role) || snakes.find((sn) => sn.kind === 'npc'); if (!o || !player) return 0;
-      o.mass = 400; updateSize(o); const n = segCount(o.mass), a = player.ang, cx = player.x + Math.cos(a) * dist, cy = player.y + Math.sin(a) * dist, px = -Math.sin(a), py = Math.cos(a);
-      o.segs = []; for (let i = 0; i < n; i++) o.segs.push({ x: cx + px * (420 - i * o.spacing), y: cy + py * (420 - i * o.spacing) });
-      o.x = o.segs[0].x; o.y = o.segs[0].y; o.ang = o.targetAng = Math.atan2(py, px); o.thinkIn = 1e9; o.grace = 0; o.ab = ''; o.wallTest = true; return n;
+      o.mass = wm || 400; updateSize(o); const n = segCount(o.mass), a = player.ang, cx = player.x + Math.cos(a) * dist, cy = player.y + Math.sin(a) * dist, px = -Math.sin(a + (tilt || 0)), py = Math.cos(a + (tilt || 0));
+      const st = tilt ? 0 : 420; o.segs = []; for (let i = 0; i < n; i++) o.segs.push({ x: cx + px * (st - i * o.spacing), y: cy + py * (st - i * o.spacing) });
+      o.x = o.segs[0].x; o.y = o.segs[0].y; o.ang = o.targetAng = Math.atan2(py, px); o.thinkIn = 1e9; o.grace = 0; o.ab = ''; endFx(o); o.slowEnd = 0; o.wallTest = true; return n;
     },
     near: (dist) => {
       const o = snakes.find((sn) => sn.kind === 'npc' && !sn.wallTest); if (!o || !player) return null;
