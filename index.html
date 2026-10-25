@@ -322,7 +322,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   .card{padding:12px;gap:10px}
 }
 /* ---------- game modes ---------- */
-.modetabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.modetabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
 .modetab{appearance:none;border:0;background:transparent;color:var(--muted);font:600 13px/1.2 var(--f-body);padding:10px 6px;border-radius:10px;cursor:pointer;touch-action:manipulation;min-width:0}
 .modetab[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .modetab:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
@@ -353,6 +353,33 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 @media (max-height:500px) and (orientation:landscape){.modebar{position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));padding:5px 10px;gap:2px}.mb-role{font-size:12px}.modebar .pips{display:none}}
 @media (prefers-reduced-motion:reduce){.mb-team.low .pips i.on{animation:none}}
 @media (prefers-reduced-motion:reduce){.pulse,.toast{animation:none}.btn,.meter > div{transition:none}}
+/* ---------- abilities ---------- */
+@media (min-width:1000px){.modetabs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.abils{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.abils .opt{min-width:0}
+.abopt span{display:flex;align-items:center;gap:6px;font-weight:600}
+.abopt svg{width:16px;height:16px;flex:none}
+.btn.abil{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 40%,transparent) var(--chg,0%),rgba(244,239,254,.08) var(--chg,0%));padding:7px 12px}
+.btn.abil .ab-ico{width:18px;height:18px;flex:none}
+.ab-txt{display:grid;gap:3px;text-align:left;line-height:1;min-width:0}
+.ab-txt small{font:500 11px var(--f-num);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.btn.abil.ready{background:var(--accent);color:var(--accent-ink);border-color:transparent;animation:abReady 1.1s ease-in-out infinite}
+.btn.abil.ready small{color:var(--accent-ink)}
+.btn.abil.active{background:var(--bot);color:var(--bot-ink);border-color:transparent}
+.btn.abil.active small{color:var(--bot-ink)}
+@keyframes abReady{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 30%,transparent)}}
+@media (max-width:640px) and (orientation:portrait){.btn.abil{padding:6px 8px;gap:6px}.btn.abil .ab-ico{display:none}.ab-txt{justify-items:center;text-align:center}}
+@media (max-height:500px) and (orientation:landscape){.btn.abil{padding:5px 10px}#app.abil-on .teach{width:128px}#app.abil-on .teach-sub{display:none}}
+@media (max-width:360px) and (orientation:portrait){.ab-txt b{font-size:12px}.abils{grid-template-columns:repeat(2,minmax(0,1fr))}#app.abil-on .dock .btn{white-space:normal;line-height:1.1;padding:7px 4px;font-size:12px;gap:4px;text-align:center}#app.abil-on #botBtn svg{display:none}}
+@media (prefers-reduced-motion:reduce){.btn.abil.ready{animation:none}}
+/* ---------- piece-by-piece builder ---------- */
+.build-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.pieces{display:flex;flex-wrap:wrap;gap:5px;min-height:30px;align-items:center;padding:8px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
+.piece{width:28px;height:28px;border-radius:50%;border:3px solid transparent;padding:0;cursor:pointer;font:700 10px/1 var(--f-num);color:rgba(10,6,24,.62);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);touch-action:manipulation;transition:transform .12s}
+.piece[aria-pressed="true"]{border-color:var(--ink);transform:scale(1.15)}
+.piece:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
+.piece-empty{font-size:13px;color:var(--muted);padding:0 4px}
+.builder .swatch{width:30px;height:30px}
 </style>
 <style>html{height:100%;height:100dvh}</style>
 </head>
@@ -385,6 +412,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
     <div class="bottom">
       <div class="dock">
         <button class="btn boost" id="boostBtn" type="button">Boost</button>
+        <button class="btn abil" id="abilBtn" type="button" hidden><svg class="ab-ico" id="abIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg><span class="ab-txt"><b id="abName">Jump</b><small id="abBits">0 bits</small></span><kbd>E</kbd></button>
         <div class="teach">
           <p class="teach-top" id="dockTop">Bot: not trained yet</p>
           <div class="meter small"><div id="dockMeter"></div></div>
@@ -422,9 +450,13 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
           <button type="button" class="modetab" data-mode="classic" aria-pressed="true">Classic</button>
           <button type="button" class="modetab" data-mode="ctl" aria-pressed="false">Capture the Leader</button>
           <button type="button" class="modetab" data-mode="tag" aria-pressed="false">Tag</button>
+          <button type="button" class="modetab" data-mode="abil" aria-pressed="false">Abilities</button>
         </div>
         <p class="modeinfo" id="modeInfo"></p>
         <div class="optrow" id="optCtl" hidden><span class="lbl">Teams</span><button type="button" class="opt" data-ctl="1">1v1</button><button type="button" class="opt" data-ctl="2">2v2</button><button type="button" class="opt" data-ctl="3">3v3</button></div>
+        <div class="optrow" id="optBase" hidden><span class="lbl">Play</span><button type="button" class="opt" data-base="classic">Classic</button><button type="button" class="opt" data-base="tag">Tag</button></div>
+        <div class="abils" id="optAbil" hidden role="group" aria-label="Your power"></div>
+        <p class="modeinfo" id="abilInfo" hidden></p>
         <div class="optrow" id="optTag" hidden><button type="button" class="opt" data-tag="1v1">1v1<small>Pass It on</small></button><button type="button" class="opt" data-tag="run">Run<small>You vs 3 hunters</small></button><button type="button" class="opt" data-tag="hunt">Hunt<small>You + 2 bots vs 1</small></button></div>
         <div class="optrow" id="optDiff" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-diff="easy">Easy</button><button type="button" class="opt" data-diff="normal">Normal</button><button type="button" class="opt" data-diff="hard">Hard</button></div>
       </div>
@@ -498,12 +530,19 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="col">
       <canvas id="lockerPreview" class="preview big" aria-label="Snake preview"></canvas>
       <div class="group"><label class="lbl" for="lockerName">Name</label><input id="lockerName" class="input" maxlength="14" autocomplete="off" placeholder="Player"></div>
-      <div class="group"><p class="lbl">Main color</p><div class="swatches" id="c1Row"></div></div>
-      <div class="group"><p class="lbl">Second color</p><div class="swatches" id="c2Row"></div></div>
+      <div class="group" id="c1Group"><p class="lbl">Main color</p><div class="swatches" id="c1Row"></div></div>
+      <div class="group"><p class="lbl" id="c2Lbl">Second color</p><div class="swatches" id="c2Row"></div></div>
       <div class="group"><p class="lbl">Saved looks</p><div class="slots" id="slotRow"></div></div>
       </div>
       <div class="col">
       <div class="group"><p class="lbl">Pattern</p><div class="opts" id="patRow"></div></div>
+      <div class="group builder" id="buildGroup">
+        <div class="build-head"><p class="lbl">Build it piece by piece</p><span class="lbl" id="buildCount">0/20 pieces</span></div>
+        <div class="pieces" id="pieceRow" role="group" aria-label="Your pieces, head first"></div>
+        <div class="swatches" id="buildSw"></div>
+        <p class="bc-line" id="buildHint"></p>
+        <div class="row"><button class="btn small" id="buildUndo" type="button">Undo</button><button class="btn small" id="buildRandom" type="button">Random</button><button class="btn small" id="buildClear" type="button">Clear</button></div>
+      </div>
       <div class="group"><p class="lbl">Eyes</p><div class="opts" id="eyeRow"></div></div>
       <div class="group"><p class="lbl">Hat</p><div class="opts" id="hatRow"></div></div>
       <div class="group"><p class="lbl">Arena background</p><div class="opts" id="themeRow"></div></div>
@@ -636,7 +675,9 @@ const PATTERNS = [
   { id: 'solid', name: 'Solid' }, { id: 'stripes', name: 'Stripes' }, { id: 'rings', name: 'Rings' },
   { id: 'spots', name: 'Spots' }, { id: 'fade', name: 'Fade' },
   { id: 'rainbow', name: 'Rainbow', lock: { type: 'botLevel', v: 3, text: 'Bot level 3' } },
+  { id: 'custom', name: 'Custom' },
 ];
+const CUSTOM_PAT = 6, SKIN_MAX = 20;
 const EYES = [
   { id: 'classic', name: 'Classic' }, { id: 'sleepy', name: 'Sleepy' }, { id: 'angry', name: 'Grumpy' }, { id: 'googly', name: 'Googly' },
   { id: 'shades', name: 'Shades', lock: { type: 'games', v: 10, text: 'Play 10 games' } },
@@ -689,6 +730,11 @@ function unpackLook(n) {
   n = Math.max(0, int(n));
   return { c1: n % 10, c2: Math.floor(n / 10) % 10, pat: Math.min(PATTERNS.length - 1, Math.floor(n / 100) % 10), eye: Math.min(EYES.length - 1, Math.floor(n / 1000) % 10), hat: Math.min(HATS.length - 1, Math.floor(n / 10000) % 10) };
 }
+// A custom snake is a list of palette colors, head first, that repeats down the body.
+function parseSkin(v) { if (typeof v !== 'string' || !/^[0-9]{1,20}$/.test(v)) return null; return [...v].map(Number).filter((k) => k < PALETTE.length); }
+function skinStr() { return profile.look.pat === CUSTOM_PAT && profile.skin.length ? profile.skin.join('') : null; }
+function lookToSlot() { const c = packLook(profile.look), k = skinStr(); return k ? `${c}|${k}` : c; }
+function slotToLook(v) { if (typeof v === 'number') return { look: unpackLook(v), skin: null }; const p = String(v).split('|'); return { look: unpackLook(+p[0]), skin: parseSkin(p[1]) }; }
 function bytesToB64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
 function b64ToBytes(b) { const s = atob(b); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
 
@@ -697,7 +743,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal' } };
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump' } };
 let brain = null;
 let newSince = 0;
 
@@ -707,14 +753,16 @@ function applyProfileData(p) {
   for (const k of ['auto', 'reflex', 'sound', 'music']) if (typeof p[k] === 'boolean') profile[k] = p[k];
   if (p.modeSel && typeof p.modeSel === 'object') {
     const ms = p.modeSel;
-    profile.modeSel = { m: ['classic', 'ctl', 'tag'].includes(ms.m) ? ms.m : 'classic', ctl: clamp(int(ms.ctl, 1), 1, 3), tag: ['1v1', 'run', 'hunt'].includes(ms.tag) ? ms.tag : '1v1', diff: ['easy', 'normal', 'hard'].includes(ms.diff) ? ms.diff : 'normal' };
+    profile.modeSel = { m: ['classic', 'ctl', 'tag', 'abil'].includes(ms.m) ? ms.m : 'classic', ctl: clamp(int(ms.ctl, 1), 1, 3), tag: ['1v1', 'run', 'hunt'].includes(ms.tag) ? ms.tag : '1v1', diff: ['easy', 'normal', 'hard'].includes(ms.diff) ? ms.diff : 'normal',
+      base: ms.base === 'tag' ? 'tag' : 'classic', ab: typeof ms.ab === 'string' && Object.prototype.hasOwnProperty.call(ABIL, ms.ab) ? ms.ab : 'jump' };
   }
   if (typeof p.volume === 'number' && isFinite(p.volume)) profile.volume = clamp(p.volume, 0, 1);
   if (typeof p.theme === 'number' && isFinite(p.theme)) profile.theme = clamp(Math.floor(p.theme), -1, 5);
   for (const k of ['acc', 'near']) if (p[k] === null || (typeof p[k] === 'number' && isFinite(p[k]))) profile[k] = p[k] === null ? null : clamp(p[k], 0, 1);
   if (typeof p.name === 'string') profile.name = p.name.slice(0, 14);
   if (typeof p.look === 'number' && isFinite(p.look)) profile.look = unpackLook(p.look);
-  if (Array.isArray(p.slots)) profile.slots = [0, 1, 2].map((i) => (typeof p.slots[i] === 'number' && isFinite(p.slots[i]) ? Math.max(0, Math.floor(p.slots[i])) : null));
+  if (Array.isArray(p.slots)) profile.slots = [0, 1, 2].map((i) => { const v = p.slots[i]; if (typeof v === 'number' && isFinite(v)) return Math.max(0, Math.floor(v)); if (typeof v === 'string' && /^\d{1,6}\|[0-9]{1,20}$/.test(v)) return v; return null; });
+  if (Array.isArray(p.skin)) profile.skin = p.skin.filter((k) => Number.isInteger(k) && k >= 0 && k < PALETTE.length).slice(0, SKIN_MAX); else if (typeof p.skin === 'string') profile.skin = parseSkin(p.skin) || [];
   if (Array.isArray(p.npcPool)) profile.npcPool = p.npcPool.slice(0, 12)
     .filter((e) => e && Array.isArray(e.g) && e.g.length === GENES.length && e.g.every((v) => typeof v === 'number' && isFinite(v)) && typeof e.f === 'number' && isFinite(e.f))
     .map((e) => ({ g: e.g.map((v, i) => clamp(v, GENES[i][0], GENES[i][1])), f: clamp(e.f, 0, 1e7) }));
@@ -983,7 +1031,7 @@ const qbuf = new Int32Array(SEG_CAP);
 function buildSegGrid() {
   segHead.fill(-1); let n = 0;
   for (const s of snakes) {
-    if (s.ghost || !s.alive) continue;
+    if (s.ghost || !s.alive || s.phase) continue;
     const segs = s.segs;
     for (let j = 0; j < segs.length; j++) {
       if (n >= SEG_CAP) return;
@@ -1009,9 +1057,11 @@ const foodAt = (i) => (i < MAX_SLOTS ? slots[i] : drops[i - MAX_SLOTS]);
 const radiusFor = (m) => Math.min(39, 9 + Math.sqrt(Math.max(1, m)) * 0.95);
 const segCount = (m) => Math.min(260, Math.floor(8 + Math.max(1, m) * 0.28));
 function updateSize(s) { s.r = radiusFor(s.mass); s.spacing = s.r * 0.45; }
-function applyLook(s, look) {
-  s.look = look; s.color = PALETTE[look.c1]; s.colorB = PALETTE[look.c2];
-  s.color2 = shade(s.color, 0.8); s.outline = shade(s.color, 0.42); s.fade = fadeFor(look.c1, look.c2);
+function applyLook(s, look, skin) {
+  s.look = look; s.skin = look.pat === CUSTOM_PAT && skin && skin.length ? skin.slice(0, SKIN_MAX) : null;
+  s.skinCols = s.skin ? s.skin.map((k) => PALETTE[k]) : null;
+  s.color = PALETTE[s.skin ? s.skin[0] : look.c1]; s.colorB = PALETTE[look.c2];
+  s.color2 = shade(s.color, 0.8); s.outline = s.skin ? '#1b1433' : shade(s.color, 0.42); s.fade = fadeFor(look.c1, look.c2);
 }
 function makeSnake(o) {
   const pos = o.pos || [0, 0];
@@ -1019,7 +1069,8 @@ function makeSnake(o) {
   const s = { id: ++snakeId, kind: o.kind, name: o.name || 'Player', mass: o.mass || START_MASS, x: pos[0], y: pos[1], ang, targetAng: ang,
     wantBoost: false, boosting: false, boostAcc: 0, alive: true, segs: [], r: 10, spacing: 5, npc: o.npc || null, lastBin: 4,
     grace: o.kind === 'player' ? 1.5 : 0.5, bot: false, ghost: false, npcId: o.npcId, nameIdx: o.nameIdx || 0, team: -1, role: '', it: false, stam: 1, spd: 1 };
-  applyLook(s, o.look || randomLook());
+  applyLook(s, o.look || randomLook(), o.skin);
+  s.ab = ''; s.charge = 0; s.fx = ''; s.fxUse = 0; s.phase = false; s.shieldOn = false; s.slowEnd = 0;
   updateSize(s);
   const n = segCount(s.mass);
   for (let i = 0; i < n; i++) s.segs.push({ x: s.x - Math.cos(ang) * i * 1.5, y: s.y - Math.sin(ang) * i * 1.5 });
@@ -1080,20 +1131,21 @@ function spawnNpc(initial) {
 
 function moveSnake(s, dt) {
   s.grace -= dt;
-  const tr = 4.8 / (1 + s.mass / 900) * (s.boosting ? 1.5 : 1);
+  const slow = s.slowEnd > curNow, dash = s.fx === 'dash';
+  const tr = 4.8 / (1 + s.mass / 900) * (s.boosting || dash ? 1.5 : 1) * (slow ? 0.6 : 1);
   const diff = wrapA(s.targetAng - s.ang), mt = tr * dt, prevAng = s.ang;
   s.ang = wrapA(s.ang + clamp(diff, -mt, mt));
   s.w = (s.w || 0) * 0.7 + (dt > 0 ? wrapA(s.ang - prevAng) / dt : 0) * 0.3;
   const tagOn = match.m === 'tag';
-  if (tagOn) { s.boosting = s.wantBoost && s.stam > 0.03; s.stam = clamp(s.stam + (s.boosting ? -0.42 : 0.2) * dt, 0, 1); }
-  else s.boosting = s.wantBoost && s.mass > MIN_BOOST_MASS;
-  const sp = (s.boosting ? BOOST_SPEED : BASE_SPEED) * (s.spd || 1);
+  if (tagOn) { s.boosting = s.wantBoost && s.stam > 0.03 && !dash; s.stam = clamp(s.stam + (s.boosting ? -0.42 : s.runner ? TAG_TUNE.runnerRegen : 0.2) * dt, 0, 1); }
+  else s.boosting = s.wantBoost && s.mass > MIN_BOOST_MASS && !dash;
+  const sp = speedOf(s, curNow);
   if (s.boosting && !tagOn) {
     s.boostAcc += dt;
     while (s.boostAcc >= 0.1) {
       s.boostAcc -= 0.1; s.mass -= 1;
       const t = s.segs[s.segs.length - 1];
-      if (drops.length < MAX_DROPS) drops.push({ x: t.x + rand(-4, 4), y: t.y + rand(-4, 4), v: 0.6, r: 4.5, c: s.look.c1, ph: Math.random() * TAU, life: 22, id: null, eaten: false });
+      if (drops.length < MAX_DROPS) drops.push({ x: t.x + rand(-4, 4), y: t.y + rand(-4, 4), v: 0.6, r: 4.5, c: s.skin ? s.skin[Math.floor(s.mass) % s.skin.length] : s.look.c1, ph: Math.random() * TAU, life: 22, id: null, eaten: false });
     }
   } else s.boostAcc = 0;
   s.x += Math.cos(s.ang) * sp * dt; s.y += Math.sin(s.ang) * sp * dt;
@@ -1134,7 +1186,7 @@ function moveRemote(s, dt, now) {
 }
 function setNet(s, x, y, a, m, b, now, w, sp) {
   const dispX = s.x, dispY = s.y;
-  s.netW = clamp(num(w), -6, 6); s.netS = clamp(num(sp, 1), 0.5, 1.5);
+  s.netW = clamp(num(w), -6, 6); s.netS = clamp(num(sp, 1), 0.3, 3.2);
   s.netX = clamp(x, -GRID_R, GRID_R); s.netY = clamp(y, -GRID_R, GRID_R); s.netA = wrapA(a); s.netB = b; s.netT = now;
   const mm = clamp(m, 1, 6000); if (mm !== s.mass) s.mass = mm;
   s.errX = dispX - s.netX; s.errY = dispY - s.netY;
@@ -1227,6 +1279,7 @@ function npcThink(s) {
   if (Math.random() < 0.15 + 0.85 * iq) best = safeBin(s, best, ORDER[best], Math.round(14 * P.look * (0.6 + 0.4 * iq)));
   s.lastBin = best; s.targetAng = wrapA(s.ang + TB[best]);
   s.wantBoost = s.mass > 40 && npcBuf[6] < 0.2 && ((npcBuf[18] > 0.7 && Math.random() < P.boost * (0.3 + 0.7 * iq)) || (s.wantBoost && Math.random() < 0.85));
+  if (s.ab) botAbility(s, npcBuf, null);
   s.thinkIn = Math.round(3 + (1 - iq) * 9);
 }
 
@@ -1249,6 +1302,7 @@ function botThink(s) {
   const pb = 1 / (1 + Math.exp(-out[NB]));
   s.wantBoost = s.wantBoost ? pb > 0.4 : pb > 0.6;
   botViz = { p: Array.from(botP), chosen: best, reflex };
+  if (s.ab) botAbility(s, botIn, null);
 }
 
 /* ---------- you ---------- */
@@ -1276,7 +1330,7 @@ function dropBody(s, key) {
     const p = segs[Math.floor(k * step)];
     let x = p.x + rand(-0.6, 0.6) * s.r, y = p.y + rand(-0.6, 0.6) * s.r;
     const d = Math.hypot(x, y); if (d > worldR - 12) { x *= (worldR - 12) / d; y *= (worldR - 12) / d; }
-    drops.push({ x, y, v: per, r, c: s.look.c1, ph: Math.random() * TAU, life: rand(35, 50), id, eaten: false });
+    drops.push({ x, y, v: per, r, c: s.skin ? s.skin[k % s.skin.length] : s.look.c1, ph: Math.random() * TAU, life: rand(35, 50), id, eaten: false });
   }
 }
 function killSnake(s, killer) {
@@ -1300,15 +1354,16 @@ function killSnake(s, killer) {
   }
 }
 function eatAround(s, dt) {
-  const n = queryNear(foodHead, foodNext, s.x, s.y, s.r + 80, qbuf), reach = s.r + 72;
+  const mag = s.fx === 'magnet', n = queryNear(foodHead, foodNext, s.x, s.y, s.r + (mag ? 390 : 80), qbuf), reach = s.r + (mag ? 380 : 72), pullV = mag ? 950 : 420;
   for (let q = 0; q < n; q++) {
     const fi = qbuf[q], f = foodAt(fi); if (!f || f.eaten) continue;
     const dx = s.x - f.x, dy = s.y - f.y, d = Math.sqrt(dx * dx + dy * dy);
     if (d < s.r + f.r + 6) {
       if (match.m !== 'tag') s.mass += f.v; if (s === player) SFX.eat(f.v);
+      if (s.ab && !s.fx) s.charge = Math.min(ABIL[s.ab].cost, s.charge + f.v * 10);
       if (fi < MAX_SLOTS) { if (gameKind === 'online') logEat(fi * 1000 + (slotGen[fi] % 1000)); slotGen[fi]++; setSlot(fi); }
       else { f.eaten = true; if (gameKind === 'online' && f.id) { logEat(f.id); eatenDrops.set(f.id, performance.now()); } }
-    } else if (d < reach && d > 0) { const pull = Math.min(d, 420 * dt) / d; f.x += dx * pull; f.y += dy * pull; }
+    } else if (d < reach && d > 0) { const pull = Math.min(d, pullV * dt) / d; f.x += dx * pull; f.y += dy * pull; }
   }
 }
 function npcTarget() {
@@ -1319,12 +1374,168 @@ function npcTarget() {
 }
 
 
+/* ================= Abilities: a power you charge up with bits ================= */
+const ABIL = {
+  jump: { name: 'Jump', cost: 2000, dur: 1.1, tag: true, info: 'Leap into the air and sail right over other snakes. Nothing can hit you while you are up there.', tagInfo: "Leap into the air. Nobody can tag you while you're up there, and you can land on someone to tag them." },
+  dash: { name: 'Dash', cost: 1500, dur: 1.6, tag: true, info: 'A huge burst of speed that costs no length.', tagInfo: 'A huge burst of speed that uses no boost.' },
+  ghost: { name: 'Ghost', cost: 2500, dur: 2.5, tag: true, info: 'Turn see-through and slide right through other snakes.', tagInfo: "Turn see-through. Nobody can tag you while you're a ghost." },
+  magnet: { name: 'Magnet', cost: 1500, dur: 5, tag: false, info: 'Pull in every snack around you. Classic only.' },
+  shield: { name: 'Shield', cost: 3000, dur: 8, tag: false, info: 'A bubble that saves you from one crash. Classic only.' },
+  freeze: { name: 'Freeze', cost: 2500, dur: 0.6, tag: true, info: 'Every snake close to you slows way down for 3 seconds.' },
+};
+const ABIL_IDS = Object.keys(ABIL);
+const FX_NAME = ['', 'jump', 'dash', 'ghost', 'magnet', 'shield', 'freeze', 'saved'], FX_CODE = {};
+FX_NAME.forEach((n, i) => { if (n) FX_CODE[n] = i; });
+const FREEZE_R = 520, FREEZE_MS = 3000;
+const ABIL_ICON = {
+  jump: '<path d="M12 17V4"/><path d="m6 10 6-6 6 6"/><path d="M4 21h16"/>',
+  dash: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  ghost: '<path d="M5 21V10a7 7 0 0 1 14 0v11l-2.3-1.8L14.3 21 12 19.2 9.7 21l-2.4-1.8z"/><circle cx="9.5" cy="10.5" r="1" fill="currentColor"/><circle cx="14.5" cy="10.5" r="1" fill="currentColor"/>',
+  magnet: '<path d="M5 3h4v8a3 3 0 0 0 6 0V3h4v8a7 7 0 0 1-14 0z"/><path d="M5 7h4M15 7h4"/>',
+  shield: '<path d="M12 3 4 6v6c0 4.6 3.4 8.1 8 9 4.6-.9 8-4.4 8-9V6z"/>',
+  freeze: '<path d="M12 2v20M3.3 7l17.4 10M20.7 7 3.3 17"/><path d="m9 4 3 2 3-2M9 20l3-2 3 2"/>',
+};
+let abilClassic = false, fzSeq = 0, curNow = 0;
+const fxRings = [], abilStats = { me: 0, bot: 0 };
+const abilOn = () => (inModes() ? !!match.ab : abilClassic);
+const abIcon = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ABIL_ICON[id] || ''}</svg>`;
+const coarse = () => { try { return matchMedia('(pointer:coarse)').matches; } catch (e) { return false; } };
+const fxDur = (id) => (id === 'saved' ? 1 : ABIL[id] ? ABIL[id].dur : 0);
+function abilAllowed(id) { return !!ABIL[id] && (match.m !== 'tag' || ABIL[id].tag); }
+function myAbility() { const a = profile.modeSel.ab; return abilAllowed(a) ? a : 'jump'; }
+function botPick(s) {
+  let ids = ABIL_IDS.filter(abilAllowed);
+  if (match.m === 'tag' && match.v !== '1v1') ids = s.it ? ['dash', 'freeze'] : ['jump', 'dash', 'ghost', 'freeze'];
+  return ids[Math.floor(Math.random() * ids.length)];
+}
+function speedOf(s, now) {
+  let v = s.fx === 'dash' ? BOOST_SPEED * 1.4 : s.boosting ? BOOST_SPEED : BASE_SPEED;
+  v *= s.spd || 1;
+  if (s.fx === 'jump') v *= 1.3;
+  if (s.slowEnd > now) v *= 0.5;
+  return v;
+}
+function startFx(s, id, now, remMs) {
+  const dur = fxDur(id) * 1000; if (!dur) return;
+  const rem = remMs == null ? dur : clamp(remMs, 0, dur);
+  s.fx = id; s.fxStart = now - (dur - rem); s.fxEnd = s.fxStart + dur;
+  s.phase = id === 'jump' || id === 'ghost' || id === 'saved'; s.shieldOn = id === 'shield';
+}
+function endFx(s) { s.fx = ''; s.phase = false; s.shieldOn = false; }
+// Other screens tell us what power a snake is using; start it once per use so the animation stays smooth.
+function applyNetFx(s, code, rem, use, slowMs, now) {
+  const id = FX_NAME[code] || '';
+  if (id && use !== s.fxUse) { s.fxUse = use; startFx(s, id, now, rem); }
+  else if (!id && s.fx) endFx(s);
+  s.slowEnd = slowMs > 0 ? now + Math.min(slowMs, FREEZE_MS) : 0;
+}
+function freezeHits(o, srcIt) { return match.m !== 'tag' || match.v === '1v1' || !!o.it !== !!srcIt; }
+function freezeAround(x, y, src, now, srcIt) {
+  fxRings.push({ x, y, t: now, R: FREEZE_R, col: '#dffaff' });
+  let n = 0;
+  for (const o of snakes) {
+    if (!o.alive || o === src || o.ghost || !freezeHits(o, srcIt)) continue;
+    if ((o.x - x) ** 2 + (o.y - y) ** 2 > (FREEZE_R + o.r) ** 2) continue;
+    n++;
+    if ((o.kind !== 'player' && o.kind !== 'npc') || o.shieldOn) continue;   // each screen slows only the snakes it drives
+    o.slowEnd = now + FREEZE_MS;
+    if (o === player && mode === 'play') { toast('Brrr! You got frozen for 3 seconds'); SFX.frozen(); }
+  }
+  return n;
+}
+function useAbility(s, now) {
+  if (!abilOn() || !s.alive || !s.ab || s.fx) return false;
+  const A = ABIL[s.ab]; if (!A || (s.charge || 0) < A.cost) return false;
+  s.charge = 0; s.fxUse = (s.fxUse || 0) + 1; startFx(s, s.ab, now);
+  if (s.ab === 'freeze') {
+    const n = freezeAround(s.x, s.y, s, now, s.it);
+    if (gameKind === 'online') online.fzOut.push({ id: myKey().slice(0, 6) + '.' + (++fzSeq), x: Math.round(s.x), y: Math.round(s.y), it: s.it ? 1 : 0, t: now });
+    if (s === player) toast(n ? `Froze ${n} snake${n === 1 ? '' : 's'}!` : 'Freeze! Nobody was close enough this time.');
+  }
+  if (s === player) { abilStats.me++; SFX.power(s.ab); }
+  else { abilStats.bot++; if (player && player.alive && mode === 'play' && Math.hypot(s.x - player.x, s.y - player.y) < 800) SFX.power(s.ab, true); }
+  return true;
+}
+function tryAbility() {
+  if (!player || !player.alive || mode !== 'play' || !abilOn() || !player.ab || player.fx) return;
+  if (useAbility(player, curNow || performance.now())) return;
+  const A = ABIL[player.ab];
+  toast(`${A.name} needs ${fmt(A.cost)} bits. You have ${fmt(player.charge || 0)}. Eat snacks to fill it up!`);
+}
+function shieldSave(s, cause, now) {
+  s.fxUse = (s.fxUse || 0) + 1; startFx(s, 'saved', now);
+  fxRings.push({ x: s.x, y: s.y, t: now, R: s.r * 4 + 60, col: '#52e5ff' });
+  if (cause === 'edge') { const d = Math.hypot(s.x, s.y) || 1, lim = worldR - s.r * 2 - 30; s.x = s.x / d * lim; s.y = s.y / d * lim; s.ang = s.targetAng = Math.atan2(-s.y, -s.x); }
+  if (s === player) { toast('Your shield saved you!'); SFX.shieldPop(); }
+}
+// Bots (and your own bot when it drives) use their power when it would help.
+function botAbility(s, buf, hint) {
+  const A = ABIL[s.ab]; if (!A || s.fx || (s.charge || 0) < A.cost || !abilOn() || Math.random() < 0.35) return;
+  const front = Math.max(buf[6], buf[5] * 0.8, buf[7] * 0.8);
+  let headNear = 0; for (let k = 0; k < S; k++) if (buf[24 + k] > headNear) headNear = buf[24 + k];
+  let go = false;
+  if (s.ab === 'jump' || s.ab === 'ghost') go = hint ? !!hint.flee && hint.d < 190 : front > 0.72;
+  else if (s.ab === 'shield') go = front > 0.5;
+  else if (s.ab === 'dash') go = hint ? (hint.chase && hint.d < 430 && hint.d > 110) || (hint.flee && hint.d < 260) : front < 0.3 && (headNear > 0.6 || buf[18] > 0.85);
+  else if (s.ab === 'freeze') go = hint ? hint.d < 380 : headNear > 0.55;
+  else if (s.ab === 'magnet') go = buf[17] + buf[18] + buf[19] > 0.6 || Math.random() < 0.08;
+  if (go) useAbility(s, curNow);
+}
+function abilTick(dt, now) {
+  const on = abilOn(), rate = match.m === 'tag' ? 45 : 30;
+  for (const s of snakes) {
+    if (s.fx && (now >= s.fxEnd || !on)) { if (s === player && s.fx === 'jump') SFX.land(); endFx(s); }
+    if (s.kind !== 'player' && s.kind !== 'npc') continue;
+    if (!on) { if (s.ab) { s.ab = ''; s.charge = 0; } continue; }
+    const want = s.kind === 'player' ? myAbility() : s.ab && abilAllowed(s.ab) ? s.ab : botPick(s);
+    if (s.ab !== want) { s.ab = want; s.charge = 0; }
+    if (!s.fx) s.charge = Math.min(ABIL[s.ab].cost, (s.charge || 0) + rate * dt);
+  }
+  if (player && player.alive && player.ab) {
+    const ready = !player.fx && player.charge >= ABIL[player.ab].cost;
+    if (ready && !player.wasReady && mode === 'play' && !botDriving) { toast(`${ABIL[player.ab].name} is ready! ${coarse() ? 'Tap the power button.' : 'Press E to use it.'}`); SFX.ready(); }
+    player.wasReady = ready;
+  }
+  for (let i = fxRings.length - 1; i >= 0; i--) if (now - fxRings[i].t > 700 || fxRings[i].t > now + 2000) fxRings.splice(i, 1);
+}
+function buildAbilOpts() {
+  const row = $('optAbil'); row.textContent = '';
+  for (const id of ABIL_IDS) {
+    const A = ABIL[id], b = document.createElement('button'); b.type = 'button'; b.className = 'opt abopt'; b.dataset.ab = id;
+    const t = document.createElement('span'); t.innerHTML = abIcon(id); t.append(A.name);
+    const sm = document.createElement('small'); sm.textContent = `${fmt(A.cost)} bits`;
+    b.append(t, sm); b.addEventListener('click', () => setModeSel({ ab: id })); row.append(b);
+  }
+}
+function updateAbilBtn() {
+  const el = $('abilBtn'), on = abilOn() && mode === 'play' && !!player && player.alive && !!player.ab;
+  el.hidden = !on; app.classList.toggle('abil-on', on);
+  if (!on) return;
+  const A = ABIL[player.ab], ch = clamp(player.charge || 0, 0, A.cost), act = !!player.fx, ready = !act && ch >= A.cost, pct = Math.floor(ch / A.cost * 100);
+  if (el.dataset.ab !== player.ab) { el.dataset.ab = player.ab; $('abIco').innerHTML = ABIL_ICON[player.ab]; $('abName').textContent = A.name; el.setAttribute('aria-label', `Use ${A.name}`); }
+  el.classList.toggle('ready', ready); el.classList.toggle('active', act);
+  el.style.setProperty('--chg', (act ? 100 : pct) + '%');
+  const compact = W < 640 || H < 500;
+  $('abBits').textContent = act ? 'Active!' : ready ? (compact || coarse() ? 'Ready!' : 'Ready! Press E') : compact ? `${pct}%` : `${fmt(ch)} / ${fmt(A.cost)} bits`;
+}
+function drawRings(now, z) {
+  for (const g of fxRings) {
+    const p = clamp((now - g.t) / 650, 0, 1), R = 30 + (g.R - 30) * (1 - (1 - p) * (1 - p));
+    ctx.globalAlpha = (1 - p) * 0.14; ctx.fillStyle = g.col; ctx.beginPath(); ctx.arc(g.x, g.y, R, 0, TAU); ctx.fill();
+    ctx.globalAlpha = (1 - p) * 0.85; ctx.strokeStyle = g.col; ctx.lineWidth = 7 / Math.max(0.5, z); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
 /* ================= game modes: Capture the Leader and Tag ================= */
 const TEAMS = [
   { name: 'Red', color: '#ff5d7d', soft: 'rgba(255,93,125,0.13)', pal: 7, pal2: 1 },
   { name: 'Blue', color: '#52b7ff', soft: 'rgba(82,183,255,0.13)', pal: 3, pal2: 9 },
 ];
 const IT_COLOR = '#ff3b55';
+// Balance for "everyone vs one" tag (Run / Hunt). Tuned with fast-forward simulations.
+const TAG_TUNE = { runnerSpd: 1.08, hunterSpd: 1, runnerRegen: 0.2, time: 90, headStart: 2500, hunterIq: 1, arena: 1700,
+  huntSpd: { easy: 0.93, normal: 1.0, hard: 1.03 }, flank: { easy: 0, normal: 0.8, hard: 0.9 } };
 const DIFF_IQ = { easy: 0.35, normal: 0.62, hard: 0.92 };
 const CTL_R = [0, 2000, 2400, 2800], CTL_MINIS = 10, LEADER_MASS = 450, GUARD_MASS = 70, MINI_MASS = 36, TAG_MASS = 50, CAPTURE_AT = 3;
 const ROLE_CODE = { L: 1, G: 2, M: 3, P: 4 }, CODE_ROLE = ['', 'L', 'G', 'M', 'P'];
@@ -1332,6 +1543,7 @@ const MODE_INFO = {
   classic: 'Eat, grow and dodge. Your bot learns by watching how you play.',
   ctl: 'Red vs Blue. Each Leader is big and guarded by 10 mini bots that drive like the bot you trained. A Leader respawns while their team has 3+ minis. Catch one with fewer than 3 and your team wins.',
   tag: 'Nobody dies here. Whoever is It glows red: touch someone with your head to tag them. Boost runs on stamina, so save it for close calls.',
+  abil: 'Pick a power, then play Classic or Tag. Eating snacks and staying alive fill up your bits. When they are full, press E or tap the power button to use it. Bots get powers too!',
 };
 let match = { m: 'classic' };
 const inModes = () => match.m === 'ctl' || match.m === 'tag';
@@ -1341,13 +1553,18 @@ function keyOf(s) { if (!s) return ''; if (s.kind === 'player') return myKey(); 
 function friendly(a, b) { return match.m === 'ctl' && !!b && a.team >= 0 && a.team === b.team; }
 const fmtTime = (sec) => { sec = Math.max(0, Math.ceil(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; };
 function modeName(m) {
-  if (m.m === 'ctl') return `Capture the Leader ${m.sz}v${m.sz}`;
-  if (m.m === 'tag') return m.v === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one';
-  return 'Classic';
+  const plus = (m.m === 'ctl' || m.m === 'tag' ? m.ab : abilClassic) ? ' + Abilities' : '';
+  if (m.m === 'ctl') return `Capture the Leader ${m.sz}v${m.sz}${plus}`;
+  if (m.m === 'tag') return (m.v === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one') + plus;
+  return 'Classic' + plus;
 }
-function newMatchCfg() { const ms = profile.modeSel; return { m: ms.m, sz: ms.ctl, v: ms.tag, df: ms.diff }; }
-function cfgOf(m) { return { m: m.m, sz: m.sz, v: m.v, df: m.df }; }
-function arenaFor(m) { return m.m === 'ctl' ? CTL_R[clamp(m.sz, 1, 3)] : m.v === '1v1' ? 1300 : 1700; }
+function newMatchCfg() {
+  const ms = profile.modeSel;
+  if (ms.m === 'abil') return ms.base === 'tag' ? { m: 'tag', sz: 1, v: ms.tag, df: ms.diff, ab: 1 } : { m: 'classic', ab: 1 };
+  return { m: ms.m, sz: ms.ctl, v: ms.tag, df: ms.diff };
+}
+function cfgOf(m) { return { m: m.m, sz: m.sz, v: m.v, df: m.df, ab: m.ab ? 1 : 0 }; }
+function arenaFor(m) { return m.m === 'ctl' ? CTL_R[clamp(m.sz, 1, 3)] : m.v === '1v1' ? 1300 : TAG_TUNE.arena; }
 function foodFor(R) { return Math.min(MAX_SLOTS - 50, Math.round(SOLO_FOOD * (R / SOLO_R) ** 2)); }
 function setArena(R, food) { worldR = worldTargetR = R; activeSlots = food; for (let i = 0; i < MAX_SLOTS; i++) { const sl = slots[i]; sl.x = sl.ux * worldR; sl.y = sl.uy * worldR; } }
 function miniLook(t) { return { c1: TEAMS[t].pal, c2: TEAMS[t].pal2, pat: 2, eye: 0, hat: 0 }; }
@@ -1396,10 +1613,10 @@ function startMatch(cfg) {
   const m = cfg.m === 'tag' ? 'tag' : 'ctl';
   match = { m, sz: clamp(int(cfg.sz, 1), 1, 3), v: ['1v1', 'run', 'hunt', 'evo'].includes(cfg.v) ? cfg.v : '1v1', df: DIFF_IQ[cfg.df] ? cfg.df : 'normal',
     mid: (Math.random() * 2147483647) | 0, round: (old.round || 0) + 1, st: 'play', win: null, why: '', sd: false, tm: {}, it: new Set(), mc: [0, 0], nb: null,
-    queue: [], overAt: 0, runner: '', myRespawnAt: 0, itTime: 0, made: 0, wasIt: false, started: now };
+    queue: [], overAt: 0, runner: '', myRespawnAt: 0, itTime: 0, made: 0, wasIt: false, started: now, ab: !!cfg.ab };
   if (gameKind === 'online' && m === 'tag' && match.v !== '1v1') match.v = 'evo';
   const R = arenaFor(match); match.bases = [[-R * 0.6, 0], [R * 0.6, 0]];
-  match.tEnd = now + 1000 * (m === 'ctl' ? 300 : match.v === '1v1' ? 120 : 90); match.tl = (match.tEnd - now) / 1000;
+  match.tEnd = now + 1000 * (m === 'ctl' ? 300 : match.v === '1v1' ? 120 : TAG_TUNE.time); match.tl = (match.tEnd - now) / 1000;
   if (gameKind === 'solo') setupWorld((Math.random() * 4294967296) >>> 0, R, foodFor(R));
   else { snakes = snakes.filter((sn) => sn.kind === 'remote'); player = null; drops = []; setArena(R, foodFor(R)); }
   const humans = gameKind === 'solo' ? ['me'] : orderedHumans(old.tm);
@@ -1427,15 +1644,20 @@ function setupTag(humans) {
     match.it.add(keys[Math.floor(Math.random() * keys.length)]);
     return;
   }
+  // Hunters start together on one side of the arena and the runner starts on the far side.
+  const th = Math.random() * TAU, R = worldR * 0.58;
+  match.huntSpot = [Math.cos(th) * R, Math.sin(th) * R]; match.runSpot = [-Math.cos(th) * R, -Math.sin(th) * R];
+  const nearHunt = () => [match.huntSpot[0] + rand(-170, 170), match.huntSpot[1] + rand(-170, 170)];
   let runner;
   if (match.v === 'run') runner = 'me';
-  else if (match.v === 'hunt') { const b = spawnModeBot({ role: 'P', spd: 1.08 }); runner = keyOf(b); match.it.add('me'); }
+  else if (match.v === 'hunt') { const b = spawnModeBot({ role: 'P', spd: TAG_TUNE.runnerSpd, pos: match.runSpot.slice() }); b.runner = true; runner = keyOf(b); match.it.add('me'); }
   else runner = humans[(match.round - 1) % humans.length];
   match.runner = runner;
   for (const k of humans) if (k !== runner) match.it.add(k);
   const total = Math.max(4, humans.length + (match.v === 'hunt' ? 1 : 0));
   const have = humans.length + (match.v === 'hunt' ? 1 : 0);
-  for (let i = have; i < total; i++) { const b = spawnModeBot({ role: 'P' }); match.it.add(keyOf(b)); }
+  for (let i = have; i < total; i++) { const b = spawnModeBot({ role: 'P', spd: TAG_TUNE.hunterSpd * (TAG_TUNE.huntSpd[match.df] || 1), pos: nearHunt() }); match.it.add(keyOf(b)); }
+  syncRoles();
 }
 function placeLocal() {
   const k = myKey(), tr = match.tm[k];
@@ -1446,11 +1668,14 @@ function placeLocal() {
     pos = [b[0] + rand(-90, 90), b[1] + rand(-90, 90)]; ang = Math.atan2(-b[1], -b[0]); mass = tr && tr[1] === 'L' ? LEADER_MASS : GUARD_MASS;
   } else {
     const iAmIt = match.it.has(k);
-    pos = tagSpot((sn) => sn.it !== iAmIt); ang = Math.random() * TAU; mass = TAG_MASS;
+    syncRoles();
+    if (match.v !== '1v1' && match.runSpot) { const sp = iAmIt ? match.huntSpot : match.runSpot; pos = [sp[0] + rand(-120, 120), sp[1] + rand(-120, 120)]; }
+    else pos = tagSpot((sn) => sn !== player && sn.it !== iAmIt);
+    ang = Math.random() * TAU; mass = TAG_MASS;
   }
-  player = makeSnake({ kind: 'player', name: cleanName(profile.name), look: profile.look, mass, pos, ang });
+  player = makeSnake({ kind: 'player', name: cleanName(profile.name), look: profile.look, skin: profile.skin, mass, pos, ang });
   player.grace = 2; player.stam = 1;
-  if (match.m === 'tag' && match.v !== '1v1' && match.runner === k) player.spd = 1.08;
+  if (match.m === 'tag' && match.v !== '1v1') { if (match.runner === k) { player.spd = TAG_TUNE.runnerSpd; player.runner = true; } else player.spd = TAG_TUNE.hunterSpd; }
   snakes.push(player); cam.x = player.x; cam.y = player.y;
   mode = 'play'; showScreen(null); botDriving = false; botWatch = false; input.last = performance.now(); match.myRespawnAt = 0;
   run = { max: 0, time: 0 }; lastKiller = null;
@@ -1509,9 +1734,9 @@ function endMatch(win, why) {
   else showResult();
 }
 function checkTags(now) {
-  if (now - (match.started || 0) < 2500) return;
+  if (now - (match.started || 0) < (match.v === '1v1' ? 2500 : TAG_TUNE.headStart)) return;
   const its = [], runs = [];
-  for (const sn of snakes) { if (!sn.alive || sn.ghost) continue; (sn.it ? its : runs).push(sn); }
+  for (const sn of snakes) { if (!sn.alive || sn.ghost || (sn.phase && !sn.it)) continue; (sn.it ? its : runs).push(sn); }
   for (const a of its) for (const b of runs) {
     if (match.nb && now < match.nb.until && keyOf(a) === match.nb.from && keyOf(b) === match.nb.to) continue;
     if (Math.abs(a.x - b.x) > 900 || Math.abs(a.y - b.y) > 900) continue;
@@ -1573,9 +1798,9 @@ function nearestRunner(sn) {
   return best;
 }
 function modeThink(sn) {
-  const iq = npcIQ;
+  const iq = match.m === 'tag' && match.v !== '1v1' && sn.it ? npcIQ * TAG_TUNE.hunterIq : npcIQ;
   if (sn.orbit === undefined) sn.orbit = Math.random() * TAU;
-  let tx = sn.x + Math.cos(sn.ang) * 200, ty = sn.y + Math.sin(sn.ang) * 200, wt = 0.4, food = 0.8, boost = false, dangerMul = 1, brainRef = null;
+  let tx = sn.x + Math.cos(sn.ang) * 200, ty = sn.y + Math.sin(sn.ang) * 200, wt = 0.4, food = 0.8, boost = false, dangerMul = 1, brainRef = null, hint = null;
   if (match.m === 'ctl') {
     const base = match.bases[sn.team] || [0, 0], L = leaderOf(sn.team), home = L || { x: base[0], y: base[1], ang: 0 };
     const enemyT = 1 - sn.team, eMinis = match.mc[enemyT] || 0, myMinis = match.mc[sn.team] || 0;
@@ -1609,14 +1834,25 @@ function modeThink(sn) {
     dangerMul = 0; food = 0;
     if (sn.it) {
       const r = nearestRunner(sn);
-      if (r) { const d = Math.hypot(r.x - sn.x, r.y - sn.y), lead = Math.min(240, d * 0.45); tx = r.x + Math.cos(r.ang) * lead; ty = r.y + Math.sin(r.ang) * lead; wt = 3; boost = d < 420 && sn.stam > 0.25 && Math.random() < 0.3 + 0.7 * iq; }
+      if (r) {
+        const d = Math.hypot(r.x - sn.x, r.y - sn.y), lead = Math.min(240, d * 0.45);
+        tx = r.x + Math.cos(r.ang) * lead; ty = r.y + Math.sin(r.ang) * lead; wt = 3; hint = { chase: true, d };
+        const fl = match.v !== '1v1' ? (TAG_TUNE.flank[match.df] || 0) : 0;
+        if (fl > 0 && d > 200) {
+          // Hunters spread out and come at the runner from different sides.
+          const hs = snakes.filter((o) => o.alive && o.it).sort((a, b) => a.id - b.id), n = hs.length, idx = hs.indexOf(sn);
+          const phi = r.ang + (idx - (n - 1) / 2) * 1.2, rad = Math.min(300, d * 0.55);
+          tx = tx + (r.x + Math.cos(phi) * rad - tx) * fl; ty = ty + (r.y + Math.sin(phi) * rad - ty) * fl;
+        }
+        boost = d < (match.v === '1v1' ? 420 : 300) && sn.stam > 0.25 && Math.random() < 0.3 + 0.7 * iq;
+      }
     } else {
       let fx = 0, fy = 0, nd = 1e9;
       for (const o of snakes) if (o.alive && o.it) { const dx = sn.x - o.x, dy = sn.y - o.y, d2 = dx * dx + dy * dy + 1; fx += dx / d2; fy += dy / d2; nd = Math.min(nd, Math.sqrt(d2)); }
       const pd = Math.hypot(sn.x, sn.y);
       if (pd > worldR * 0.6) { const k = (pd / worldR) * 0.004; fx -= sn.x / pd * k; fy -= sn.y / pd * k; }
       const fl = Math.hypot(fx, fy) || 1; tx = sn.x + fx / fl * 300; ty = sn.y + fy / fl * 300; wt = 2.6;
-      boost = nd < 300 && sn.stam > 0.2 && Math.random() < 0.3 + 0.7 * iq;
+      boost = nd < 300 && sn.stam > 0.2 && Math.random() < 0.3 + 0.7 * iq; hint = { flee: true, d: nd };
     }
   }
   sense(sn, mtBuf);
@@ -1642,6 +1878,7 @@ function modeThink(sn) {
   if (Math.random() < 0.25 + 0.75 * iq) best = safeBin(sn, best, ORDER[best], Math.round(12 * (0.6 + 0.4 * iq)));
   sn.lastBin = best; sn.targetAng = wrapA(sn.ang + TB[best]);
   sn.wantBoost = boost && (match.m === 'tag' || sn.mass > 30);
+  if (sn.ab) botAbility(sn, mtBuf, hint);
   sn.thinkIn = Math.round(2 + (1 - iq) * 7);
 }
 /* ---------- drawing ---------- */
@@ -1700,17 +1937,25 @@ function updateModeBar() {
 }
 function setModeSel(patch) { Object.assign(profile.modeSel, patch); save(); renderModeSel(); }
 function renderModeSel() {
-  const ms = profile.modeSel;
+  const ms = profile.modeSel, ab = ms.m === 'abil', tagLike = ms.m === 'tag' || (ab && ms.base === 'tag');
   for (const b of document.querySelectorAll('.modetab')) b.setAttribute('aria-pressed', String(b.dataset.mode === ms.m));
   for (const b of document.querySelectorAll('[data-ctl]')) b.setAttribute('aria-pressed', String(+b.dataset.ctl === ms.ctl));
   for (const b of document.querySelectorAll('[data-tag]')) b.setAttribute('aria-pressed', String(b.dataset.tag === ms.tag));
   for (const b of document.querySelectorAll('[data-diff]')) b.setAttribute('aria-pressed', String(b.dataset.diff === ms.diff));
+  for (const b of document.querySelectorAll('[data-base]')) b.setAttribute('aria-pressed', String(b.dataset.base === ms.base));
+  for (const b of document.querySelectorAll('[data-ab]')) { const id = b.dataset.ab, okHere = ms.base !== 'tag' || ABIL[id].tag; b.disabled = !okHere; b.setAttribute('aria-pressed', String(id === ms.ab && okHere)); }
   $('modeInfo').textContent = MODE_INFO[ms.m];
-  $('optCtl').hidden = ms.m !== 'ctl'; $('optTag').hidden = ms.m !== 'tag'; $('optDiff').hidden = ms.m === 'classic';
+  $('optCtl').hidden = ms.m !== 'ctl'; $('optTag').hidden = !tagLike; $('optDiff').hidden = !(ms.m === 'ctl' || tagLike);
+  $('optBase').hidden = $('optAbil').hidden = $('abilInfo').hidden = !ab;
+  if (ab) { const A = ABIL[ms.ab] || ABIL.jump; $('abilInfo').textContent = `${A.name} · ${fmt(A.cost)} bits. ${ms.base === 'tag' && A.tagInfo ? A.tagInfo : A.info}`; }
   $('watchBtn').hidden = ms.m !== 'classic';
-  const cfg = newMatchCfg(), line = $('roomModeLine');
-  if (ms.m === 'classic') line.textContent = 'Mode: Classic. Pick another mode in the menu if you like.';
-  else { line.textContent = ''; const b = document.createElement('b'); b.textContent = ms.m === 'ctl' ? `Capture the Leader ${ms.ctl}v${ms.ctl}` : ms.tag === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one'; line.append('Mode: ', b, `, ${ms.diff} bots. Friends who join play your mode.`); }
+  const line = $('roomModeLine');
+  if (ms.m === 'classic') { line.textContent = 'Mode: Classic. Pick another mode in the menu if you like.'; return; }
+  line.textContent = ''; const b = document.createElement('b');
+  const tagName = ms.tag === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one';
+  if (ab) b.textContent = `Abilities · ${ms.base === 'tag' ? tagName : 'Classic'}`;
+  else b.textContent = ms.m === 'ctl' ? `Capture the Leader ${ms.ctl}v${ms.ctl}` : tagName;
+  line.append('Mode: ', b, ab ? `${tagLike ? `, ${ms.diff} bots` : ''}. Friends who join play your mode and use the power they picked.` : `, ${ms.diff} bots. Friends who join play your mode.`);
 }
 function resultFor() {
   const k = myKey(), out = { mode: modeName(match), title: '', won: false, labels: [], values: [] };
@@ -1751,16 +1996,17 @@ function updateResultNext(now) {
 }
 /* ---------- online: share the match, and each Leader's bot brain ---------- */
 function packMatch(now) {
-  if (!inModes()) return { m: 'classic' };
+  if (!inModes()) return { m: 'classic', ab: abilClassic ? 1 : 0 };
   return { m: match.m, sz: match.sz, v: match.v, df: match.df, mid: match.mid, rd: match.round, st: match.st, tl: Math.round(match.tl), sd: match.sd ? 1 : 0,
-    win: match.win, why: match.why, tm: match.tm, it: [...match.it], mc: match.mc, rn: match.runner || null,
+    win: match.win, why: match.why, tm: match.tm, it: [...match.it], mc: match.mc, rn: match.runner || null, hs: match.huntSpot ? match.huntSpot.map(Math.round) : null,
     nb: match.nb && now < match.nb.until ? [match.nb.from, match.nb.to, Math.round(match.nb.until - now)] : null,
-    ov: match.st === 'over' ? Math.round(now - match.overAt) : 0, el: Math.round((now - (match.started || now)) / 1000) };
+    ov: match.st === 'over' ? Math.round(now - match.overAt) : 0, el: Math.round((now - (match.started || now)) / 1000), ab: match.ab ? 1 : 0 };
 }
 function applyMatchFromHost(md) {
   if (!md || typeof md !== 'object') return;
   const now = performance.now();
   if (md.m !== 'ctl' && md.m !== 'tag') {
+    abilClassic = md.ab === 1;
     if (online.awaitSpawnAt) { online.awaitSpawnAt = 0; if (!inModes()) startGame({ watch: false }); }
     if (inModes()) { match = { m: 'classic' }; for (const sn of snakes) { sn.team = -1; sn.role = ''; sn.it = false; } $('result').hidden = true; if (mode !== 'menu') startGame({ watch: false }); }
     return;
@@ -1772,10 +2018,11 @@ function applyMatchFromHost(md) {
     online.rnpcs.clear(); drops = [];
   }
   match.m = md.m; match.mid = mid; match.sz = clamp(int(md.sz, 1), 1, 3); match.v = ['1v1', 'evo'].includes(md.v) ? md.v : '1v1'; match.df = DIFF_IQ[md.df] ? md.df : 'normal';
-  match.round = int(md.rd, 1); match.st = md.st === 'over' ? 'over' : 'play'; match.tl = clamp(num(md.tl), 0, 600); match.tEnd = now + match.tl * 1000; match.sd = md.sd === 1;
+  match.ab = md.ab === 1; match.round = int(md.rd, 1); match.st = md.st === 'over' ? 'over' : 'play'; match.tl = clamp(num(md.tl), 0, 600); match.tEnd = now + match.tl * 1000; match.sd = md.sd === 1;
   match.win = typeof md.win === 'number' || typeof md.win === 'string' ? md.win : null; match.why = typeof md.why === 'string' ? cleanText(md.why, 120) : '';
   match.mc = Array.isArray(md.mc) ? [clamp(int(md.mc[0]), 0, 99), clamp(int(md.mc[1]), 0, 99)] : [0, 0];
   match.runner = typeof md.rn === 'string' ? md.rn.slice(0, 32) : '';
+  if (Array.isArray(md.hs)) { match.huntSpot = [clamp(num(md.hs[0]), -4000, 4000), clamp(num(md.hs[1]), -4000, 4000)]; match.runSpot = [-match.huntSpot[0], -match.huntSpot[1]]; }
   match.started = now - clamp(num(md.el), 0, 3600) * 1000;
   const tm = {};
   if (md.tm && typeof md.tm === 'object') for (const k of Object.keys(md.tm).slice(0, 40)) { const v = md.tm[k]; if (Array.isArray(v) && (v[0] === 0 || v[0] === 1 || v[0] === -1) && ROLE_CODE[v[1]] && k.length <= 32) tm[k] = [v[0], v[1]]; }
@@ -1879,7 +2126,7 @@ function takeBrainChunk(peer, bw) {
 /* ---------- one simulation tick ---------- */
 let respawnT = 0;
 function step(dt, now) {
-  frame++;
+  frame++; curNow = now;
   if (worldR !== worldTargetR) {
     const d = worldTargetR - worldR; worldR += Math.sign(d) * Math.min(Math.abs(d), 70 * dt);
     for (let i = 0; i < MAX_SLOTS; i++) { const s = slots[i]; s.x = s.ux * worldR; s.y = s.uy * worldR; }
@@ -1890,6 +2137,8 @@ function step(dt, now) {
   for (const s of snakes) if (s.kind === 'npc') { s.thinkIn = (s.thinkIn || 0) - 1; if (s.thinkIn <= 0) { if (s.role) modeThink(s, now); else npcThink(s); } }
   if (player && player.alive && mode === 'play') {
     player.bot = botDriving;
+    if (simAuto) { if (frame % 3 === 0) { if (!player.npc) player.npc = newNpcMind(); modeThink(player); } }
+    else
     if (botDriving) { if (botReady()) { if (frame % 2 === 0) botThink(player); } else setBot(false); }
     else {
       humanControl(player);
@@ -1898,12 +2147,13 @@ function step(dt, now) {
       if (profile.auto && botReady() && now - input.last > AWAY_MS) setBot(true, 'auto');
     }
   }
+  abilTick(dt, now);
   for (const s of snakes) { if (s.kind === 'remote' || s.kind === 'rnpc') moveRemote(s, dt, now); else moveSnake(s, dt); }
   buildSegGrid();
 
   const dying = [];
   for (const s of snakes) {
-    if (!s.alive || s.grace > 0 || match.m === 'tag') continue;
+    if (!s.alive || s.grace > 0 || match.m === 'tag' || s.phase) continue;
     if (s.kind !== 'player' && !(s.kind === 'npc' && npcHost)) continue;
     const hx = s.x, hy = s.y;
     if (hx * hx + hy * hy > (worldR - s.r * 0.6) ** 2) { dying.push([s, 'edge']); continue; }
@@ -1914,6 +2164,7 @@ function step(dt, now) {
       if (dx * dx + dy * dy < rr * rr) { if (segIdx[i] < 3 && s.mass > o.mass) continue; dying.push([s, o]); break; }
     }
   }
+  for (let i = dying.length - 1; i >= 0; i--) if (dying[i][0].shieldOn) { shieldSave(dying[i][0], dying[i][1], now); dying.splice(i, 1); }
   for (const [s] of dying) s.alive = false;
   for (const s of snakes) if (s.alive && (s.kind === 'player' || s.kind === 'npc')) eatAround(s, dt);
   if (dying.length) { for (const [s, k] of dying) { s.alive = true; killSnake(s, k); } buildSegGrid(); }
@@ -1957,7 +2208,7 @@ function step(dt, now) {
 
 /* ================= online play (room capability) ================= */
 const online = { api: null, room: null, code: null, myPeer: null, isHost: false, claim: false, noClaimSince: 0, filler: true, tier: 0, players: 1,
-  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false, avgLt: 0, hostIq: 0.1, kind: 'room', busy: false, pendingCfg: null, brains: new Map(), awaitSpawnAt: 0, rmBots: [] };
+  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false, avgLt: 0, hostIq: 0.1, kind: 'room', busy: false, pendingCfg: null, brains: new Map(), awaitSpawnAt: 0, rmBots: [], fzOut: [] };
 function logEat(id) { online.eatLog.push({ id, t: performance.now() }); }
 const tierFor = (n) => (n <= 3 ? 0 : n <= 8 ? 1 : n <= 12 ? 2 : 3);
 function setTier(t) {
@@ -2261,7 +2512,8 @@ async function joinRoom(code, create) {
   online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = [];
   online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear(); online.brains.clear();
   gameKind = 'online'; myDeaths = 0; match = { m: 'classic' };
-  online.pendingCfg = create && profile.modeSel.m !== 'classic' ? newMatchCfg() : null;
+  const cfg0 = create ? newMatchCfg() : null; online.pendingCfg = cfg0 && cfg0.m !== 'classic' ? cfg0 : null;
+  abilClassic = !!(cfg0 && cfg0.m === 'classic' && cfg0.ab); online.fzOut = [];
   setupWorld(seedFromCode(code), TIERS[0].R, TIERS[0].food);
   try { online.unsubs.push(r.onPeers(onRoomPeers, (err) => {
     if (online.kind !== 'web') { toast('Lost the connection to the room.'); return; }
@@ -2322,17 +2574,27 @@ function applyPeer(peer, pr, now) {
   }
   rs.d = d;
   if (aliveNow && !rs.snake) {
-    const s = makeSnake({ kind: 'remote', name: rs.name, look: unpackLook(pr.s), mass: num(pr.m, START_MASS), pos: [num(pr.x), num(pr.y)], ang: num(pr.a) });
-    s.peer = peer; s.netD = d; s.errX = 0; s.errY = 0; s.grace = 0;
+    const s = makeSnake({ kind: 'remote', name: rs.name, look: unpackLook(pr.s), skin: parseSkin(pr.sk), mass: num(pr.m, START_MASS), pos: [num(pr.x), num(pr.y)], ang: num(pr.a) });
+    s.peer = peer; s.netD = d; s.errX = 0; s.errY = 0; s.grace = 0; s.lookCode = pr.s; s.skinCode = typeof pr.sk === 'string' ? pr.sk : null;
     setNet(s, num(pr.x), num(pr.y), num(pr.a), num(pr.m, START_MASS), !!pr.b, now, pr.w, pr.sp);
     s.errX = 0; s.errY = 0; for (const p of s.segs) { p.x = s.x; p.y = s.y; }
     snakes.push(s); rs.snake = s; syncRoles();
   } else if (aliveNow && rs.snake) {
     const s = rs.snake;
     setNet(s, num(pr.x), num(pr.y), num(pr.a), num(pr.m, s.mass), !!pr.b, now, pr.w, pr.sp);
-    s.name = rs.name; if (s.lookCode !== pr.s) { s.lookCode = pr.s; applyLook(s, unpackLook(pr.s)); }
+    s.name = rs.name; const sk = typeof pr.sk === 'string' ? pr.sk : null;
+    if (s.lookCode !== pr.s || s.skinCode !== sk) { s.lookCode = pr.s; s.skinCode = sk; applyLook(s, unpackLook(pr.s), parseSkin(sk)); }
   }
-  if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; }
+  if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; const f = Array.isArray(pr.fx) ? pr.fx : null; applyNetFx(rs.snake, f ? int(f[0]) : 0, f ? num(f[1]) : 0, f ? int(f[2]) : rs.snake.fxUse, num(pr.sl), now); }
+  if (Array.isArray(pr.fz)) {
+    const cur = new Set();
+    for (const e of pr.fz.slice(0, 12)) {
+      if (!Array.isArray(e) || typeof e[0] !== 'string' || e[0].length > 24) continue;
+      cur.add(e[0]); if (rs.seenFz && rs.seenFz.has(e[0])) continue;
+      freezeAround(clamp(num(e[1]), -GRID_R, GRID_R), clamp(num(e[2]), -GRID_R, GRID_R), rs.snake, now, e[3] === 1);
+    }
+    rs.seenFz = cur;
+  }
   if (online.isHost && Array.isArray(pr.bw)) takeBrainChunk(peer, pr.bw);
   if (Array.isArray(pr.e)) {
     const cur = new Set();
@@ -2394,6 +2656,7 @@ function applyHost(pr) {
       online.rnpcs.set(id, s); snakes.push(s);
     } else setNet(s, x, y, a, m, b, now, num(e[9]) / 100, num(e[10], 100) / 100);
     s.team = e[7] === 0 || e[7] === 1 ? e[7] : -1; s.role = CODE_ROLE[int(e[8])] || ''; s.it = match.m === 'tag' && match.it.has('b' + id);
+    if (e.length >= 15) applyNetFx(s, int(e[11]), num(e[12]), int(e[13]), num(e[14]), now); else if (s.fx || s.slowEnd) applyNetFx(s, 0, 0, s.fxUse, 0, now);
     if (s.role === 'M' && s.lookCode !== code) { s.lookCode = code; applyLook(s, unpackLook(code % 100000)); }
   }
   const quiet = new Set(Array.isArray(pr.rm) ? pr.rm.slice(0, 60).map((x) => int(x)) : []);
@@ -2427,10 +2690,18 @@ function sendPresence(now) {
   const p = player, alive = !!(p && p.alive);
   const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
     h: online.claim ? 1 : 0, e: online.eatLog.map((x) => x.id), kb: lastKiller, hid: document.hidden ? 1 : null };
-  if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; pr.sp = p.spd && p.spd !== 1 ? p.spd : null; }
+  if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
+    pr.fx = p.fx ? [FX_CODE[p.fx] || 0, Math.round(p.fxEnd - now), p.fxUse || 0] : null; pr.sl = p.slowEnd > now ? Math.round(p.slowEnd - now) : null; }
+  pr.sk = skinStr();
+  online.fzOut = online.fzOut.filter((e) => now - e.t < 1500); pr.fz = online.fzOut.length ? online.fzOut.map((e) => [e.id, e.x, e.y, e.it]) : null;
   if (online.isHost) {
     pr.w = [online.tier, online.filler ? 1 : 0, Math.round(npcIQ * 100)];
-    pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 36).map((s) => [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 100000 * s.nameIdx, s.team, ROLE_CODE[s.role] || 0, Math.round((s.w || 0) * 100), Math.round((s.spd || 1) * 100)]);
+    const abOn = abilOn();
+    pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 36).map((s) => {
+      const e = [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 100000 * s.nameIdx, s.team, ROLE_CODE[s.role] || 0, Math.round((s.w || 0) * 100), Math.round(speedOf(s, now) / (s.boosting ? BOOST_SPEED : BASE_SPEED) * 100)];
+      if (abOn && (s.fx || s.slowEnd > now)) e.push(s.fx ? FX_CODE[s.fx] || 0 : 0, s.fx ? Math.round(s.fxEnd - now) : 0, s.fxUse || 0, s.slowEnd > now ? Math.round(s.slowEnd - now) : 0);
+      return e;
+    });
     pr.md = packMatch(now);
     pr.nk = online.nk.map((e) => [e.id, e.peer]);
     online.rmBots = online.rmBots.filter((e) => now - e.t < 4000); pr.rm = online.rmBots.length ? online.rmBots.map((e) => e.id) : null;
@@ -2484,13 +2755,52 @@ function segColor(s, i, n, t) {
     case 2: return (i % 6 === 3) ? s.colorB : s.color;
     case 4: return s.fade[Math.min(11, Math.floor((i / Math.max(1, n)) * 12))];
     case 5: return RAINBOW[(i * 2 + t) % 36];
+    case 6: return s.skinCols ? s.skinCols[(i >> 2) % s.skinCols.length] : s.color;
     default: return ((i >> 2) & 1) ? s.color2 : s.color;
   }
 }
+// Powers change how a snake looks: jumping lifts the body in an arc, Dash glows, Shield is a bubble, Freeze frosts you.
 function drawSnake(c, s, b, t, now, z) {
+  const fx = s.fx, slow = s.slowEnd > now;
+  s.drawLift = 0;
+  if (!fx && !slow) { drawSnakeBody(c, s, b, t, now, z); return; }
+  const segs = s.segs, n = segs.length, r = s.r, m = r * 3;
+  const vis = (p) => p.x > b.x0 - m && p.x < b.x1 + m && p.y > b.y0 - m && p.y < b.y1 + m;
+  const halo = (col, a, rad, step) => { c.globalAlpha = a; c.fillStyle = col; c.beginPath(); for (let i = n - 1; i >= 0; i -= step) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + rad, p.y); c.arc(p.x, p.y, rad, 0, TAU); } c.fill(); c.globalAlpha = 1; };
+  if (slow) halo('#bff3ff', 0.3 + 0.1 * Math.sin(now * 0.01), r + 9, 2);
+  if (fx === 'dash') { halo('#52e5ff', 0.22, r * 2, 2); halo('#ffffff', 0.16, r * 1.35, 3); }
+  if (fx === 'jump' && n > 1) {
+    const p = clamp((now - s.fxStart) / Math.max(1, s.fxEnd - s.fxStart), 0, 1), Hh = 40 + r * 1.3, K = 0.6;
+    const L = (i) => Math.sin(Math.PI * clamp(p * (1 + K) - K * i / (n - 1), 0, 1)) * Hh;
+    c.fillStyle = 'rgba(4,2,12,0.32)'; c.beginPath();
+    for (let i = n - 1; i >= 0; i -= 2) { const q = segs[i]; if (!vis(q)) continue; const rr = r * (1 - 0.35 * L(i) / Hh); c.moveTo(q.x + rr, q.y + r * 0.25); c.arc(q.x, q.y + r * 0.25, rr, 0, TAU); }
+    c.fill();
+    if (!s.liftSegs) s.liftSegs = [];
+    const ls = s.liftSegs; while (ls.length < n) ls.push({ x: 0, y: 0 }); ls.length = n;
+    for (let i = 0; i < n; i++) { const q = segs[i]; ls[i].x = q.x; ls[i].y = q.y - L(i); }
+    const hl = L(0); s.drawLift = hl; s.segs = ls; s.r = r * (1 + 0.25 * hl / Hh);
+    try { drawSnakeBody(c, s, b, t, now, z); } finally { s.segs = segs; s.r = r; }
+  } else drawSnakeBody(c, s, b, t, now, z);
+  const h = segs[0];
+  if (fx === 'shield' && vis(h)) {
+    const left = s.fxEnd - now;
+    if (!(left < 1500 && Math.floor(now / 120) % 2 === 0)) {
+      const R = r * 2 + 6 + Math.sin(now * 0.008) * 2;
+      c.fillStyle = 'rgba(82,229,255,0.12)'; c.strokeStyle = 'rgba(190,245,255,0.85)'; c.lineWidth = Math.max(2, r * 0.16);
+      c.beginPath(); c.arc(h.x, h.y, R, 0, TAU); c.fill(); c.stroke();
+      c.globalAlpha = 0.65; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1.5, r * 0.1); c.beginPath(); c.arc(h.x, h.y, R * 0.78, -2.4, -1.4); c.stroke(); c.globalAlpha = 1;
+    }
+  }
+  if (fx === 'magnet' && vis(h)) {
+    c.strokeStyle = '#b28cff'; c.lineWidth = Math.max(2, 3 / Math.max(0.5, z));
+    for (let k = 0; k < 3; k++) { const ph = (now * 0.0016 + k / 3) % 1, R = r + 16 + (1 - ph) * 340; c.globalAlpha = ph * 0.4; c.beginPath(); c.arc(h.x, h.y, R, 0, TAU); c.stroke(); }
+    c.globalAlpha = 1;
+  }
+}
+function drawSnakeBody(c, s, b, t, now, z) {
   const segs = s.segs, n = segs.length, r = s.r, m = r * 2;
   const vis = (p) => p.x > b.x0 - m && p.x < b.x1 + m && p.y > b.y0 - m && p.y < b.y1 + m;
-  if (s.ghost) c.globalAlpha = 0.3;
+  if (s.ghost) c.globalAlpha = 0.3; else if (s.fx === 'ghost' || s.fx === 'saved') c.globalAlpha = 0.4 + 0.12 * Math.sin(now * 0.02);
   const tm = match.m === 'ctl' && s.team >= 0 ? TEAMS[s.team] : null;
   if (s.it) {
     const ga = c.globalAlpha; c.globalAlpha = ga * (0.34 + 0.16 * Math.sin(now * 0.012)); c.fillStyle = IT_COLOR; c.beginPath();
@@ -2615,9 +2925,12 @@ function render(now) {
   for (const f of drops) { if (f.eaten) continue; ctx.globalAlpha = Math.min(1, f.life / 3); drawFood(f); }
   ctx.globalAlpha = 1;
 
-  for (const s of snakes) if (s !== player) drawSnake(ctx, s, b, t, now, z);
+  const air = [];
+  for (const s of snakes) if (s !== player) { if (s.fx === 'jump') air.push(s); else drawSnake(ctx, s, b, t, now, z); }
+  if (player && player.alive) { if (player.fx === 'jump') air.push(player); else drawSnake(ctx, player, b, t, now, z); }
+  for (const s of air) drawSnake(ctx, s, b, t, now, z);
+  if (fxRings.length) drawRings(now, z);
   if (player && player.alive) {
-    drawSnake(ctx, player, b, t, now, z);
     if (botDriving && botViz) {
       const h = player.segs[0], r = player.r; ctx.lineCap = 'round';
       for (let k = 0; k < NB; k++) {
@@ -2632,7 +2945,7 @@ function render(now) {
   for (const s of snakes) {
     const h = s.segs[0]; if (h.x < b.x0 || h.x > b.x1 || h.y < b.y0 || h.y > b.y1) continue;
     if (s.role === 'M') continue;
-    const lift = s.r + (HATS[s.look.hat].id !== 'none' || s.bot || s.role === 'L' ? s.r * 1.3 : 0) + 10 / z;
+    const lift = s.r + (HATS[s.look.hat].id !== 'none' || s.bot || s.role === 'L' ? s.r * 1.3 : 0) + 10 / z + (s.drawLift || 0);
     if (s.it) { ctx.fillStyle = IT_COLOR; ctx.globalAlpha = 1; ctx.fillText('IT', h.x, h.y - lift - 16 / z); }
     ctx.fillStyle = s === player ? 'rgba(244,239,254,0.95)' : s.kind === 'remote' ? 'rgba(244,239,254,0.85)' : 'rgba(244,239,254,0.55)';
     ctx.globalAlpha = s.ghost ? 0.4 : 1;
@@ -2662,11 +2975,11 @@ function drawMini() {
     mctx.fillStyle = botDriving ? C.bot : C.accent; mctx.beginPath(); mctx.arc(w / 2 + player.x / worldR * R, h / 2 + player.y / worldR * R, 3.4 * DPR, 0, TAU); mctx.fill();
   }
 }
-function previewSnake(look, name, w) {
-  const s = { id: 7, kind: 'preview', name, look, segs: [], r: 13, ang: 0, targetAng: 0.2, boosting: false, bot: false, ghost: false };
-  applyLook(s, look); s._w = w; return s;
+function previewSnake(look, name, w, skin) {
+  const s = { id: 7, kind: 'preview', name, look, segs: [], r: 13, ang: 0, targetAng: 0.2, boosting: false, bot: false, ghost: false, fx: '', slowEnd: 0 };
+  applyLook(s, look, skin); s._w = w; return s;
 }
-function drawPreview(cv, look, now) {
+function drawPreview(cv, look, now, skin) {
   const r = cv.getBoundingClientRect(); if (r.width < 2) return;
   const w = r.width, h = r.height;
   if (cv.width !== Math.round(w * DPR) || cv.height !== Math.round(h * DPR)) { cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR); }
@@ -2674,12 +2987,11 @@ function drawPreview(cv, look, now) {
   const th = THEMES[themeCur]; if (!cv._pats) cv._pats = {};
   if (!cv._pats[themeCur]) cv._pats[themeCur] = c.createPattern(tileFor(th), 'repeat');
   c.fillStyle = th.floor; c.fillRect(0, 0, w, h); c.fillStyle = cv._pats[themeCur]; c.fillRect(0, 0, w, h);
-  const s = previewSnake(look, '', w), scale = Math.min(1.25, h / 70); s.r = 11 * scale;
+  const s = previewSnake(look, '', w, skin), scale = Math.min(1.25, h / 70); s.r = 11 * scale;
   const n = Math.max(10, Math.floor((w * 0.62) / (s.r * 0.45))), headX = w * 0.78, cy = h / 2 + 4 * scale;
   const ph = now * 0.004;
   for (let i = 0; i < n; i++) { const x = headX - i * s.r * 0.45; s.segs.push({ x, y: cy + Math.sin(ph - i * 0.32) * h * 0.16 }); }
   s.ang = Math.atan2(s.segs[0].y - s.segs[1].y, s.segs[0].x - s.segs[1].x); s.targetAng = s.ang + Math.sin(now * 0.0015) * 0.6;
-  s.outline = shade(s.color, 0.42);
   drawSnake(c, s, { x0: -1e5, x1: 1e5, y0: -1e5, y1: 1e5 }, Math.floor(now / 50) % 36, now, 1);
 }
 
@@ -2688,6 +3000,7 @@ const app = $('app');
 const screens = ['menu', 'locker', 'online', 'death', 'train', 'result'];
 function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', mode === 'play' && !name); }
 function showMenu() {
+  if (gameKind === 'solo') abilClassic = false;
   if (inModes() && gameKind === 'solo') { match = { m: 'classic' }; setupSoloWorld(); }
   mode = 'menu'; if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
   player = null; botDriving = false; updateBanner();
@@ -2697,7 +3010,7 @@ function startGame(opts = {}) {
   mode = 'play'; showScreen(null);
   if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
   const pos = findSpawn(false);
-  player = makeSnake({ kind: 'player', name: cleanName(profile.name), look: profile.look, mass: START_MASS, pos, ang: Math.atan2(-pos[1], -pos[0]) });
+  player = makeSnake({ kind: 'player', name: cleanName(profile.name), look: profile.look, skin: profile.skin, mass: START_MASS, pos, ang: Math.atan2(-pos[1], -pos[0]) });
   snakes.push(player); cam.x = player.x; cam.y = player.y;
   run = { max: 0, time: 0 }; lastKiller = null; botDriving = false; botWatch = !!opts.watch; input.last = performance.now();
   if (opts.watch && botReady()) setBot(true, 'watch');
@@ -2729,7 +3042,7 @@ function onPlayerDeath(killer) {
     showScreen('death');
   }
 }
-let botReason = '';
+let botReason = '', simAuto = false;
 function setBot(on, reason) {
   if (on && !botReady()) { toast('Train your bot first: play a bit, then press Train bot.'); return; }
   if (!player || !player.alive) return;
@@ -2747,7 +3060,7 @@ function updateBanner() {
 let boardTick = 0;
 function updateHud() {
   if (player && player.alive) $('lenVal').textContent = fmt(player.mass * 10);
-  if (boardTick % 6 === 0) updateModeBar();
+  if (boardTick % 6 === 0) { updateModeBar(); updateAbilBtn(); }
   if (++boardTick % 12 !== 1) return;
   const iqp = Math.round(npcIQ * 100); $('iqVal').textContent = W <= 360 ? `Smarts ${iqp}%` : `Bot smarts ${iqp}%`; $('iqFill').style.width = iqp + '%';
   $('genVal').textContent = gameKind === 'solo' || online.isHost ? `· Gen ${fmt(profile.npcGen + 1)}` : '';
@@ -2775,7 +3088,8 @@ function updateRoomChip() {
     const n = online.players;
     t.textContent = W <= 360 ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${TIERS[online.tier].name}${online.room && !online.connected ? ' · reconnecting' : ''}`;
     $('exitBtn').textContent = 'Leave';
-  } else { t.textContent = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
+  } else { t.textContent = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : abilClassic ? 'Solo · Abilities' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
+  if (gameKind === 'online' && online.code && !inModes() && abilClassic && W > 360) t.textContent += ' · Abilities';
   if (gameKind === 'online' && online.code && inModes() && W > 360) t.textContent = `Room ${online.code} · ${online.players} player${online.players === 1 ? '' : 's'} · ${modeName(match)}`;
   const inv = gameKind === 'online' && !!online.code && online.kind === 'web';
   $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv);
@@ -2896,14 +3210,18 @@ function buildLocker() {
     const row = $(rowId); row.textContent = '';
     arr.forEach((it, i) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'opt';
-      const ok = isUnlocked(it); b.disabled = !ok; b.setAttribute('aria-pressed', String(profile.look[key] === i));
+      const noPieces = key === 'pat' && it.id === 'custom' && !profile.skin.length, ok = isUnlocked(it) && !noPieces; b.disabled = !ok; b.setAttribute('aria-pressed', String(profile.look[key] === i));
       const t = document.createElement('span'); t.textContent = it.name; b.append(t);
-      if (!ok) { const sm = document.createElement('small'); sm.textContent = `Unlock: ${it.lock.text} · ${lockProgress(it.lock)}`; b.append(sm); }
+      if (noPieces) { const sm = document.createElement('small'); sm.textContent = 'Build it below'; b.append(sm); }
+      else if (!ok) { const sm = document.createElement('small'); sm.textContent = `Unlock: ${it.lock.text} · ${lockProgress(it.lock)}`; b.append(sm); }
       b.addEventListener('click', () => { profile.look[key] = i; save(); buildLocker(); });
       row.append(b);
     });
   };
   mkOpts('patRow', PATTERNS, 'pat'); mkOpts('eyeRow', EYES, 'eye'); mkOpts('hatRow', HATS, 'hat');
+  const custom = profile.look.pat === CUSTOM_PAT && profile.skin.length > 0;
+  $('c1Group').hidden = custom; $('c2Lbl').textContent = custom ? 'Hat color' : 'Second color';
+  buildBuilder();
   const tr = $('themeRow'); tr.textContent = '';
   const addTheme = (label, val, th) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.setAttribute('aria-pressed', String(profile.theme === val));
@@ -2923,11 +3241,48 @@ function buildLocker() {
     const p = document.createElement('p'); p.textContent = code == null ? `Slot ${i + 1}: empty` : `Look ${i + 1}`; d.append(p);
     const row = document.createElement('div'); row.className = 'row';
     const wear = document.createElement('button'); wear.type = 'button'; wear.className = 'btn small'; wear.textContent = 'Wear'; wear.disabled = code == null;
-    wear.addEventListener('click', () => { const l = unpackLook(code); for (const [k, arr] of [['pat', PATTERNS], ['eye', EYES], ['hat', HATS]]) if (!isUnlocked(arr[l[k]])) l[k] = 0; profile.look = l; save(); buildLocker(); });
+    wear.addEventListener('click', () => { const sl = slotToLook(code), l = sl.look; for (const [k, arr] of [['pat', PATTERNS], ['eye', EYES], ['hat', HATS]]) if (!isUnlocked(arr[l[k]])) l[k] = 0; if (sl.skin) profile.skin = sl.skin; else if (l.pat === CUSTOM_PAT) l.pat = 0; profile.look = l; pieceSel = -1; save(); buildLocker(); });
     const sv = document.createElement('button'); sv.type = 'button'; sv.className = 'btn small'; sv.textContent = 'Save';
-    sv.addEventListener('click', () => { profile.slots[i] = packLook(profile.look); save(); buildLocker(); toast(`Saved to slot ${i + 1}`); });
+    sv.addEventListener('click', () => { profile.slots[i] = lookToSlot(); save(); buildLocker(); toast(`Saved to slot ${i + 1}`); });
     row.append(wear, sv); d.append(row); sr.append(d);
   });
+}
+
+let pieceSel = -1;
+function buildBuilder() {
+  const row = $('pieceRow'), sk = profile.skin; row.textContent = '';
+  if (pieceSel >= sk.length) pieceSel = -1;
+  sk.forEach((k, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'piece'; b.style.background = PALETTE[k]; b.textContent = String(i + 1);
+    b.setAttribute('aria-label', `Piece ${i + 1}${i === 0 ? ' (head)' : ''}`); b.setAttribute('aria-pressed', String(i === pieceSel));
+    b.addEventListener('click', () => { pieceSel = pieceSel === i ? -1 : i; buildLocker(); });
+    row.append(b);
+  });
+  if (!sk.length) { const p = document.createElement('span'); p.className = 'piece-empty'; p.textContent = 'No pieces yet'; row.append(p); }
+  const sw = $('buildSw'); sw.textContent = '';
+  PALETTE.forEach((col, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.style.background = col;
+    b.setAttribute('aria-label', pieceSel >= 0 ? `Make piece ${pieceSel + 1} color ${i + 1}` : `Add a piece in color ${i + 1}`);
+    b.setAttribute('aria-pressed', String(pieceSel >= 0 && sk[pieceSel] === i));
+    b.addEventListener('click', () => addPiece(i)); sw.append(b);
+  });
+  $('buildCount').textContent = `${sk.length}/${SKIN_MAX} pieces`;
+  $('buildHint').textContent = pieceSel >= 0 ? `Pick a new color for piece ${pieceSel + 1}, or tap it again to stop.`
+    : sk.length >= SKIN_MAX ? 'Your pattern is full. Tap a piece to change its color.'
+    : sk.length ? 'Tap colors to add more pieces, or tap a piece to change it. The pattern repeats all the way down your snake.'
+    : 'Tap colors to add pieces one at a time, starting at the head. The pattern repeats all the way down your snake.';
+  $('buildUndo').disabled = $('buildClear').disabled = !sk.length;
+}
+function addPiece(k) {
+  if (pieceSel >= 0 && pieceSel < profile.skin.length) { profile.skin[pieceSel] = k; pieceSel = -1; }
+  else if (profile.skin.length < SKIN_MAX) profile.skin.push(k);
+  else { toast(`That's the most pieces (${SKIN_MAX}). Tap a piece to change it.`); return; }
+  profile.look.pat = CUSTOM_PAT; save(); buildLocker();
+}
+function clearPieces(all) {
+  if (all) profile.skin = []; else profile.skin.pop();
+  pieceSel = -1; if (!profile.skin.length && profile.look.pat === CUSTOM_PAT) profile.look.pat = 0;
+  save(); buildLocker();
 }
 
 /* ---------- online screen ---------- */
@@ -3113,6 +3468,19 @@ const SFX = {
   spawn() { tone(300, 0.28, 'sine', 0.12, 660); },
   join() { tone(620, 0.12, 'sine', 0.09, 930); },
   click() { tone(880, 0.035, 'triangle', 0.05); },
+  power(id, far) {
+    const v = far ? 0.035 : 0.1;
+    if (id === 'jump') { tone(300, 0.26, 'sine', v * 1.2, 900); tone(1200, 0.1, 'triangle', v * 0.5, null, 0.2); }
+    else if (id === 'dash') { noiseHit(0.3, 2600, v * 1.3); tone(420, 0.22, 'sawtooth', v * 0.5, 1500); }
+    else if (id === 'ghost') { tone(760, 0.5, 'sine', v * 0.8, 330); tone(1140, 0.5, 'sine', v * 0.35, 500, 0.05); }
+    else if (id === 'magnet') { tone(220, 0.35, 'square', v * 0.45, 520); tone(330, 0.35, 'square', v * 0.3, 780, 0.06); }
+    else if (id === 'shield') { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.2, 'triangle', v * 0.8, null, i * 0.05)); }
+    else if (id === 'freeze') { [1568, 1319, 1175, 988].forEach((f, i) => tone(f, 0.14, 'sine', v * 0.75, null, i * 0.045)); noiseHit(0.45, 5200, v * 0.5); }
+  },
+  ready() { [880, 1175, 1568].forEach((f, i) => tone(f, 0.1, 'triangle', 0.08, null, i * 0.07)); },
+  land() { noiseHit(0.14, 450, 0.1); tone(160, 0.12, 'sine', 0.08, 90); },
+  shieldPop() { noiseHit(0.22, 3200, 0.13); tone(950, 0.24, 'sine', 0.08, 300); },
+  frozen() { tone(1300, 0.32, 'sine', 0.07, 650); },
 };
 function setBoostSound(on) {
   try { setBoostInner(on); } catch (e) { /* audio hiccup */ }
@@ -3318,6 +3686,7 @@ window.addEventListener('keydown', (e) => {
   else if (k === 'ArrowLeft' || k === 'KeyA') { input.left = true; input.mode = 'keys'; }
   else if (k === 'ArrowRight' || k === 'KeyD') { input.right = true; input.mode = 'keys'; }
   else if (k === 'KeyB') { if (mode === 'play' && !e.repeat) setBot(!botDriving, 'manual'); }
+  else if (k === 'KeyE' || k === 'KeyQ') { if (mode === 'play' && !e.repeat) tryAbility(); }
   else if (k === 'KeyM') { if (!e.repeat) toggleSound(); }
   else if (k === 'KeyN') { if (!e.repeat) toggleMusic(); }
   else return;
@@ -3343,6 +3712,12 @@ function tapButton(el, fn) {
 }
 tapButton($('botBtn'), () => { setBot(!botDriving, 'manual'); blurIfPlaying(); });
 tapButton($('takeBackBtn'), () => { setBot(false); blurIfPlaying(); });
+// The power button fires the moment a finger or mouse goes down, even while another finger steers.
+(() => {
+  const el = $('abilBtn'); let lastP = -1e9;
+  el.addEventListener('pointerdown', (e) => { if (e.button > 0) return; e.preventDefault(); lastP = performance.now(); humanInput(); tryAbility(); });
+  el.addEventListener('click', () => { if (performance.now() - lastP < 800) return; tryAbility(); blurIfPlaying(); });
+})();
 tapButton($('trainBtn'), () => { if (startTraining()) toast('Training started. Keep playing while your bot studies.'); blurIfPlaying(); });
 $('dockAuto').addEventListener('change', (e) => { profile.auto = e.target.checked; save(); blurIfPlaying(); });
 $('exitBtn').addEventListener('click', () => { if (gameKind === 'online') leaveRoom(false); else showMenu(); });
@@ -3350,17 +3725,22 @@ $('nameIn').addEventListener('input', (e) => { profile.name = e.target.value.sli
 $('lockerName').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
 $('lockerBtn').addEventListener('click', openLocker);
 $('lockerDone').addEventListener('click', showMenu);
+$('buildUndo').addEventListener('click', () => clearPieces(false));
+$('buildClear').addEventListener('click', () => clearPieces(true));
+$('buildRandom').addEventListener('click', () => { const n = 3 + Math.floor(Math.random() * 6); profile.skin = Array.from({ length: n }, () => Math.floor(Math.random() * PALETTE.length)); pieceSel = -1; profile.look.pat = CUSTOM_PAT; save(); buildLocker(); });
 $('soloBtn').addEventListener('click', () => {
-  if (profile.modeSel.m === 'classic') { const wasMode = inModes(); match = { m: 'classic' }; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: false }); }
-  else { gameKind = 'solo'; startMatch(newMatchCfg()); }
+  const cfg = newMatchCfg();
+  if (cfg.m === 'classic') { const wasMode = inModes(); match = { m: 'classic' }; abilClassic = !!cfg.ab; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: false }); }
+  else { gameKind = 'solo'; abilClassic = false; startMatch(cfg); }
 });
+for (const b of document.querySelectorAll('[data-base]')) b.addEventListener('click', () => { const p = { base: b.dataset.base }; if (p.base === 'tag' && !ABIL[profile.modeSel.ab].tag) p.ab = 'jump'; setModeSel(p); });
 for (const b of document.querySelectorAll('.modetab')) b.addEventListener('click', () => setModeSel({ m: b.dataset.mode }));
 for (const b of document.querySelectorAll('[data-ctl]')) b.addEventListener('click', () => setModeSel({ ctl: +b.dataset.ctl }));
 for (const b of document.querySelectorAll('[data-tag]')) b.addEventListener('click', () => setModeSel({ tag: b.dataset.tag }));
 for (const b of document.querySelectorAll('[data-diff]')) b.addEventListener('click', () => setModeSel({ diff: b.dataset.diff }));
 $('resAgain').addEventListener('click', () => { if (gameKind === 'solo') startMatch(cfgOf(match)); });
 $('resMenu').addEventListener('click', () => { if (gameKind === 'online') leaveRoom(false); else showMenu(); });
-$('watchBtn').addEventListener('click', () => { const wasMode = inModes(); match = { m: 'classic' }; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: true }); });
+$('watchBtn').addEventListener('click', () => { const wasMode = inModes(); match = { m: 'classic' }; abilClassic = false; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: true }); });
 $('onlineBtn').addEventListener('click', () => { showScreen('online'); updateOnlineScreen(); renderModeSel(); });
 $('onlineBack').addEventListener('click', showMenu);
 $('createBtn').addEventListener('click', () => joinRoom(newCode(), true));
@@ -3434,10 +3814,10 @@ function loop(now) {
     updateCam(dt);
     render(now);
     if (mode === 'play') { updateHud(); if (frame % 10 === 0) drawMini(); }
-    if (!$('menu').hidden) drawPreview($('menuPreview'), profile.look, now);
+    if (!$('menu').hidden) drawPreview($('menuPreview'), profile.look, now, profile.skin);
     if (!$('locker').hidden) {
-      drawPreview($('lockerPreview'), profile.look, now);
-      if (frame % 3 === 0) for (const cv of document.querySelectorAll('#slotRow canvas')) { const code = profile.slots[+cv.dataset.slot]; if (code != null) drawPreview(cv, unpackLook(code), now); }
+      drawPreview($('lockerPreview'), profile.look, now, profile.skin);
+      if (frame % 3 === 0) for (const cv of document.querySelectorAll('#slotRow canvas')) { const code = profile.slots[+cv.dataset.slot]; if (code != null) { const sl = slotToLook(code); drawPreview(cv, sl.look, now, sl.skin); } }
     }
   } catch (e) { reportGlitch('drawing', e); }
   try { adaptQuality(ft, now); saveT += dt; if (saveT > 60 && mode === 'play') { saveT = 0; save(); } } catch (e) { reportGlitch('saving', e); }
@@ -3451,7 +3831,7 @@ function boot() {
   cam.x = 0; cam.y = 0;
   checkUnlocks();
   $('nameIn').value = profile.name;
-  updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
+  buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
   showScreen('menu');
@@ -3478,7 +3858,40 @@ function boot() {
     timeSave: () => { const t = performance.now(); save(); return Math.round(performance.now() - t); },
     state: () => ({ alive: !!(player && player.alive), boosting: !!(player && player.boosting), wantBoost: !!(player && player.wantBoost), tAng: player ? +player.targetAng.toFixed(2) : null, bot: botDriving, botReason, dpr: +DPR.toFixed(2), inputMode: input.mode }),
     autoBot: () => { setBot(true, 'auto'); return botDriving; },
+    tune: (o) => { Object.assign(TAG_TUNE, o || {}); return TAG_TUNE; },
+    simTag: (v, diff, rounds) => {
+      const res = { runnerWins: 0, rounds: 0, avgLast: 0 }; simAuto = true;
+      for (let r = 0; r < rounds; r++) {
+        gameKind = 'solo'; profile.modeSel.diff = diff; startMatch({ m: 'tag', v, df: diff });
+        let t = performance.now(); const t0 = t;
+        for (let i = 0; i < 60 * (TAG_TUNE.time + 3) && match.st === 'play'; i++) { t += 1000 / 60; step(1 / 60, t); }
+        res.rounds++; if (match.win === 'R') res.runnerWins++; res.avgLast += (t - t0) / 1000;
+      }
+      simAuto = false; res.avgLast = Math.round(res.avgLast / res.rounds); return res;
+    },
     teamBrain: (t) => !!teamBrain(t),
+    abil: () => (player ? { on: abilOn(), ab: player.ab, charge: Math.round(player.charge || 0), fx: player.fx, phase: !!player.phase, slow: player.slowEnd > curNow, stats: abilStats, btn: !$('abilBtn').hidden, bits: $('abBits').textContent } : { on: abilOn(), stats: abilStats }),
+    charge: () => { if (player && player.ab) player.charge = ABIL[player.ab].cost; return player && player.charge; },
+    chargeAll: () => { for (const sn of snakes) if (sn.ab) sn.charge = ABIL[sn.ab].cost; },
+    useAb: () => { tryAbility(); return player && player.fx; },
+    botAbs: () => snakes.filter((sn) => sn.kind !== 'player').map((sn) => [sn.kind, sn.ab || '', Math.round(sn.charge || 0), sn.fx || '', sn.slowEnd > curNow ? 1 : 0, sn.skin ? sn.skin.join('') : '']),
+    skin: () => ({ skin: profile.skin.slice(), pat: profile.look.pat, slots: profile.slots.slice() }),
+    grace: (sec) => { if (player) player.grace = sec; },
+    grow: (m) => { if (player) { player.mass = m; bodyFollow(player); } },
+    tp: (x, y) => { if (!player) return false; player.x = x; player.y = y; for (const p of player.segs) { p.x = x; p.y = y; } player.grace = 3; return true; },
+    straight: () => { input.mode = 'keys'; input.left = input.right = false; if (player) player.targetAng = player.ang; },
+    wall: (dist) => {
+      const o = snakes.find((sn) => sn.kind === 'npc' && !sn.role) || snakes.find((sn) => sn.kind === 'npc'); if (!o || !player) return 0;
+      o.mass = 400; updateSize(o); const n = segCount(o.mass), a = player.ang, cx = player.x + Math.cos(a) * dist, cy = player.y + Math.sin(a) * dist, px = -Math.sin(a), py = Math.cos(a);
+      o.segs = []; for (let i = 0; i < n; i++) o.segs.push({ x: cx + px * (420 - i * o.spacing), y: cy + py * (420 - i * o.spacing) });
+      o.x = o.segs[0].x; o.y = o.segs[0].y; o.ang = o.targetAng = Math.atan2(py, px); o.thinkIn = 1e9; o.grace = 0; o.ab = ''; o.wallTest = true; return n;
+    },
+    near: (dist) => {
+      const o = snakes.find((sn) => sn.kind === 'npc' && !sn.wallTest); if (!o || !player) return null;
+      o.x = player.x + dist; o.y = player.y; for (const p of o.segs) { p.x = o.x; p.y = o.y; } o.grace = 3; return o.name;
+    },
+    remotes: () => snakes.filter((sn) => sn.kind === 'remote' || sn.kind === 'rnpc').map((sn) => [sn.kind, sn.name, sn.fx || '', !!sn.phase, sn.slowEnd > curNow ? 1 : 0, sn.skin ? sn.skin.join('') : '']),
+    me: () => (player ? { x: Math.round(player.x), y: Math.round(player.y), ang: +player.ang.toFixed(2), alive: player.alive, fx: player.fx, slow: player.slowEnd > curNow, skin: player.skin ? player.skin.join('') : '' } : null),
     tagNow: () => { const a = snakes.find((sn) => sn.it && sn.alive), b = snakes.find((sn) => !sn.it && sn.alive); if (!a || !b) return false; match.started = 0; const mv = b.kind === 'remote' ? a : b, to = mv === a ? b : a; mv.x = to.x + 2; mv.y = to.y; for (const p of mv.segs) { p.x = mv.x; p.y = mv.y; } return true; },
   };
   requestAnimationFrame((t) => { last = t; loop(t); });
