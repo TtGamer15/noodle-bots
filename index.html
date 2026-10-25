@@ -2273,7 +2273,8 @@ function newCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ'; let s = ''; for (let i
    their own state and hears everyone else's, the same way rooms work inside
    Claude, so the room keeps going if whoever made it leaves. Several servers
    are tried at once in case one is down. */
-const NET_BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://mqtt.eclipseprojects.io/mqtt', 'wss://broker.hivemq.com:8884/mqtt', 'wss://test.mosquitto.org:8081/mqtt'];
+// Free public relay servers. Hosts use the first one that answers; friends listen on all of them to find the room.
+const NET_BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://mqtt.eclipseprojects.io/mqtt', 'wss://broker.hivemq.com:8884/mqtt', 'wss://test.mosquitto.org:8081/mqtt', 'wss://public:public@public.cloud.shiftr.io'];
 const NET_TOPIC = 'noodlebots/tt15/v2/', NET_MAX = 16, NET_SEND_MS = 100, NET_STALE_MS = 8000;
 const NET_TE = typeof TextEncoder === 'function' ? new TextEncoder() : null, NET_TD = typeof TextDecoder === 'function' ? new TextDecoder() : null;
 const netId = () => Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
@@ -2287,11 +2288,13 @@ function mqPacket(head, body) {
 // A tiny MQTT 3.1.1 client (QoS 0 only): connect with a "last will", subscribe, publish, keep alive.
 function mqttConnect(url, opts) {
   return new Promise((resolve, reject) => {
-    let ws;
-    try { ws = new WebSocket(url, ['mqtt']); } catch (e) { reject(e); return; }
+    let ws, wsUrl = url, user = '', pass = '';
+    // Some servers want a (public) user name and password: take them out of the address and send them when connecting.
+    try { const u = new URL(url); if (u.username) { user = decodeURIComponent(u.username); pass = decodeURIComponent(u.password); u.username = ''; u.password = ''; wsUrl = u.href; } } catch (e) { /* plain address */ }
+    try { ws = new WebSocket(wsUrl, ['mqtt']); } catch (e) { reject(new Error('blocked')); return; }
     ws.binaryType = 'arraybuffer';
     let buf = new Uint8Array(0), ready = false, closed = false, pid = 1, ping = 0, lastIn = Date.now();
-    const timer = setTimeout(() => { if (!ready) { closed = true; try { ws.close(); } catch (e) { /* ignore */ } reject(new Error('timeout')); } }, opts.timeout || 7000);
+    const t0 = Date.now(), timer = setTimeout(() => { if (!ready) { closed = true; try { ws.close(); } catch (e) { /* ignore */ } reject(new Error('timeout')); } }, opts.timeout || 9000);
     const send = (pk) => { if (ws.readyState === 1) { try { ws.send(pk); } catch (e) { /* ignore */ } } };
     const api = {
       url,
@@ -2301,8 +2304,10 @@ function mqttConnect(url, opts) {
       close() { if (closed) return; closed = true; clearInterval(ping); send(new Uint8Array([0xe0, 0])); setTimeout(() => { try { ws.close(); } catch (e) { /* ignore */ } }, 60); },
     };
     ws.onopen = () => {
-      const parts = [mqStr('MQTT'), new Uint8Array([4, 0x02 | (opts.will ? 0x04 : 0), 0, 30]), mqStr(opts.clientId)];
+      const parts = [mqStr('MQTT'), new Uint8Array([4, 0x02 | (opts.will ? 0x04 : 0) | (user ? 0x80 : 0) | (pass ? 0x40 : 0), 0, 30]), mqStr(opts.clientId)];
       if (opts.will) { const wp = NET_TE.encode(opts.will.payload); parts.push(mqStr(opts.will.topic), new Uint8Array([wp.length >> 8, wp.length & 255]), wp); }
+      if (user) parts.push(mqStr(user));
+      if (pass) parts.push(mqStr(pass));
       send(mqPacket(0x10, mqCat(...parts)));
     };
     ws.onmessage = (ev) => {
@@ -2330,7 +2335,7 @@ function mqttConnect(url, opts) {
     ws.onclose = () => {
       clearInterval(ping); clearTimeout(timer);
       const unexpected = ready && !closed; closed = true;
-      if (!ready) reject(new Error('closed'));
+      if (!ready) reject(new Error(Date.now() - t0 < 2500 ? 'blocked' : 'closed'));
       else if (unexpected && opts.onClose) opts.onClose(api);
     };
   });
@@ -2393,7 +2398,7 @@ function webRoom(code, create) {
       let pr; try { pr = JSON.parse(text); } catch (e) { return; }
       seen.set(id, Date.now()); R.setPres(id, pr);
     };
-    const optsFor = (url, onMsg) => ({ clientId: 'nb' + me + netId().slice(0, 4), will: { topic: base + 'x/' + me, payload: '1' }, onMessage: onMsg || hear, onClose: (c) => { if (c === client) lost(url); }, timeout: 7000 });
+    const optsFor = (url, onMsg) => ({ clientId: 'nb' + me + netId().slice(0, 4), will: { topic: base + 'x/' + me, payload: '1' }, onMessage: onMsg || hear, onClose: (c) => { if (c === client) lost(url); }, timeout: 9000 });
     const send = (pr) => { if (client && client.open) client.publish(base + 'p/' + me, JSON.stringify(pr)); };
     const api = R.makeApi(send, () => {
       clearInterval(dog);
@@ -2421,7 +2426,8 @@ function webRoom(code, create) {
       }
       reconnecting = false; if (!R.dead) R.fail('lost');
     }
-    const fail = (why) => { if (settled) return; settled = true; reject({ code: why }); };
+    const tries = [];
+    const fail = (why) => { if (settled) return; settled = true; reject({ code: why, tries: tries.slice(), total: brokers.length }); };
     if (!NET_TE || !NET_TD || typeof WebSocket !== 'function') { fail('unsupported'); return; }
     if (!brokers.length) { fail('network'); return; }
     if (create) {
@@ -2432,9 +2438,9 @@ function webRoom(code, create) {
         mqttConnect(url, optsFor(url)).then((c) => {
           if (settled) { c.close(); return; }
           c.subscribe(base + '#'); begin(c);
-        }).catch(() => { if (--left === 0) fail('network'); });
+        }).catch((e) => { tries.push(e && e.message || 'error'); if (--left === 0) fail('network'); });
       }, idx * 500));
-      setTimeout(() => fail('network'), 12000);
+      setTimeout(() => fail('network'), 15000);
     } else {
       // Joiner: listen on every server at once and stay on the one where the room is.
       const open = []; let left = brokers.length;
@@ -2448,9 +2454,9 @@ function webRoom(code, create) {
         mqttConnect(url, optsFor(url, onMsg)).then((c) => {
           if (settled) { c.close(); return; }
           mine = c; open.push(c); c.subscribe(base + '#');
-        }).catch(() => { if (--left === 0) fail('network'); });
+        }).catch((e) => { tries.push(e && e.message || 'error'); if (--left === 0) fail('network'); });
       });
-      setTimeout(() => { if (!settled) { for (const o of open) o.close(); fail(open.length ? 'not_found' : 'network'); } }, 9000);
+      setTimeout(() => { if (!settled) { for (const o of open) o.close(); fail(open.length ? 'not_found' : 'network'); } }, 12000);
     }
   });
 }
@@ -2527,6 +2533,13 @@ function lobbyRooms() {
   }
   return { rooms, here };
 }
+function netFailText(e) {
+  const t = (e && e.tries) || [], n = (e && e.total) || NET_BROKERS.length, blocked = t.filter((x) => x === 'blocked' || x === 'refused' || x === 'closed').length, slow = t.filter((x) => x === 'timeout').length;
+  try { localStorage.setItem('noodlebots.netfail', JSON.stringify({ at: new Date().toISOString(), tries: t })); } catch (er) { /* ignore */ }
+  if (blocked >= Math.max(1, t.length - 1) && t.length) return `None of the ${n} free game servers would connect. Something on this network may be blocking them, like school or parental Wi-Fi filters. Try mobile data or a different Wi-Fi, or play online in the Claude version.`;
+  if (slow >= Math.max(1, t.length - 1) && t.length) return `The ${n} free game servers didn't answer in time. They might be busy right now. Wait a minute and try again.`;
+  return `Couldn't reach any of the ${n} free game servers (${blocked} wouldn't connect, ${slow} didn't answer). Try again in a minute, or try mobile data or a different Wi-Fi.`;
+}
 async function joinRoom(code, create) {
   if (!online.api) return;
   code = code.toUpperCase();
@@ -2548,7 +2561,7 @@ async function joinRoom(code, create) {
     setOnlineStatus(c === 'limit_reached' ? 'Too many rooms open right now. Try again in a moment.'
       : c === 'full' ? `Room ${code} is full (${NET_MAX} players max).`
       : c === 'not_found' ? `Couldn't find room ${code}. Check the code, and make sure someone in that room still has the game open.`
-      : c === 'network' ? "Couldn't reach the online game servers. Check your internet connection and try again."
+      : c === 'network' ? netFailText(e)
       : c === 'unsupported' ? "This browser can't do online play. Try Safari or Chrome."
       : `Couldn't join room ${code}. Check the code and try again.`, true);
     setRoomHash(null);
