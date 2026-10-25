@@ -1,0 +1,2157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Noodle Bots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Chakra+Petch:wght@500;700&family=Lexend:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  /* Layout: full-bleed arena canvas; HUD pinned to the corners; one control dock on the bottom edge; menus float as cards over the live arena */
+  --floor:#17122c;
+  --floor-dot:#2c2553;
+  --panel:rgba(18,13,38,.84);
+  --panel-strong:#1d1640;
+  --ink:#f4effe;
+  --muted:#a9a1cc;
+  --line:rgba(244,239,254,.14);
+  --accent:#ff9f43;
+  --accent-ink:#2b1500;
+  --bot:#52e5ff;
+  --bot-ink:#002630;
+  --bot-deep:#16707f;
+  --danger:#ff5d7d;
+  --danger-ink:#2a0010;
+  --f-display:"Bungee","Arial Black",Impact,system-ui,sans-serif;
+  --f-body:"Lexend",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-num:"Chakra Petch",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+#app{position:relative;height:100%;overflow:hidden}
+#game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+h1,h2,p{margin:0}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- HUD ---------- */
+#hud{position:absolute;inset:0;pointer-events:none;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;gap:10px;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));transition:opacity .25s}
+#app:not(.playing) #hud{opacity:0;visibility:hidden}
+.stats{grid-column:1;grid-row:1;align-self:start;justify-self:start;display:grid;gap:3px;min-width:0}
+.big{font-family:var(--f-num);font-weight:700;font-size:clamp(28px,5vw,40px);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.sub{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(244,239,254,.1);color:var(--ink)}
+.chip.is-bot{background:var(--bot);color:var(--bot-ink)}
+.roomchip{pointer-events:auto;margin-top:6px;display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12px;color:var(--muted);max-width:100%}
+.roomchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chipbtn{appearance:none;border:1px solid var(--line);background:rgba(244,239,254,.08);color:var(--ink);font:600 12px var(--f-body);padding:4px 10px;border-radius:999px;cursor:pointer}
+.chipbtn:hover{background:rgba(244,239,254,.16)}
+.board{grid-column:2;grid-row:1;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;width:200px;backdrop-filter:blur(6px)}
+.board ol{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px;font-size:13px}
+.board li{display:grid;grid-template-columns:1.6em minmax(0,1fr) auto;gap:6px;align-items:center}
+.board .n{color:var(--muted);font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.board .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.board li.friend .nm{color:var(--ink)}
+.board .sc{font-family:var(--f-num);font-variant-numeric:tabular-nums;color:var(--muted)}
+.board li.me .nm,.board li.me .sc{color:var(--accent);font-weight:600}
+.board li.me.bot .nm,.board li.me.bot .sc{color:var(--bot)}
+.board li.gap{color:var(--muted);text-align:center;display:block;line-height:.6}
+.midstack{grid-column:1/-1;grid-row:2;justify-self:center;align-self:start;display:grid;justify-items:center;gap:8px}
+.banner{pointer-events:auto;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:10px;padding:8px 8px 8px 14px;border-radius:999px;background:var(--panel);border:1px solid color-mix(in srgb,var(--bot) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--bot) 12%,transparent);font-size:14px}
+.pulse{width:10px;height:10px;border-radius:50%;background:var(--bot);box-shadow:0 0 0 0 var(--bot);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--bot) 60%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
+.toast{padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:13px;color:var(--ink);animation:toastIn .25s ease-out}
+@keyframes toastIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.bottom{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px}
+.dock{justify-self:center;pointer-events:auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:8px;border-radius:18px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);max-width:100%}
+.teach{min-width:0;display:grid;gap:5px;padding:2px 8px;width:210px}
+.teach-top{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.teach-sub{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#minimap{width:104px;height:104px;display:block}
+
+/* ---------- controls ---------- */
+.btn{appearance:none;font:600 14px/1 var(--f-body);color:var(--ink);background:rgba(244,239,254,.08);border:1px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,background .15s,opacity .15s;white-space:nowrap}
+.btn:hover:not(:disabled){background:rgba(244,239,254,.15)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn:focus-visible,.chipbtn:focus-visible,.swatch:focus-visible,.opt:focus-visible,.input:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.primary:hover:not(:disabled){background:color-mix(in srgb,var(--accent) 86%,white)}
+.btn.bot{background:var(--bot);color:var(--bot-ink);border-color:transparent}
+.btn.bot:hover:not(:disabled){background:color-mix(in srgb,var(--bot) 86%,white)}
+.btn.bot.driving{background:transparent;color:var(--bot);border-color:var(--bot)}
+.btn.danger{background:var(--danger);color:var(--danger-ink);border-color:transparent}
+.btn.big{font-size:17px;padding:15px 18px;border-radius:14px;width:100%}
+.btn.small{font-size:13px;padding:8px 12px;border-radius:10px}
+.btn svg{flex:none}
+kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.2)}
+.boost{display:none}
+@media (pointer:coarse){.boost{display:inline-flex}.dock kbd,.banner kbd{display:none}}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;position:relative;padding:4px}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .track{width:34px;height:20px;border-radius:999px;background:rgba(244,239,254,.16);position:relative;transition:background .15s;flex:none}
+.switch .track::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.switch input:checked + .track{background:var(--bot)}
+.switch input:checked + .track::after{transform:translateX(14px);background:var(--bot-ink)}
+.switch input:focus-visible + .track{outline:3px solid var(--bot);outline-offset:2px}
+.linkbtn{background:none;border:0;color:var(--muted);font:500 13px var(--f-body);text-decoration:underline;cursor:pointer;padding:4px}
+[hidden]{display:none!important}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.vh:focus-visible + .btn{outline:3px solid var(--bot);outline-offset:2px}
+.range{accent-color:var(--accent);width:150px;max-width:100%}
+.soundrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.savebox{display:grid;gap:10px;padding:14px;border-radius:16px;border:1px solid var(--line)}
+.savemsg{font-size:13px;color:var(--muted);min-height:1.2em}
+.opt .sw{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px;border:1px solid var(--line)}
+.input{font:500 16px var(--f-body);color:var(--ink);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;box-sizing:border-box;min-width:0}
+.meter{height:8px;border-radius:999px;background:rgba(244,239,254,.1);overflow:hidden}
+.meter.small{height:6px}
+.meter > div{height:100%;width:0;background:var(--bot);border-radius:inherit;transition:width .3s}
+
+/* ---------- screens ---------- */
+.screen{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:radial-gradient(ellipse at center,rgba(23,18,44,.3),rgba(12,9,26,.84))}
+.card{width:100%;max-width:460px;margin-block:auto;box-sizing:border-box;background:var(--panel-strong);border:1px solid var(--line);border-radius:22px;padding:22px;display:grid;gap:16px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.02em;text-wrap:balance}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-family:var(--f-display);font-weight:400;font-size:clamp(44px,12vw,64px);line-height:.92;letter-spacing:.01em;color:var(--ink);text-shadow:4px 4px 0 var(--accent);text-wrap:balance}
+.logo span{color:var(--bot);text-shadow:4px 4px 0 var(--bot-deep)}
+.tag{color:var(--muted);font-size:15px;line-height:1.45}
+.me-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}
+.preview{width:100%;height:96px;display:block;border-radius:14px;background:var(--floor);border:1px solid var(--line)}
+.preview.big{height:140px}
+.me-info{display:grid;gap:8px;min-width:0}
+.play-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.botcard{border:1px solid color-mix(in srgb,var(--bot) 35%,transparent);background:color-mix(in srgb,var(--bot) 6%,transparent);border-radius:16px;padding:14px;display:grid;gap:10px}
+.botcard-head{display:flex;align-items:center;gap:10px}
+.botface{width:40px;height:40px;border-radius:12px;background:var(--bot);color:var(--bot-ink);display:grid;place-items:center;flex:none}
+.botname{margin-top:2px;font-weight:700;font-size:17px}
+.bc-line{font-size:13px;color:var(--muted);line-height:1.45}
+.bc-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+.bc-stats div{display:grid;gap:2px;min-width:0}
+.bc-stats dt{font-size:11px;color:var(--muted)}
+.bc-stats dd{margin:0;font-family:var(--f-num);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
+.toggles{display:grid;gap:2px}
+.bc-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.confirm{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;padding:10px;border-radius:12px;background:color-mix(in srgb,var(--danger) 14%,transparent)}
+.how{margin:0;padding:0;list-style:none;display:grid;gap:9px;counter-reset:how}
+.how li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;font-size:14px;color:var(--muted);line-height:1.45}
+.how li::before{counter-increment:how;content:counter(how);font-family:var(--f-num);font-weight:700;color:var(--accent);width:26px;height:26px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;font-size:13px}
+.how b{color:var(--ink);font-weight:600}
+.group{display:grid;gap:8px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatch{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18)}
+.swatch[aria-pressed="true"]{border-color:var(--ink)}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{appearance:none;font:500 13px var(--f-body);color:var(--ink);background:rgba(244,239,254,.07);border:1px solid var(--line);border-radius:10px;padding:8px 11px;cursor:pointer;display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
+.opt[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:var(--accent)}
+.opt:disabled{cursor:not-allowed;color:var(--muted)}
+.opt small{font-size:11px;color:var(--muted)}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.slot{border:1px solid var(--line);border-radius:12px;padding:8px;display:grid;gap:6px;min-width:0}
+.slot canvas{width:100%;height:44px;display:block;border-radius:8px;background:var(--floor)}
+.slot .row{display:flex;gap:4px}
+.slot .btn{flex:1;padding:7px 4px;font-size:12px}
+.slot p{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{font-size:14px;line-height:1.5;color:var(--muted);padding:10px 12px;border-radius:12px;background:rgba(244,239,254,.06)}
+.status.warn{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--ink)}
+.joinrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.code{font-family:var(--f-num);font-weight:700;letter-spacing:.3em;text-transform:uppercase}
+.roomlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.roomlist li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 8px 8px 12px;border:1px solid var(--line);border-radius:12px;font-size:13px}
+.roomlist .rc{font-family:var(--f-num);font-weight:700;letter-spacing:.15em}
+.roomlist .rn{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.roomlist .empty{display:block;color:var(--muted);border-style:dashed}
+.maps{width:100%;border-collapse:collapse;font-size:13px}
+.maps th,.maps td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}
+.maps th{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.maps td:first-child{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.eyebrow.bot{color:var(--bot)}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.trio div{display:grid;gap:3px;padding:10px;border-radius:12px;background:rgba(244,239,254,.06);min-width:0}
+.trio span{font-size:11px;color:var(--muted)}
+.trio b{font-family:var(--f-num);font-size:20px;font-variant-numeric:tabular-nums}
+.tip{font-size:14px;color:var(--muted);line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.row .btn{flex:1 1 auto}
+#accChart{width:100%;height:150px;display:block}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px;background:var(--bot)}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)}
+.result{display:grid;gap:4px;padding:14px;border-radius:14px;background:color-mix(in srgb,var(--bot) 8%,transparent);border:1px solid color-mix(in srgb,var(--bot) 30%,transparent)}
+.result b{font-family:var(--f-num);font-size:40px;line-height:1;color:var(--bot);font-variant-numeric:tabular-nums}
+.result span{font-size:13px;color:var(--muted);line-height:1.45}
+@media (max-width:640px){
+  .board{width:150px;padding:8px 10px}
+  .board ol{font-size:12px}
+  #minimap{width:72px;height:72px}
+  .teach{width:100%;order:-1}
+  .me-row{grid-template-columns:1fr}
+  .card{padding:18px}
+}
+@media (prefers-reduced-motion:reduce){.pulse,.toast{animation:none}.btn,.meter > div{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="Noodle Bots arena"></canvas>
+
+  <div id="hud">
+    <div class="stats">
+      <p class="lbl">Length</p>
+      <p class="big" id="lenVal">0</p>
+      <p class="sub"><span id="rankVal">Rank –</span><span class="chip" id="driverChip">You</span></p>
+      <div class="roomchip"><span id="roomText">Solo</span><button class="chipbtn" id="muteBtn" type="button" aria-pressed="false">Sound on</button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
+    </div>
+    <div class="board"><p class="lbl">Biggest noodles</p><ol id="boardList"></ol></div>
+    <div class="midstack">
+      <div class="banner" id="botBanner" hidden><span class="pulse" aria-hidden="true"></span><span id="bannerText">Your bot is driving</span><button class="btn small" id="takeBackBtn" type="button">Take back <kbd>B</kbd></button></div>
+      <div id="toastBox" aria-live="polite"></div>
+    </div>
+    <div class="bottom">
+      <div class="dock">
+        <button class="btn boost" id="boostBtn" type="button">Boost</button>
+        <div class="teach">
+          <p class="teach-top" id="dockTop">Bot: not trained yet</p>
+          <div class="meter small"><div id="dockMeter"></div></div>
+          <p class="teach-sub" id="dockSub">0 / 300 moves recorded</p>
+        </div>
+        <button class="btn" id="trainBtn" type="button">Train bot</button>
+        <button class="btn bot" id="botBtn" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg>
+          <span id="botBtnLabel">Bot takes over</span><kbd>B</kbd>
+        </button>
+        <label class="switch" for="dockAuto"><input type="checkbox" id="dockAuto"><span class="track"></span><span>Auto when away</span></label>
+      </div>
+      <canvas id="minimap" aria-hidden="true"></canvas>
+    </div>
+  </div>
+
+  <!-- Menu -->
+  <section id="menu" class="screen">
+    <div class="card">
+      <h1 class="logo">Noodle <span>Bots</span></h1>
+      <p class="tag">Eat, grow, and teach a bot to play exactly like you. Then hand it the controls whenever you need a break.</p>
+      <div class="me-row">
+        <canvas id="menuPreview" class="preview" aria-label="Your snake"></canvas>
+        <div class="me-info">
+          <label class="lbl" for="nameIn">Your name</label>
+          <input id="nameIn" class="input" maxlength="14" autocomplete="off" placeholder="Player">
+          <button class="btn small" id="lockerBtn" type="button">Customize snake</button>
+        </div>
+      </div>
+      <div class="play-row">
+        <button class="btn primary big" id="soloBtn" type="button">Play solo</button>
+        <button class="btn big" id="onlineBtn" type="button">Play with friends</button>
+      </div>
+      <button class="btn bot big" id="watchBtn" type="button">Watch my bot play</button>
+      <div class="botcard">
+        <div class="botcard-head">
+          <span class="botface"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg></span>
+          <div><p class="lbl">Your bot</p><p class="botname" id="bcName">Not trained yet</p></div>
+        </div>
+        <div class="meter"><div id="bcMeter"></div></div>
+        <p class="bc-line" id="bcLine">Play a game and it starts watching how you steer.</p>
+        <dl class="bc-stats">
+          <div><dt>Moves learned</dt><dd id="bcMoves">0</dd></div>
+          <div><dt>Same move as you</dt><dd id="bcAcc">–</dd></div>
+          <div><dt>Bot best length</dt><dd id="bcBest">–</dd></div>
+        </dl>
+        <div class="toggles">
+          <label class="switch" for="reflexChk"><input type="checkbox" id="reflexChk"><span class="track"></span><span>Survival reflexes: dodge snakes it's about to hit</span></label>
+          <label class="switch" for="autoChk"><input type="checkbox" id="autoChk"><span class="track"></span><span>Take over when I'm away for 10 seconds</span></label>
+        </div>
+        <div class="bc-actions">
+          <button class="btn small" id="bcTrain" type="button">Train now</button>
+          <button class="linkbtn" id="bcReset" type="button">Reset bot</button>
+        </div>
+        <div class="confirm" id="resetConfirm" hidden>
+          <span>Erase your bot's brain and every recorded move?</span>
+          <button class="btn small danger" id="resetYes" type="button">Erase</button>
+          <button class="btn small" id="resetNo" type="button">Keep</button>
+        </div>
+      </div>
+      <div class="soundrow">
+        <label class="switch" for="soundChk"><input type="checkbox" id="soundChk"><span class="track"></span><span>Sound effects <span class="lbl">(M)</span></span></label>
+        <input type="range" id="volIn" class="range" min="0" max="100" step="5" aria-label="Volume">
+      </div>
+      <div class="savebox">
+        <div class="group">
+          <p class="lbl">Save file</p>
+          <p class="bc-line">Download your name, look, saved looks, stats and trained bot as a .zip. Load it here or in the HTML version of the game to pick up where you left off.</p>
+        </div>
+        <div class="row">
+          <button class="btn small" id="exportBtn" type="button">Download save (.zip)</button>
+          <input type="file" id="importIn" class="vh" accept=".zip,application/zip">
+          <label class="btn small" for="importIn">Load save</label>
+        </div>
+        <p class="savemsg" id="saveMsg" aria-live="polite"></p>
+      </div>
+      <ol class="how">
+        <li><span><b>Play.</b> Steer with your mouse or finger. Hold click, Space or Boost to go fast. The game records how you steer.</span></li>
+        <li><span><b>Train.</b> Press Train bot. A small brain studies your moves right here in your browser.</span></li>
+        <li><span><b>Hand over.</b> Press <b>B</b> or Bot takes over and it plays like you until you take back control.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Locker -->
+  <section id="locker" class="screen" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Locker</h2><button class="btn primary small" id="lockerDone" type="button">Done</button></div>
+      <canvas id="lockerPreview" class="preview big" aria-label="Snake preview"></canvas>
+      <div class="group"><label class="lbl" for="lockerName">Name</label><input id="lockerName" class="input" maxlength="14" autocomplete="off" placeholder="Player"></div>
+      <div class="group"><p class="lbl">Main color</p><div class="swatches" id="c1Row"></div></div>
+      <div class="group"><p class="lbl">Second color</p><div class="swatches" id="c2Row"></div></div>
+      <div class="group"><p class="lbl">Pattern</p><div class="opts" id="patRow"></div></div>
+      <div class="group"><p class="lbl">Eyes</p><div class="opts" id="eyeRow"></div></div>
+      <div class="group"><p class="lbl">Hat</p><div class="opts" id="hatRow"></div></div>
+      <div class="group"><p class="lbl">Arena background</p><div class="opts" id="themeRow"></div></div>
+      <div class="group"><p class="lbl">Saved looks</p><div class="slots" id="slotRow"></div></div>
+    </div>
+  </section>
+
+  <!-- Online -->
+  <section id="online" class="screen" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Play with friends</h2><button class="btn small" id="onlineBack" type="button">Back</button></div>
+      <p class="status" id="onlineStatus">Connecting…</p>
+      <div class="group" id="onlineBody">
+        <div class="group">
+          <p class="lbl">Start a room</p>
+          <label class="switch" for="fillerChk"><input type="checkbox" id="fillerChk" checked><span class="track"></span><span>Fill empty spots with bots</span></label>
+          <button class="btn primary" id="createBtn" type="button">Create room</button>
+        </div>
+        <div class="group">
+          <label class="lbl" for="codeIn">Join with a code</label>
+          <div class="joinrow"><input id="codeIn" class="input code" maxlength="4" autocomplete="off" placeholder="ABCD" autocapitalize="characters"><button class="btn" id="joinBtn" type="button">Join</button></div>
+        </div>
+        <div class="group"><p class="lbl">Rooms open now</p><ul class="roomlist" id="roomList"></ul></div>
+      </div>
+      <div class="group">
+        <p class="lbl">Arena size grows with your room</p>
+        <table class="maps">
+          <thead><tr><th>Players</th><th>Arena</th><th>Bots</th></tr></thead>
+          <tbody>
+            <tr><td>1–3</td><td>Small</td><td>Fill up to 7 snakes</td></tr>
+            <tr><td>4–8</td><td>Medium</td><td>Fill up to 12 snakes</td></tr>
+            <tr><td>9–12</td><td>Large</td><td>Fill up to 14 snakes</td></tr>
+            <tr><td>13+</td><td>Huge</td><td>8 extra bots join</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Death -->
+  <section id="death" class="screen" hidden>
+    <div class="card">
+      <p class="eyebrow" id="deathWho">You crashed</p>
+      <h2 id="deathTitle">Ran into Sir Wiggles</h2>
+      <div class="trio">
+        <div><span>This run</span><b id="dRun">0</b></div>
+        <div><span>Your best</span><b id="dBestYou">0</b></div>
+        <div><span>Bot best</span><b id="dBestBot">0</b></div>
+      </div>
+      <p class="tip" id="deathTip"></p>
+      <div class="row">
+        <button class="btn primary" id="againBtn" type="button">Play again</button>
+        <button class="btn" id="deathTrainBtn" type="button">Train my bot</button>
+        <button class="btn" id="deathMenuBtn" type="button">Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Training -->
+  <section id="train" class="screen" hidden>
+    <div class="card">
+      <p class="eyebrow bot">Bot school</p>
+      <h2 id="trainTitle">Teaching your bot…</h2>
+      <div class="meter"><div id="trainBar"></div></div>
+      <p class="tip" id="trainStatus">Getting ready</p>
+      <canvas id="accChart" aria-label="How often your bot picks your move, each practice round"></canvas>
+      <div class="legend"><span><i></i>Same move as you</span><span><i class="dash"></i>Close to your move</span></div>
+      <div class="result" id="trainResult" hidden>
+        <b id="trainAcc">–</b>
+        <span id="trainAccText">of the time your bot picks the same move you did, on moves it never studied.</span>
+      </div>
+      <button class="btn primary" id="trainDone" type="button">Back to the arena</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const TAU = Math.PI * 2;
+
+/* ================= constants ================= */
+const GRID_R = 3900;
+const SOLO_R = 2600, SOLO_FOOD = 760, SOLO_NPCS = 14;
+const TIERS = [
+  { name: 'Small', R: 1500, food: 270, snakes: 7 },
+  { name: 'Medium', R: 2200, food: 560, snakes: 12 },
+  { name: 'Large', R: 2900, food: 960, snakes: 14 },
+  { name: 'Huge', R: 3700, food: 1500, snakes: 0, extra: 8 },
+];
+const MAX_SLOTS = 1500, MAX_DROPS = 2600;
+const S = 12, FEAT = 46;
+const TB = [-135, -80, -40, -15, 0, 15, 40, 80, 135].map((d) => d * Math.PI / 180);
+const NB = TB.length;
+const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
+const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
+const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
+const STORE_KEY = 'noodlebots.v2';
+const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
+const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
+const PATTERNS = [
+  { id: 'solid', name: 'Solid' }, { id: 'stripes', name: 'Stripes' }, { id: 'rings', name: 'Rings' },
+  { id: 'spots', name: 'Spots' }, { id: 'fade', name: 'Fade' },
+  { id: 'rainbow', name: 'Rainbow', lock: { type: 'botLevel', v: 3, text: 'Bot level 3' } },
+];
+const EYES = [
+  { id: 'classic', name: 'Classic' }, { id: 'sleepy', name: 'Sleepy' }, { id: 'angry', name: 'Grumpy' }, { id: 'googly', name: 'Googly' },
+  { id: 'shades', name: 'Shades', lock: { type: 'games', v: 10, text: 'Play 10 games' } },
+];
+const HATS = [
+  { id: 'none', name: 'None' }, { id: 'party', name: 'Party hat' }, { id: 'cap', name: 'Cap' }, { id: 'flower', name: 'Flower' },
+  { id: 'crown', name: 'Crown', lock: { type: 'best', v: 1000, text: 'Reach length 1,000' } },
+  { id: 'horns', name: 'Horns', lock: { type: 'kills', v: 5, text: 'Take out 5 snakes' } },
+  { id: 'halo', name: 'Halo', lock: { type: 'botBest', v: 500, text: 'Bot reaches 500' } },
+];
+const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [10000, 'Arena Shark'], [20000, 'Mega Noodle'], [40000, 'Legend'], [80000, 'Your Twin']];
+
+/* ================= utils ================= */
+const wrapA = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const rand = (a, b) => a + Math.random() * (b - a);
+const num = (v, d = 0) => (typeof v === 'number' && isFinite(v) ? v : d);
+const int = (v, d = 0) => Math.floor(num(v, d));
+const fmt = (n) => Math.floor(n).toLocaleString();
+const sectorOf = (a) => { let k = Math.floor((a + Math.PI + Math.PI / S) / TAU * S) % S; if (k < 0) k += S; return k; };
+const SECTOR_C = Array.from({ length: S }, (_, k) => -Math.PI + k * TAU / S);
+function nearestBin(rel) { let best = 0, bd = 1e9; for (let i = 0; i < NB; i++) { const d = Math.abs(wrapA(rel - TB[i])); if (d < bd) { bd = d; best = i; } } return best; }
+function hash32(a, b, c) {
+  let h = (a ^ 0x9e3779b9) >>> 0;
+  h = Math.imul(h ^ ((b + 0x7f4a7c15) >>> 0), 0x85ebca6b); h ^= h >>> 13;
+  h = Math.imul(h ^ ((c + 0x165667b1) >>> 0), 0xc2b2ae35); h ^= h >>> 16;
+  h = Math.imul(h, 0x27d4eb2f); h ^= h >>> 15;
+  return h >>> 0;
+}
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+function shade(h, f) { const [r, g, b] = hexRgb(h); const c = (v) => Math.max(0, Math.min(255, Math.round(v * f))); return `rgb(${c(r)},${c(g)},${c(b)})`; }
+const fadeCache = new Map();
+function fadeFor(c1, c2) {
+  const k = c1 * 16 + c2; let a = fadeCache.get(k); if (a) return a;
+  const A = hexRgb(PALETTE[c1]), B = hexRgb(PALETTE[c2]); a = [];
+  for (let i = 0; i < 12; i++) { const t = i / 11; a.push(`rgb(${Math.round(A[0] + (B[0] - A[0]) * t)},${Math.round(A[1] + (B[1] - A[1]) * t)},${Math.round(A[2] + (B[2] - A[2]) * t)})`); }
+  fadeCache.set(k, a); return a;
+}
+const RAINBOW = Array.from({ length: 36 }, (_, i) => `hsl(${i * 10},90%,63%)`);
+function cleanName(v) {
+  if (typeof v !== 'string') return 'Player';
+  const s = v.replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '').trim().slice(0, 14);
+  return s || 'Player';
+}
+function packLook(l) { return l.c1 + 10 * l.c2 + 100 * l.pat + 1000 * l.eye + 10000 * l.hat; }
+function unpackLook(n) {
+  n = Math.max(0, int(n));
+  return { c1: n % 10, c2: Math.floor(n / 10) % 10, pat: Math.min(PATTERNS.length - 1, Math.floor(n / 100) % 10), eye: Math.min(EYES.length - 1, Math.floor(n / 1000) % 10), hat: Math.min(HATS.length - 1, Math.floor(n / 10000) % 10) };
+}
+function bytesToB64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+function b64ToBytes(b) { const s = atob(b); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+
+const css = getComputedStyle(document.documentElement);
+const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
+const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
+
+/* ================= profile & storage ================= */
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, volume: 0.7, theme: 0 };
+let brain = null;
+let newSince = 0;
+
+function applyProfileData(p) {
+  if (!p || typeof p !== 'object') return;
+  for (const k of ['practice', 'bestYou', 'bestBot', 'totalRecorded', 'games', 'kills', 'sessions']) if (typeof p[k] === 'number' && isFinite(p[k])) profile[k] = clamp(Math.floor(p[k]), 0, 1e9);
+  for (const k of ['auto', 'reflex', 'sound']) if (typeof p[k] === 'boolean') profile[k] = p[k];
+  if (typeof p.volume === 'number' && isFinite(p.volume)) profile.volume = clamp(p.volume, 0, 1);
+  if (typeof p.theme === 'number' && isFinite(p.theme)) profile.theme = clamp(Math.floor(p.theme), -1, 5);
+  for (const k of ['acc', 'near']) if (p[k] === null || (typeof p[k] === 'number' && isFinite(p[k]))) profile[k] = p[k] === null ? null : clamp(p[k], 0, 1);
+  if (typeof p.name === 'string') profile.name = p.name.slice(0, 14);
+  if (typeof p.look === 'number' && isFinite(p.look)) profile.look = unpackLook(p.look);
+  if (Array.isArray(p.slots)) profile.slots = [0, 1, 2].map((i) => (typeof p.slots[i] === 'number' && isFinite(p.slots[i]) ? Math.max(0, Math.floor(p.slots[i])) : null));
+}
+let saveTimer = 0;
+function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 500); }
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY); if (!raw) return;
+    const d = JSON.parse(raw);
+    applyProfileData(d.profile);
+    newSince = clamp(int(d.newSince), 0, 1e7);
+    if (d.weights) { const b = makeBrain(); if (setWeights(b, b64ToBytes(d.weights))) brain = b; }
+    if (d.samples) loadSamples(b64ToBytes(d.samples));
+  } catch (e) { /* storage unavailable or corrupt: start fresh */ }
+}
+function save() {
+  const p = Object.assign({}, profile, { look: packLook(profile.look) });
+  const base = { v: 2, profile: p, newSince, weights: brain && profile.sessions > 0 ? bytesToB64(getWeightBytes(brain)) : null };
+  for (const keep of [SAVE_SAMPLES, 4000, 0]) {
+    try {
+      const d = Object.assign({}, base);
+      if (keep > 0 && sampCount > 0) d.samples = bytesToB64(packSamples(keep));
+      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+      return true;
+    } catch (e) { /* try smaller */ }
+  }
+  return false;
+}
+function botLevel() {
+  if (!botReady()) return { n: 1, name: LEVELS[0][1], next: null, from: 0 };
+  let l = 1;
+  for (let i = 1; i < LEVELS.length; i++) if (profile.practice >= LEVELS[i][0]) l = i;
+  return { n: l + 1, name: LEVELS[l][1], next: LEVELS[l + 1] ? LEVELS[l + 1][0] : null, from: LEVELS[l][0] };
+}
+function isUnlocked(item) {
+  const L = item.lock; if (!L) return true;
+  if (L.type === 'botLevel') return botReady() && botLevel().n >= L.v;
+  if (L.type === 'games') return profile.games >= L.v;
+  if (L.type === 'best') return profile.bestYou >= L.v;
+  if (L.type === 'kills') return profile.kills >= L.v;
+  if (L.type === 'botBest') return profile.bestBot >= L.v;
+  return false;
+}
+let unlockedKeys = null;
+function unlockSnapshot() { const s = new Set(); for (const [arr, tag] of [[PATTERNS, 'p'], [EYES, 'e'], [HATS, 'h']]) arr.forEach((it, i) => { if (isUnlocked(it)) s.add(tag + i); }); return s; }
+function creditKill(name) { profile.kills++; toast(`You took out ${name}`); SFX.kill(); checkUnlocks(); }
+function checkUnlocks() {
+  const now = unlockSnapshot();
+  if (unlockedKeys) for (const k of now) if (!unlockedKeys.has(k)) {
+    const arr = k[0] === 'p' ? PATTERNS : k[0] === 'e' ? EYES : HATS;
+    toast(`New in your locker: ${arr[+k.slice(1)].name}`); SFX.unlock();
+  }
+  unlockedKeys = now;
+}
+
+/* ================= brain (tiny neural net) ================= */
+const SIZES = [FEAT, 48, 32, NB + 1];
+function gauss() { let u = 0; while (!u) u = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * Math.random()); }
+function makeBrain() {
+  const layers = [];
+  for (let l = 0; l < SIZES.length - 1; l++) {
+    const nin = SIZES[l], nout = SIZES[l + 1];
+    const W = new Float32Array(nin * nout), sc = Math.sqrt(2 / nin) * (l === SIZES.length - 2 ? 0.5 : 1);
+    for (let i = 0; i < W.length; i++) W[i] = gauss() * sc;
+    layers.push({ nin, nout, W, b: new Float32Array(nout) });
+  }
+  const b = { layers, t: 0 };
+  b.z = layers.map((L) => new Float32Array(L.nout));
+  b.a = [null].concat(layers.map((L) => new Float32Array(L.nout)));
+  b.d = layers.slice(0, -1).map((L) => new Float32Array(L.nout));
+  b.gW = layers.map((L) => new Float32Array(L.W.length)); b.gb = layers.map((L) => new Float32Array(L.nout));
+  b.mW = layers.map((L) => new Float32Array(L.W.length)); b.vW = layers.map((L) => new Float32Array(L.W.length));
+  b.mb = layers.map((L) => new Float32Array(L.nout)); b.vb = layers.map((L) => new Float32Array(L.nout));
+  return b;
+}
+function forward(br, x) {
+  const L = br.layers; let a = x;
+  for (let l = 0; l < L.length; l++) {
+    const { nin, nout, W, b } = L[l]; const z = br.z[l], out = br.a[l + 1];
+    for (let j = 0; j < nout; j++) z[j] = b[j];
+    for (let i = 0; i < nin; i++) { const ai = a[i]; if (ai === 0) continue; const row = i * nout; for (let j = 0; j < nout; j++) z[j] += ai * W[row + j]; }
+    if (l < L.length - 1) for (let j = 0; j < nout; j++) out[j] = z[j] > 0 ? z[j] : 0.02 * z[j];
+    else for (let j = 0; j < nout; j++) out[j] = z[j];
+    a = out;
+  }
+  return a;
+}
+const dOut = new Float32Array(NB + 1);
+function backward(br, x, bin, boost, cw) {
+  const L = br.layers, nl = L.length, out = br.a[nl];
+  let mx = -1e9; for (let j = 0; j < NB; j++) if (out[j] > mx) mx = out[j];
+  let sum = 0; for (let j = 0; j < NB; j++) { const e = Math.exp(out[j] - mx); dOut[j] = e; sum += e; }
+  let loss = 0;
+  for (let j = 0; j < NB; j++) { const p = dOut[j] / sum; if (j === bin) loss -= Math.log(Math.max(p, 1e-7)) * cw; dOut[j] = (p - (j === bin ? 1 : 0)) * cw; }
+  const pb = 1 / (1 + Math.exp(-out[NB])); dOut[NB] = (pb - boost) * 0.5;
+  let delta = dOut;
+  for (let l = nl - 1; l >= 0; l--) {
+    const { nin, nout, W } = L[l]; const ain = l === 0 ? x : br.a[l]; const gW = br.gW[l], gb = br.gb[l];
+    for (let j = 0; j < nout; j++) gb[j] += delta[j];
+    const prev = l > 0 ? br.d[l - 1] : null;
+    for (let i = 0; i < nin; i++) {
+      const ai = ain[i], row = i * nout; let acc = 0;
+      for (let j = 0; j < nout; j++) { gW[row + j] += ai * delta[j]; acc += W[row + j] * delta[j]; }
+      if (prev) prev[i] = acc;
+    }
+    if (prev) { const zp = br.z[l - 1]; for (let i = 0; i < nin; i++) if (zp[i] <= 0) prev[i] *= 0.02; }
+    delta = prev;
+  }
+  return loss;
+}
+function adamStep(br, bs, lr) {
+  br.t++; const b1 = 0.9, b2 = 0.999, c1 = 1 - Math.pow(b1, br.t), c2 = 1 - Math.pow(b2, br.t);
+  br.layers.forEach((Ly, l) => {
+    const sets = [[Ly.W, br.gW[l], br.mW[l], br.vW[l], 1e-4], [Ly.b, br.gb[l], br.mb[l], br.vb[l], 0]];
+    for (const [P, G, M, V, wd] of sets) for (let k = 0; k < P.length; k++) {
+      const g = G[k] / bs + wd * P[k];
+      M[k] = b1 * M[k] + (1 - b1) * g; V[k] = b2 * V[k] + (1 - b2) * g * g;
+      P[k] -= lr * (M[k] / c1) / (Math.sqrt(V[k] / c2) + 1e-8); G[k] = 0;
+    }
+  });
+}
+function weightCount() { let n = 0; for (let l = 0; l < SIZES.length - 1; l++) n += SIZES[l] * SIZES[l + 1] + SIZES[l + 1]; return n; }
+function getWeightBytes(br) { const f = new Float32Array(weightCount()); let o = 0; for (const L of br.layers) { f.set(L.W, o); o += L.W.length; f.set(L.b, o); o += L.b.length; } return new Uint8Array(f.buffer); }
+function setWeights(br, bytes) {
+  if (bytes.length !== weightCount() * 4) return false;
+  const f = new Float32Array(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)); let o = 0;
+  for (const L of br.layers) { L.W.set(f.subarray(o, o + L.W.length)); o += L.W.length; L.b.set(f.subarray(o, o + L.b.length)); o += L.b.length; }
+  return true;
+}
+const botReady = () => !!brain && profile.sessions > 0;
+
+/* ================= recorded moves ================= */
+const sampX = new Float32Array(MAX_SAMPLES * FEAT), sampY = new Uint8Array(MAX_SAMPLES);
+let sampCount = 0, sampHead = 0;
+function pushSample(f, label, isNew) {
+  sampX.set(f, sampHead * FEAT); sampY[sampHead] = label;
+  sampHead = (sampHead + 1) % MAX_SAMPLES; if (sampCount < MAX_SAMPLES) sampCount++;
+  if (isNew) { newSince++; profile.totalRecorded++; }
+}
+function packSamples(keep) {
+  const k = Math.min(keep, sampCount), out = new Uint8Array(k * (FEAT + 1));
+  let start = (sampHead - k + MAX_SAMPLES) % MAX_SAMPLES;
+  for (let s = 0; s < k; s++) {
+    const i = (start + s) % MAX_SAMPLES, o = s * (FEAT + 1);
+    for (let f = 0; f < FEAT; f++) out[o + f] = clamp(Math.round((sampX[i * FEAT + f] + 1) * 127.5), 0, 255);
+    out[o + FEAT] = sampY[i];
+  }
+  return out;
+}
+function loadSamples(bytes) {
+  const k = Math.floor(bytes.length / (FEAT + 1)), tmp = new Float32Array(FEAT);
+  for (let s = 0; s < k; s++) { const o = s * (FEAT + 1); for (let f = 0; f < FEAT; f++) tmp[f] = bytes[o + f] / 127.5 - 1; pushSample(tmp, bytes[o + FEAT] % (NB * 2), false); }
+}
+function mirrorFeat(src, dst) {
+  for (let k = 0; k < S; k++) { const m = (S - k) % S; dst[m] = src[k]; dst[12 + m] = src[12 + k]; dst[24 + m] = src[24 + k]; }
+  dst[36] = src[36]; dst[37] = src[37]; dst[38] = src[38]; dst[39] = -src[39]; dst[40] = src[40];
+  dst[41] = -src[41]; dst[42] = src[42]; dst[43] = src[43]; dst[44] = -src[44]; dst[45] = src[45];
+}
+
+/* ================= training (runs in small slices so the game keeps going) ================= */
+let trainJob = null;
+const xBuf = new Float32Array(FEAT), mBuf = new Float32Array(FEAT);
+function loadFeat(si, dst) { const o = si * FEAT; for (let k = 0; k < FEAT; k++) dst[k] = sampX[o + k]; }
+function shuffleRange(a, from, to) { for (let i = to - 1; i > from; i--) { const j = from + Math.floor(Math.random() * (i - from + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } }
+function startTraining() {
+  if (trainJob || sampCount < MIN_TRAIN) return false;
+  const fresh = !brain; if (!brain) brain = makeBrain();
+  brain.t = 0; for (const arr of [brain.mW, brain.vW, brain.mb, brain.vb]) arr.forEach((a) => a.fill(0));
+  const n = sampCount, idx = new Int32Array(n); for (let i = 0; i < n; i++) idx[i] = i;
+  shuffleRange(idx, 0, n);
+  const nVal = Math.min(2000, Math.max(40, Math.floor(n * 0.12))), nTr = n - nVal;
+  const cnt = new Float64Array(NB); for (let q = nVal; q < n; q++) cnt[sampY[idx[q]] >> 1]++;
+  const cw = new Float32Array(NB); for (let b = 0; b < NB; b++) cw[b] = cnt[b] > 0 ? clamp(Math.sqrt((nTr / NB) / cnt[b]), 0.35, 3) : 1;
+  trainJob = { idx, n, nVal, nTr, cw, epochs: clamp(Math.round(160000 / nTr), 6, 60), ep: 0, q: nVal, bc: 0, lr: fresh ? 0.003 : 0.0015, accs: [], done: 0, newAtStart: newSince, fresh };
+  trainJob.total = trainJob.epochs * nTr;
+  shuffleRange(idx, nVal, n);
+  updateDock(); return true;
+}
+function evaluate(j) {
+  let ex = 0, near = 0;
+  for (let q = 0; q < j.nVal; q++) {
+    const si = j.idx[q]; loadFeat(si, xBuf); const out = forward(brain, xBuf);
+    let best = 0; for (let k = 1; k < NB; k++) if (out[k] > out[best]) best = k;
+    const bin = sampY[si] >> 1; if (best === bin) ex++; if (Math.abs(best - bin) <= 1) near++;
+  }
+  return { exact: ex / j.nVal, near: near / j.nVal };
+}
+function stepTraining(budget) {
+  const j = trainJob; if (!j) return;
+  const t0 = performance.now();
+  while (performance.now() - t0 < budget) {
+    if (j.q >= j.n) {
+      if (j.bc) { adamStep(brain, j.bc, j.lr); j.bc = 0; }
+      j.accs.push(evaluate(j)); j.ep++;
+      if (j.ep >= j.epochs) { finishTraining(); return; }
+      shuffleRange(j.idx, j.nVal, j.n); j.q = j.nVal;
+      if (!$('train').hidden) drawAccChart();
+      continue;
+    }
+    for (let c = 0; c < 48 && j.q < j.n; c++) {
+      const si = j.idx[j.q]; loadFeat(si, xBuf);
+      let bin = sampY[si] >> 1; const boost = sampY[si] & 1;
+      if (Math.random() < 0.3) { mirrorFeat(xBuf, mBuf); xBuf.set(mBuf); bin = NB - 1 - bin; }
+      forward(brain, xBuf); backward(brain, xBuf, bin, boost, j.cw[bin]);
+      if (++j.bc === 32) { adamStep(brain, j.bc, j.lr); j.bc = 0; }
+      j.q++; j.done++;
+    }
+  }
+}
+function finishTraining() {
+  const j = trainJob; trainJob = null;
+  const last = j.accs[j.accs.length - 1] || { exact: 0, near: 0 };
+  profile.practice += Math.max(1, j.newAtStart); newSince = Math.max(0, newSince - j.newAtStart);
+  profile.acc = last.exact; profile.near = last.near; profile.sessions++;
+  lastJob = j; SFX.trainDone(); save(); checkUnlocks(); updateDock(); updateBotCard(); updateMenuButtons();
+  if (!$('train').hidden) showTrainResult(); else toast(`Training done. Your bot picks your move ${Math.round(last.exact * 100)}% of the time.`);
+}
+let lastJob = null;
+
+/* ================= world ================= */
+let mode = 'menu';          // menu | play | dead
+let gameKind = 'solo';      // solo | online
+let worldR = SOLO_R, worldTargetR = SOLO_R, seed = 1, activeSlots = SOLO_FOOD;
+const slotGen = new Int32Array(MAX_SLOTS);
+const slots = Array.from({ length: MAX_SLOTS }, () => ({ ux: 0, uy: 0, x: 0, y: 0, v: 1, r: 5, c: 0, ph: 0 }));
+let drops = [];
+let snakes = [];
+let player = null;
+let snakeId = 0, frame = 0;
+let botDriving = false, botWatch = false;
+let run = { max: 0 };
+let myDeaths = 0, lastKiller = null;
+const eatenDrops = new Map();
+
+function setSlot(i) {
+  const g = slotGen[i];
+  const h1 = hash32(seed, i, g * 2), h2 = hash32(seed, i, g * 2 + 1), h3 = hash32(seed ^ 0x5bd1e995, i, g);
+  const ang = h1 / 4294967296 * TAU, rr = Math.sqrt(h2 / 4294967296) * 0.965;
+  const s = slots[i]; s.ux = Math.cos(ang) * rr; s.uy = Math.sin(ang) * rr; s.x = s.ux * worldR; s.y = s.uy * worldR;
+  const big = (h3 % 100) < 14; s.v = big ? 2 : 1; s.r = big ? 7.5 : 4 + (h3 % 17) / 10; s.c = (h3 >>> 8) % 10; s.ph = ((h3 >>> 4) % 628) / 100;
+}
+function setupWorld(sd, R, food) {
+  seed = sd >>> 0; worldR = worldTargetR = R; activeSlots = food;
+  slotGen.fill(0); for (let i = 0; i < MAX_SLOTS; i++) setSlot(i);
+  drops = []; snakes = []; player = null; eatenDrops.clear();
+  buildSegGrid(); buildFoodGrid();
+}
+function setupSoloWorld() {
+  gameKind = 'solo';
+  setupWorld((Math.random() * 4294967296) >>> 0, SOLO_R, SOLO_FOOD);
+  for (let i = 0; i < SOLO_NPCS; i++) spawnNpc(true);
+}
+
+/* ---------- spatial grids ---------- */
+const CELL = 110, GN = Math.ceil(GRID_R * 2 / CELL) + 3;
+const cellOf = (v) => { const c = Math.floor((v + GRID_R) / CELL) + 1; return c < 0 ? 0 : c >= GN ? GN - 1 : c; };
+const SEG_CAP = 16000;
+const segHead = new Int32Array(GN * GN), segNext = new Int32Array(SEG_CAP);
+const segX = new Float32Array(SEG_CAP), segY = new Float32Array(SEG_CAP), segR = new Float32Array(SEG_CAP), segIdx = new Int32Array(SEG_CAP);
+const segOwner = new Array(SEG_CAP);
+const foodHead = new Int32Array(GN * GN), foodNext = new Int32Array(MAX_SLOTS + MAX_DROPS + 10);
+const qbuf = new Int32Array(SEG_CAP);
+function buildSegGrid() {
+  segHead.fill(-1); let n = 0;
+  for (const s of snakes) {
+    if (s.ghost || !s.alive) continue;
+    const segs = s.segs;
+    for (let j = 0; j < segs.length; j++) {
+      if (n >= SEG_CAP) return;
+      const p = segs[j]; segX[n] = p.x; segY[n] = p.y; segR[n] = s.r; segIdx[n] = j; segOwner[n] = s;
+      const c = cellOf(p.y) * GN + cellOf(p.x); segNext[n] = segHead[c]; segHead[c] = n; n++;
+    }
+  }
+}
+function buildFoodGrid() {
+  foodHead.fill(-1);
+  for (let i = 0; i < activeSlots; i++) { const f = slots[i]; const c = cellOf(f.y) * GN + cellOf(f.x); foodNext[i] = foodHead[c]; foodHead[c] = i; }
+  const nd = Math.min(drops.length, MAX_DROPS);
+  for (let j = 0; j < nd; j++) { const f = drops[j], i = MAX_SLOTS + j; const c = cellOf(f.y) * GN + cellOf(f.x); foodNext[i] = foodHead[c]; foodHead[c] = i; }
+}
+function queryNear(head, next, x, y, rad, out) {
+  let n = 0; const c0 = cellOf(x - rad), c1 = cellOf(x + rad), r0 = cellOf(y - rad), r1 = cellOf(y + rad);
+  for (let cy = r0; cy <= r1; cy++) { const base = cy * GN; for (let cx = c0; cx <= c1; cx++) { let i = head[base + cx]; while (i !== -1) { if (n < out.length) out[n++] = i; i = next[i]; } } }
+  return n;
+}
+const foodAt = (i) => (i < MAX_SLOTS ? slots[i] : drops[i - MAX_SLOTS]);
+
+/* ---------- snakes ---------- */
+const radiusFor = (m) => Math.min(39, 9 + Math.sqrt(Math.max(1, m)) * 0.95);
+const segCount = (m) => Math.min(260, Math.floor(8 + Math.max(1, m) * 0.28));
+function updateSize(s) { s.r = radiusFor(s.mass); s.spacing = s.r * 0.45; }
+function applyLook(s, look) {
+  s.look = look; s.color = PALETTE[look.c1]; s.colorB = PALETTE[look.c2];
+  s.color2 = shade(s.color, 0.8); s.outline = shade(s.color, 0.42); s.fade = fadeFor(look.c1, look.c2);
+}
+function makeSnake(o) {
+  const pos = o.pos || [0, 0];
+  const ang = o.ang !== undefined ? o.ang : Math.random() * TAU;
+  const s = { id: ++snakeId, kind: o.kind, name: o.name || 'Player', mass: o.mass || START_MASS, x: pos[0], y: pos[1], ang, targetAng: ang,
+    wantBoost: false, boosting: false, boostAcc: 0, alive: true, segs: [], r: 10, spacing: 5, npc: o.npc || null, lastBin: 4,
+    grace: o.kind === 'player' ? 1.5 : 0.5, bot: false, ghost: false, npcId: o.npcId, nameIdx: o.nameIdx || 0 };
+  applyLook(s, o.look || randomLook());
+  updateSize(s);
+  const n = segCount(s.mass);
+  for (let i = 0; i < n; i++) s.segs.push({ x: s.x - Math.cos(ang) * i * 1.5, y: s.y - Math.sin(ang) * i * 1.5 });
+  return s;
+}
+function randomLook() {
+  const c1 = Math.floor(Math.random() * 10); let c2 = Math.floor(Math.random() * 10); if (c2 === c1) c2 = (c1 + 3) % 10;
+  const hatRoll = Math.random();
+  return { c1, c2, pat: Math.floor(Math.random() * 5), eye: Math.floor(Math.random() * 4), hat: hatRoll < 0.78 ? 0 : 1 + Math.floor(Math.random() * 3) };
+}
+function randomPersonality() { return { greed: rand(0.8, 1.7), caution: rand(0.9, 1.8), wander: rand(0.08, 0.4), boost: rand(0.02, 0.1), hunter: Math.random() < 0.35 ? rand(0.25, 0.8) : 0 }; }
+function findSpawn(avoidPlayer) {
+  let best = [0, 0], bestD = -1;
+  for (let t = 0; t < 26; t++) {
+    const a = Math.random() * TAU, d = Math.sqrt(Math.random()) * worldR * 0.78, x = Math.cos(a) * d, y = Math.sin(a) * d;
+    let md = 1e9;
+    for (const s of snakes) for (let i = 0; i < s.segs.length; i += 3) { const p = s.segs[i]; const dd = Math.hypot(p.x - x, p.y - y); if (dd < md) md = dd; }
+    if (avoidPlayer && player && player.alive) { const dp = Math.hypot(player.x - x, player.y - y); if (dp < 900) md = Math.min(md, dp * 0.3); }
+    if (md > bestD) { bestD = md; best = [x, y]; }
+    if (md > 650) break;
+  }
+  return best;
+}
+function npcCount() { let n = 0; for (const s of snakes) if (s.kind === 'npc') n++; return n; }
+let npcIdNext = Math.floor(Math.random() * 100000);
+function spawnNpc(initial) {
+  const pos = findSpawn(!initial);
+  const used = new Set(snakes.map((s) => s.name));
+  let ni = Math.floor(Math.random() * NPC_NAMES.length);
+  for (let t = 0; t < 12 && used.has(NPC_NAMES[ni]); t++) ni = Math.floor(Math.random() * NPC_NAMES.length);
+  const s = makeSnake({ kind: 'npc', name: NPC_NAMES[ni], nameIdx: ni, mass: 12 + Math.pow(Math.random(), 2.5) * 260, pos, ang: Math.atan2(-pos[1], -pos[0]) + rand(-1, 1), npc: randomPersonality(), npcId: npcIdNext++ });
+  snakes.push(s); return s;
+}
+
+function moveSnake(s, dt) {
+  s.grace -= dt;
+  const tr = 4.8 / (1 + s.mass / 900);
+  const diff = wrapA(s.targetAng - s.ang), mt = tr * dt;
+  s.ang = wrapA(s.ang + clamp(diff, -mt, mt));
+  s.boosting = s.wantBoost && s.mass > MIN_BOOST_MASS;
+  const sp = s.boosting ? BOOST_SPEED : BASE_SPEED;
+  if (s.boosting) {
+    s.boostAcc += dt;
+    while (s.boostAcc >= 0.1) {
+      s.boostAcc -= 0.1; s.mass -= 1;
+      const t = s.segs[s.segs.length - 1];
+      if (drops.length < MAX_DROPS) drops.push({ x: t.x + rand(-4, 4), y: t.y + rand(-4, 4), v: 0.6, r: 4.5, c: s.look.c1, ph: Math.random() * TAU, life: 22, id: null, eaten: false });
+    }
+  } else s.boostAcc = 0;
+  s.x += Math.cos(s.ang) * sp * dt; s.y += Math.sin(s.ang) * sp * dt;
+  bodyFollow(s);
+}
+function bodyFollow(s) {
+  updateSize(s);
+  const segs = s.segs, target = segCount(s.mass);
+  while (segs.length < target) { const l = segs[segs.length - 1]; segs.push({ x: l.x, y: l.y }); }
+  while (segs.length > target && segs.length > 2) segs.pop();
+  segs[0].x = s.x; segs[0].y = s.y;
+  const sp = s.spacing;
+  for (let i = 1; i < segs.length; i++) {
+    const p = segs[i - 1], q = segs[i], dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy);
+    if (d > sp) { const k = sp / d; q.x = p.x + dx * k; q.y = p.y + dy * k; }
+  }
+}
+function moveRemote(s, dt, now) {
+  const age = Math.min(0.5, (now - s.netT) / 1000), sp = s.netB ? BOOST_SPEED : BASE_SPEED;
+  const decay = Math.pow(0.002, dt); s.errX *= decay; s.errY *= decay;
+  s.x = s.netX + Math.cos(s.netA) * sp * age + s.errX;
+  s.y = s.netY + Math.sin(s.netA) * sp * age + s.errY;
+  s.ang = wrapA(s.ang + wrapA(s.netA - s.ang) * Math.min(1, dt * 14));
+  s.targetAng = s.netA; s.boosting = s.netB;
+  s.ghost = s.hid || now - s.netT > 2500;
+  bodyFollow(s);
+}
+function setNet(s, x, y, a, m, b, now) {
+  const dispX = s.x, dispY = s.y;
+  s.netX = clamp(x, -GRID_R, GRID_R); s.netY = clamp(y, -GRID_R, GRID_R); s.netA = wrapA(a); s.netB = b; s.netT = now;
+  const mm = clamp(m, 1, 6000); if (mm !== s.mass) s.mass = mm;
+  s.errX = dispX - s.netX; s.errY = dispY - s.netY;
+  if (s.errX * s.errX + s.errY * s.errY > 160000) { s.errX = 0; s.errY = 0; s.x = s.netX; s.y = s.netY; for (const p of s.segs) { p.x = s.x; p.y = s.y; } }
+}
+
+/* ---------- sensing: what the bot (and NPCs) can "see" ---------- */
+const fsum = new Float32Array(S);
+function sense(s, out) {
+  out.fill(0); fsum.fill(0);
+  const hx = s.x, hy = s.y, ch = Math.cos(s.ang), sh = Math.sin(s.ang);
+  const RD = 430, RF = 520, RH = 680;
+  let nh = -1, nhd = 1e9;
+  let n = queryNear(segHead, segNext, hx, hy, RH, qbuf);
+  for (let q = 0; q < n; q++) {
+    const i = qbuf[q]; if (segOwner[i] === s) continue;
+    const dx = segX[i] - hx, dy = segY[i] - hy, d2 = dx * dx + dy * dy; if (d2 > RH * RH) continue;
+    const d = Math.sqrt(d2), lx = dx * ch + dy * sh, ly = -dx * sh + dy * ch, k = sectorOf(Math.atan2(ly, lx));
+    const ed = d - segR[i] - s.r;
+    if (ed < RD) { const v = 1 - Math.max(0, ed) / RD; if (v > out[k]) out[k] = v; }
+    if (segIdx[i] === 0) { const hv = 1 - d / RH; if (hv > out[24 + k]) out[24 + k] = hv; if (d < nhd) { nhd = d; nh = i; } }
+  }
+  const pd = Math.hypot(hx, hy);
+  if (worldR - pd < RD + 60) {
+    for (let k = 0; k < S; k++) {
+      const a = s.ang + SECTOR_C[k], ux = Math.cos(a), uy = Math.sin(a);
+      const pu = hx * ux + hy * uy, disc = pu * pu - (pd * pd - worldR * worldR);
+      const t = -pu + Math.sqrt(Math.max(0, disc)), v = 1 - Math.max(0, t - s.r) / RD;
+      if (v > out[k]) out[k] = v;
+    }
+  }
+  n = queryNear(foodHead, foodNext, hx, hy, RF, qbuf);
+  for (let q = 0; q < n; q++) {
+    const f = foodAt(qbuf[q]); if (!f || f.eaten) continue;
+    const dx = f.x - hx, dy = f.y - hy, d2 = dx * dx + dy * dy; if (d2 > RF * RF) continue;
+    const d = Math.sqrt(d2), lx = dx * ch + dy * sh, ly = -dx * sh + dy * ch;
+    fsum[sectorOf(Math.atan2(ly, lx))] += f.v * (1 - d / RF);
+  }
+  for (let k = 0; k < S; k++) out[12 + k] = 1 - Math.exp(-fsum[k] / 5);
+  out[36] = Math.tanh(s.mass / 300); out[37] = s.mass > MIN_BOOST_MASS ? 1 : 0; out[38] = Math.min(1, pd / worldR);
+  if (pd > 1) { const lx = -hx * ch - hy * sh, ly = hx * sh - hy * ch, ac = Math.atan2(ly, lx); out[39] = Math.sin(ac); out[40] = Math.cos(ac); }
+  if (nh >= 0) {
+    const dx = segX[nh] - hx, dy = segY[nh] - hy, lx = dx * ch + dy * sh, ly = -dx * sh + dy * ch, a = Math.atan2(ly, lx);
+    out[41] = Math.sin(a); out[42] = Math.cos(a); out[43] = 1 - nhd / RH;
+    const rh = wrapA(segOwner[nh].ang - s.ang); out[44] = Math.sin(rh); out[45] = Math.cos(rh);
+  }
+}
+
+/* ---------- look-ahead used by NPCs and by your bot's survival reflexes ---------- */
+function pathHits(s, rel, n) {
+  const steps = 14, dt = 0.035, tr = 4.8 / (1 + s.mass / 900), sp = s.boosting ? BOOST_SPEED : BASE_SPEED;
+  let x = s.x, y = s.y, a = s.ang; const tgt = wrapA(s.ang + rel), lim = (worldR - s.r - 10) ** 2;
+  for (let t = 0; t < steps; t++) {
+    a += clamp(wrapA(tgt - a), -tr * dt, tr * dt);
+    x += Math.cos(a) * sp * dt; y += Math.sin(a) * sp * dt;
+    if (x * x + y * y > lim) return t + 1;
+    for (let q = 0; q < n; q++) {
+      const i = qbuf[q]; if (segOwner[i] === s) continue;
+      const dx = segX[i] - x, dy = segY[i] - y, rr = segR[i] + s.r * 0.8 + 6;
+      if (dx * dx + dy * dy < rr * rr) return t + 1;
+    }
+  }
+  return 0;
+}
+function safeBin(s, pref, order) {
+  const sp = s.boosting ? BOOST_SPEED : BASE_SPEED;
+  const n = queryNear(segHead, segNext, s.x, s.y, sp * 0.5 + 90, qbuf);
+  const h0 = pathHits(s, TB[pref], n); if (h0 === 0) return pref;
+  let best = pref, bestH = h0;
+  for (const b of order) { if (b === pref) continue; const h = pathHits(s, TB[b], n); if (h === 0) return b; if (h > bestH) { bestH = h; best = b; } }
+  return best;
+}
+
+/* ---------- NPC brains ---------- */
+const npcBuf = new Float32Array(FEAT);
+function npcThink(s) {
+  sense(s, npcBuf);
+  const P = s.npc; let best = 4, bestScore = -1e9;
+  for (let b = 0; b < NB; b++) {
+    const k = sectorOf(TB[b]), kl = (k + S - 1) % S, kr = (k + 1) % S;
+    const danger = npcBuf[k] + 0.5 * (npcBuf[kl] + npcBuf[kr]);
+    const food = npcBuf[12 + k] + 0.3 * (npcBuf[12 + kl] + npcBuf[12 + kr]);
+    let score = food * P.greed - danger * danger * P.caution * 4 - Math.abs(TB[b]) * 0.08 + (Math.random() - 0.5) * P.wander + P.hunter * npcBuf[24 + k] * 0.5;
+    if (b === s.lastBin) score += 0.08;
+    if (score > bestScore) { bestScore = score; best = b; }
+  }
+  best = safeBin(s, best, ORDER[best]);
+  s.lastBin = best; s.targetAng = wrapA(s.ang + TB[best]);
+  s.wantBoost = s.mass > 40 && npcBuf[6] < 0.2 && ((npcBuf[18] > 0.7 && Math.random() < P.boost) || (s.wantBoost && Math.random() < 0.85));
+}
+
+/* ---------- your bot ---------- */
+const botIn = new Float32Array(FEAT), botP = new Float32Array(NB).fill(1 / NB);
+let botViz = null;
+function botThink(s) {
+  sense(s, botIn);
+  const out = forward(brain, botIn);
+  let mx = -1e9; for (let j = 0; j < NB; j++) if (out[j] > mx) mx = out[j];
+  let sum = 0; const p = new Float32Array(NB); for (let j = 0; j < NB; j++) { p[j] = Math.exp(out[j] - mx); sum += p[j]; }
+  let best = 0;
+  for (let j = 0; j < NB; j++) { botP[j] = botP[j] * 0.45 + (p[j] / sum) * 0.55; if (botP[j] > botP[best]) best = j; }
+  let reflex = false;
+  if (profile.reflex) {
+    const order = Array.from({ length: NB }, (_, i) => i).sort((a, b) => botP[b] - botP[a]);
+    const sb = safeBin(s, best, order); if (sb !== best) { reflex = true; best = sb; }
+  }
+  s.targetAng = wrapA(s.ang + TB[best]);
+  const pb = 1 / (1 + Math.exp(-out[NB]));
+  s.wantBoost = s.wantBoost ? pb > 0.4 : pb > 0.6;
+  botViz = { p: Array.from(botP), chosen: best, reflex };
+}
+
+/* ---------- you ---------- */
+const input = { px: 0, py: 0, has: false, mode: 'mouse', mBoost: false, kBoost: false, tBoost: false, left: false, right: false, last: performance.now() };
+const recBuf = new Float32Array(FEAT);
+function humanControl(s) {
+  if (input.left || input.right) s.targetAng = s.ang + (input.right ? 0.9 : -0.9);
+  else if (input.mode === 'keys') s.targetAng = s.ang;
+  else if (input.has) {
+    const hx = W / 2 + (s.x - cam.x) * cam.z, hy = H / 2 + (s.y - cam.y) * cam.z, dx = input.px - hx, dy = input.py - hy;
+    if (dx * dx + dy * dy > 16) s.targetAng = Math.atan2(dy, dx);
+  }
+  s.wantBoost = input.mBoost || input.kBoost || input.tBoost;
+}
+function record(s) { sense(s, recBuf); pushSample(recBuf, nearestBin(wrapA(s.targetAng - s.ang)) * 2 + (s.wantBoost ? 1 : 0), true); }
+
+/* ---------- deaths & food ---------- */
+function dropBody(s, key) {
+  const segs = s.segs, count = clamp(Math.floor(segs.length / 2), 4, 120);
+  const per = (s.mass * 0.8) / count, step = segs.length / count, r = clamp(5 + Math.sqrt(per) * 2.4, 5, 16);
+  for (let k = 0; k < count; k++) {
+    if (drops.length >= MAX_DROPS) break;
+    const id = key ? key + '.' + k : null; if (id && eatenDrops.has(id)) continue;
+    const p = segs[Math.floor(k * step)];
+    let x = p.x + rand(-0.6, 0.6) * s.r, y = p.y + rand(-0.6, 0.6) * s.r;
+    const d = Math.hypot(x, y); if (d > worldR - 12) { x *= (worldR - 12) / d; y *= (worldR - 12) / d; }
+    drops.push({ x, y, v: per, r, c: s.look.c1, ph: Math.random() * TAU, life: rand(35, 50), id, eaten: false });
+  }
+}
+function killSnake(s, killer) {
+  if (s.dead) return;
+  s.alive = false; s.dead = true;
+  let key = null;
+  if (s.kind === 'player') { myDeaths++; if (gameKind === 'online' && online.myPeer) key = online.myPeer.slice(0, 8) + '.' + myDeaths; }
+  else if (s.kind === 'npc' || s.kind === 'rnpc') key = gameKind === 'online' ? 'n' + s.npcId : null;
+  else if (s.kind === 'remote') key = s.peer.slice(0, 8) + '.' + s.netD;
+  dropBody(s, key);
+  if (s !== player && player && player.alive && mode === 'play' && Math.hypot(s.x - player.x, s.y - player.y) < 900) SFX.pop();
+  const i = snakes.indexOf(s); if (i >= 0) snakes.splice(i, 1);
+  if (s.kind === 'player') onPlayerDeath(killer);
+  else if (s.kind === 'npc' && killer && typeof killer === 'object') {
+    if (killer === player) creditKill(s.name);
+    else if (killer.kind === 'remote' && gameKind === 'online') online.nk.push({ id: s.npcId, peer: killer.peer, t: performance.now() });
+  }
+}
+function eatAround(s, dt) {
+  const n = queryNear(foodHead, foodNext, s.x, s.y, s.r + 80, qbuf), reach = s.r + 72;
+  for (let q = 0; q < n; q++) {
+    const fi = qbuf[q], f = foodAt(fi); if (!f || f.eaten) continue;
+    const dx = s.x - f.x, dy = s.y - f.y, d = Math.sqrt(dx * dx + dy * dy);
+    if (d < s.r + f.r + 6) {
+      s.mass += f.v; if (s === player) SFX.eat(f.v);
+      if (fi < MAX_SLOTS) { if (gameKind === 'online') logEat(fi * 1000 + (slotGen[fi] % 1000)); slotGen[fi]++; setSlot(fi); }
+      else { f.eaten = true; if (gameKind === 'online' && f.id) { logEat(f.id); eatenDrops.set(f.id, performance.now()); } }
+    } else if (d < reach && d > 0) { const pull = Math.min(d, 420 * dt) / d; f.x += dx * pull; f.y += dy * pull; }
+  }
+}
+function npcTarget() {
+  if (gameKind === 'solo') return SOLO_NPCS;
+  if (!online.filler) return 0;
+  const t = TIERS[online.tier], humans = Math.max(1, online.players);
+  return t.extra ? t.extra : Math.max(0, t.snakes - humans);
+}
+
+/* ---------- one simulation tick ---------- */
+let respawnT = 0;
+function step(dt, now) {
+  frame++;
+  if (worldR !== worldTargetR) {
+    const d = worldTargetR - worldR; worldR += Math.sign(d) * Math.min(Math.abs(d), 70 * dt);
+    for (let i = 0; i < MAX_SLOTS; i++) { const s = slots[i]; s.x = s.ux * worldR; s.y = s.uy * worldR; }
+  }
+  const npcHost = gameKind === 'solo' || online.isHost;
+  for (const s of snakes) if (s.kind === 'npc' && (frame + s.id) % 3 === 0) npcThink(s);
+  if (player && player.alive && mode === 'play') {
+    player.bot = botDriving;
+    if (botDriving) { if (botReady()) { if (frame % 2 === 0) botThink(player); } else setBot(false); }
+    else {
+      humanControl(player);
+      if (frame % 3 === 0 && now - input.last < 4000) record(player);
+      if (profile.auto && botReady() && now - input.last > AWAY_MS) setBot(true, 'auto');
+    }
+  }
+  for (const s of snakes) { if (s.kind === 'remote' || s.kind === 'rnpc') moveRemote(s, dt, now); else moveSnake(s, dt); }
+  buildSegGrid();
+
+  const dying = [];
+  for (const s of snakes) {
+    if (!s.alive || s.grace > 0) continue;
+    if (s.kind !== 'player' && !(s.kind === 'npc' && npcHost)) continue;
+    const hx = s.x, hy = s.y;
+    if (hx * hx + hy * hy > (worldR - s.r * 0.6) ** 2) { dying.push([s, 'edge']); continue; }
+    const n = queryNear(segHead, segNext, hx, hy, s.r + 50, qbuf);
+    for (let q = 0; q < n; q++) {
+      const i = qbuf[q], o = segOwner[i]; if (o === s) continue;
+      const dx = segX[i] - hx, dy = segY[i] - hy, rr = s.r * 0.72 + segR[i] * 0.88;
+      if (dx * dx + dy * dy < rr * rr) { dying.push([s, o]); break; }
+    }
+  }
+  for (const [s] of dying) s.alive = false;
+  for (const s of snakes) if (s.alive && (s.kind === 'player' || s.kind === 'npc')) eatAround(s, dt);
+  if (dying.length) { for (const [s, k] of dying) { s.alive = true; killSnake(s, k); } buildSegGrid(); }
+
+  let w = 0;
+  for (let i = 0; i < drops.length; i++) {
+    const f = drops[i]; f.life -= dt;
+    if (f.id && eatenDrops.has(f.id)) f.eaten = true;
+    if (!f.eaten && f.life > 0) drops[w++] = f;
+  }
+  drops.length = w;
+  buildFoodGrid();
+
+  if (npcHost) {
+    respawnT -= dt;
+    if (respawnT <= 0) {
+      respawnT = 0.7;
+      const target = npcTarget(), have = npcCount();
+      if (have < target) spawnNpc(false);
+      else if (have > target + 1) {
+        let pick = null;
+        for (const s of snakes) if (s.kind === 'npc' && (!player || !player.alive || Math.hypot(s.x - player.x, s.y - player.y) > 900) && (!pick || s.mass < pick.mass)) pick = s;
+        if (pick) killSnake(pick, null);
+      }
+    }
+  }
+  if (player && player.alive && mode === 'play') {
+    const sc = Math.floor(player.mass * 10);
+    if (sc > run.max) run.max = sc;
+    if (botDriving) { if (sc > profile.bestBot) profile.bestBot = sc; }
+    else if (sc > profile.bestYou) profile.bestYou = sc;
+  }
+  setBoostSound(!!(player && player.alive && mode === 'play' && player.boosting));
+  if (gameKind === 'online') {
+    if (frame % 2 === 0) sendPresence(now);
+    if (frame % 30 === 0) { computeRoomMeta(); for (const [id, t] of eatenDrops) if (now - t > 60000) eatenDrops.delete(id); }
+  }
+}
+
+/* ================= online play (room capability) ================= */
+const online = { api: null, room: null, code: null, myPeer: null, isHost: false, claim: false, noClaimSince: 0, filler: true, tier: 0, players: 1,
+  eatLog: [], nk: [], remotes: new Map(), rnpcs: new Map(), lastPres: new Map(), lastHostPres: null, seenKills: new Set(), unsubs: [], connected: false, lobbyUnsub: null, apiTried: false };
+function logEat(id) { online.eatLog.push({ id, t: performance.now() }); }
+const tierFor = (n) => (n <= 3 ? 0 : n <= 8 ? 1 : n <= 12 ? 2 : 3);
+function setTier(t) {
+  t = clamp(int(t), 0, 3);
+  if (t === online.tier && worldTargetR === TIERS[t].R) return;
+  const grew = t > online.tier; online.tier = t; worldTargetR = TIERS[t].R; activeSlots = TIERS[t].food;
+  if (mode === 'play') toast(grew ? `More players: the arena is growing (${TIERS[t].name})` : `Arena shrinking to ${TIERS[t].name}. Head for the middle!`);
+  updateRoomChip();
+}
+function seedFromCode(code) { let h = 2166136261; for (const ch of code) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function newCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
+
+function initOnline() {
+  online.apiTried = false;
+  try {
+    const p = window.claude && typeof window.claude.use === 'function' ? window.claude.use('room') : Promise.resolve(null);
+    p.then((api) => {
+      online.apiTried = true; online.api = api || null;
+      if (api) {
+        try { api.onConnection((c) => { online.connected = c; updateOnlineScreen(); }, () => { online.api = null; updateOnlineScreen(); }); } catch (e) { /* ignore */ }
+        try { online.lobbyUnsub = api.onPeers(() => { if (!$('online').hidden) updateOnlineScreen(); }, () => {}); } catch (e) { /* ignore */ }
+        setLobbyPresence();
+      }
+      updateOnlineScreen();
+    }).catch(() => { online.apiTried = true; online.api = null; updateOnlineScreen(); });
+  } catch (e) { online.apiTried = true; online.api = null; }
+}
+function setLobbyPresence() {
+  if (!online.api) return;
+  online.api.presence({ g: 'nb1', n: cleanName(profile.name), r: online.code || null, cnt: online.room ? online.players : null }).catch(() => {});
+}
+function lobbyRooms() {
+  const rooms = new Map(); const here = [];
+  if (!online.api) return { rooms, here };
+  let ps = []; try { ps = online.api.peers(); } catch (e) { ps = []; }
+  for (const p of ps) {
+    const pr = p.presence; if (!pr || pr.g !== 'nb1' || p.sameTab) continue;
+    const nm = cleanName(pr.n);
+    if (typeof pr.r === 'string' && /^[A-Z]{4}$/.test(pr.r)) { const r = rooms.get(pr.r) || { code: pr.r, names: [] }; r.names.push(nm); rooms.set(pr.r, r); }
+    else here.push(nm);
+  }
+  return { rooms, here };
+}
+async function joinRoom(code, create) {
+  if (!online.api) return;
+  code = code.toUpperCase();
+  if (!/^[A-Z]{4}$/.test(code)) { setOnlineStatus('Room codes are 4 letters, like KXPT.', true); return; }
+  if (online.room) await leaveRoom(true);
+  setOnlineStatus(`Joining room ${code}…`);
+  let r;
+  try { r = await online.api.join('nb-' + code.toLowerCase()); }
+  catch (e) { setOnlineStatus(e && e.code === 'limit_reached' ? 'Too many rooms open right now. Try again in a moment.' : `Couldn't join room ${code}. Check the code and try again.`, true); return; }
+  online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0;
+  online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = [];
+  online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear();
+  gameKind = 'online'; myDeaths = 0;
+  setupWorld(seedFromCode(code), TIERS[0].R, TIERS[0].food);
+  try { online.unsubs.push(r.onPeers(onRoomPeers, () => { toast('Lost the connection to the room.'); })); } catch (e) { /* ignore */ }
+  try { online.unsubs.push(r.onConnection((c) => { online.connected = c; updateRoomChip(); })); } catch (e) { /* ignore */ }
+  setLobbyPresence();
+  startGame({ watch: false });
+  sendPresence(performance.now());
+  toast(create ? `Room ${code} is open. Tell your friends the code!` : `You joined room ${code}`);
+}
+async function leaveRoom(silent) {
+  const r = online.room;
+  online.unsubs.forEach((u) => { try { u(); } catch (e) { /* ignore */ } });
+  online.unsubs = []; online.room = null; online.code = null; online.isHost = false; online.claim = false;
+  online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear();
+  if (r) { try { await r.leave(); } catch (e) { /* ignore */ } }
+  setLobbyPresence();
+  if (!silent) { setupSoloWorld(); showMenu(); }
+}
+function onRoomPeers(change) {
+  const now = performance.now();
+  for (const p of change.left) {
+    online.lastPres.delete(p.peer);
+    const rs = online.remotes.get(p.peer);
+    if (rs && rs.snake && rs.snake.alive) { const i = snakes.indexOf(rs.snake); if (i >= 0) snakes.splice(i, 1); rs.snake.alive = false; }
+    if (rs) toast(`${rs.name} left the room`);
+    online.remotes.delete(p.peer);
+  }
+  for (const p of change.peers) {
+    if (p.sameTab) { online.myPeer = p.peer; continue; }
+    const pr = p.presence; if (!pr || pr.g !== 'nb1') continue;
+    if (online.lastPres.get(p.peer) === pr) continue;
+    online.lastPres.set(p.peer, pr);
+    applyPeer(p.peer, pr, now);
+  }
+  computeRoomMeta();
+}
+function applyPeer(peer, pr, now) {
+  let rs = online.remotes.get(peer);
+  if (!rs) { rs = { snake: null, d: int(pr.d), name: cleanName(pr.n), seenE: new Set() }; online.remotes.set(peer, rs); if (mode === 'play') { toast(`${rs.name} joined the room`); SFX.join(); } }
+  rs.name = cleanName(pr.n);
+  const d = int(pr.d), aliveNow = pr.al === 1 && typeof pr.x === 'number';
+  if (rs.snake && rs.snake.alive && (!aliveNow || d > rs.d)) {
+    const s = rs.snake; s.netD = d; rs.d = d;
+    killSnake(s, null);
+    const key = peer.slice(0, 8) + '.' + d;
+    if (pr.kb === online.myPeer && online.myPeer && !online.seenKills.has(key)) { online.seenKills.add(key); creditKill(rs.name); }
+    rs.snake = null;
+  }
+  rs.d = d;
+  if (aliveNow && !rs.snake) {
+    const s = makeSnake({ kind: 'remote', name: rs.name, look: unpackLook(pr.s), mass: num(pr.m, START_MASS), pos: [num(pr.x), num(pr.y)], ang: num(pr.a) });
+    s.peer = peer; s.netD = d; s.errX = 0; s.errY = 0; s.grace = 0;
+    setNet(s, num(pr.x), num(pr.y), num(pr.a), num(pr.m, START_MASS), !!pr.b, now);
+    s.errX = 0; s.errY = 0; for (const p of s.segs) { p.x = s.x; p.y = s.y; }
+    snakes.push(s); rs.snake = s;
+  } else if (aliveNow && rs.snake) {
+    const s = rs.snake;
+    setNet(s, num(pr.x), num(pr.y), num(pr.a), num(pr.m, s.mass), !!pr.b, now);
+    s.name = rs.name; if (s.lookCode !== pr.s) { s.lookCode = pr.s; applyLook(s, unpackLook(pr.s)); }
+  }
+  if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; }
+  if (Array.isArray(pr.e)) {
+    const cur = new Set();
+    for (const e of pr.e.slice(0, 90)) {
+      cur.add(e); if (rs.seenE.has(e)) continue;
+      if (typeof e === 'number' && isFinite(e)) applyAmbientEat(e);
+      else if (typeof e === 'string' && e.length <= 24) eatenDrops.set(e, now);
+    }
+    rs.seenE = cur;
+  }
+}
+function applyAmbientEat(v) {
+  const slot = Math.floor(v / 1000), g = ((v % 1000) + 1000) % 1000;
+  if (slot < 0 || slot >= MAX_SLOTS) return;
+  const local = slotGen[slot], diff = (g - (local % 1000) + 1000) % 1000;
+  if (diff < 500) { slotGen[slot] = local + diff + 1; setSlot(slot); }
+}
+function computeRoomMeta() {
+  const r = online.room; if (!r) return;
+  let ps = []; try { ps = r.peers().filter((p) => p.presence && p.presence.g === 'nb1'); } catch (e) { ps = []; }
+  online.players = Math.max(1, ps.length);
+  const now = performance.now();
+  const claimants = ps.filter((p) => p.presence.h === 1).map((p) => p.peer).sort();
+  let host = claimants[0] || null;
+  if (online.claim && host && online.myPeer && host !== online.myPeer) { online.claim = false; stopHosting(); }
+  if (!host) {
+    if (!online.noClaimSince) online.noClaimSince = now;
+    else if (now - online.noClaimSince > 1500 && online.myPeer) {
+      const lowest = ps.map((p) => p.peer).sort()[0];
+      if (lowest === online.myPeer || ps.length === 0) { online.claim = true; host = online.myPeer; }
+    }
+  } else online.noClaimSince = 0;
+  if (online.claim && !host) host = online.myPeer;
+  const was = online.isHost;
+  online.isHost = !!online.myPeer && online.claim && host === online.myPeer;
+  if (online.isHost && !was) startHosting();
+  if (online.isHost) setTier(tierFor(online.players));
+  else if (host) { const hp = ps.find((p) => p.peer === host); if (hp) applyHost(hp.presence); }
+  updateRoomChip();
+}
+function applyHost(pr) {
+  if (online.lastHostPres === pr) return; online.lastHostPres = pr;
+  const now = performance.now();
+  if (Array.isArray(pr.w)) { setTier(pr.w[0]); online.filler = pr.w[1] === 1; }
+  const seen = new Set();
+  if (Array.isArray(pr.np)) for (const e of pr.np.slice(0, 24)) {
+    if (!Array.isArray(e) || e.length < 7) continue;
+    const id = int(e[0]); seen.add(id);
+    const x = num(e[1]), y = num(e[2]), a = num(e[3]) / 100, m = num(e[4], 120) / 10, b = e[5] === 1, code = int(e[6]);
+    let s = online.rnpcs.get(id);
+    if (!s || !s.alive) {
+      const ni = clamp(Math.floor(code / 100000), 0, NPC_NAMES.length - 1);
+      s = makeSnake({ kind: 'rnpc', name: NPC_NAMES[ni], nameIdx: ni, look: unpackLook(code % 100000), mass: m, pos: [x, y], ang: a, npcId: id });
+      s.errX = 0; s.errY = 0; s.grace = 0; setNet(s, x, y, a, m, b, now); s.errX = 0; s.errY = 0;
+      for (const p of s.segs) { p.x = s.x; p.y = s.y; }
+      online.rnpcs.set(id, s); snakes.push(s);
+    } else setNet(s, x, y, a, m, b, now);
+  }
+  for (const [id, s] of online.rnpcs) if (!seen.has(id)) { if (s.alive) killSnake(s, null); online.rnpcs.delete(id); }
+  if (Array.isArray(pr.nk)) for (const e of pr.nk.slice(0, 20)) {
+    if (Array.isArray(e) && online.myPeer && e[1] === online.myPeer) {
+      const k = 'nk' + int(e[0]);
+      if (!online.seenKills.has(k)) { online.seenKills.add(k); const s = online.rnpcs.get(int(e[0])); creditKill(s ? s.name : 'a bot'); }
+    }
+  }
+}
+function startHosting() {
+  let maxId = npcIdNext;
+  for (const [id, s] of online.rnpcs) {
+    if (!s.alive) continue;
+    s.kind = 'npc'; s.npc = randomPersonality(); s.lastBin = 4; s.wantBoost = false; s.targetAng = s.ang; s.grace = 0;
+    if (id >= maxId) maxId = id + 1;
+  }
+  online.rnpcs.clear(); npcIdNext = maxId;
+}
+function stopHosting() {
+  snakes = snakes.filter((s) => s.kind !== 'npc');
+  online.lastHostPres = null;
+}
+function sendPresence(now) {
+  const r = online.room; if (!r) return;
+  while (online.eatLog.length && now - online.eatLog[0].t > 2500) online.eatLog.shift();
+  if (online.eatLog.length > 70) online.eatLog.splice(0, online.eatLog.length - 70);
+  online.nk = online.nk.filter((e) => now - e.t < 3000);
+  const p = player, alive = !!(p && p.alive);
+  const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), p: 1, al: alive ? 1 : 0, d: myDeaths, bot: botDriving ? 1 : 0,
+    h: online.claim ? 1 : 0, e: online.eatLog.map((x) => x.id), kb: lastKiller, hid: document.hidden ? 1 : null };
+  if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; }
+  if (online.isHost) {
+    pr.w = [online.tier, online.filler ? 1 : 0];
+    pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 20).map((s) => [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 100000 * s.nameIdx]);
+    pr.nk = online.nk.map((e) => [e.id, e.peer]);
+  } else { pr.w = null; pr.np = null; pr.nk = null; }
+  let txt = JSON.stringify(pr);
+  while (txt.length > 3900 && pr.e.length) { pr.e = pr.e.slice(Math.ceil(pr.e.length / 2)); txt = JSON.stringify(pr); }
+  while (txt.length > 3900 && pr.np && pr.np.length) { pr.np.pop(); txt = JSON.stringify(pr); }
+  r.presence(pr).catch(() => {});
+}
+
+/* ================= camera & rendering ================= */
+const canvas = $('game'), ctx = canvas.getContext('2d');
+const mini = $('minimap'), mctx = mini.getContext('2d');
+let W = 0, H = 0, DPR = 1, canvasRect = { left: 0, top: 0 };
+const cam = { x: 0, y: 0, z: 1 };
+let attractTarget = null;
+function resize() {
+  const r = canvas.getBoundingClientRect(); W = r.width; H = r.height; DPR = Math.min(2, window.devicePixelRatio || 1);
+  canvasRect = { left: r.left, top: r.top };
+  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+  const m = mini.getBoundingClientRect(); mini.width = Math.max(1, Math.round(m.width * DPR)); mini.height = Math.max(1, Math.round(m.height * DPR));
+}
+function updateCam(dt) {
+  let tgt = player && player.alive ? player : null;
+  if (!tgt && mode === 'menu') {
+    if (!attractTarget || !attractTarget.alive || frame % 600 === 0) { attractTarget = null; for (const s of snakes) if (!attractTarget || s.mass > attractTarget.mass) attractTarget = s; }
+    tgt = attractTarget;
+  }
+  if (tgt) { const k = 1 - Math.pow(0.0008, dt); cam.x += (tgt.x - cam.x) * k; cam.y += (tgt.y - cam.y) * k; }
+  const base = clamp(Math.min(W, H) / 820, 0.5, 1.35), r = tgt ? tgt.r : 14;
+  const zt = base * 1.12 / (1 + (r - 9) / 36) * (mode === 'menu' ? 0.85 : 1);
+  cam.z += (zt - cam.z) * (1 - Math.pow(0.05, dt));
+}
+const dotTile = document.createElement('canvas'); dotTile.width = 56; dotTile.height = 48;
+(() => { const c = dotTile.getContext('2d'); c.fillStyle = C.dot; for (const [x, y] of [[0, 0], [56, 0], [0, 48], [56, 48], [28, 24]]) { c.beginPath(); c.arc(x, y, 2.4, 0, TAU); c.fill(); } })();
+const dotPattern = ctx.createPattern(dotTile, 'repeat');
+const foodSprites = PALETTE.map((col) => {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.16, col); gr.addColorStop(0.2, col); gr.addColorStop(0.26, col + '88'); gr.addColorStop(1, col + '00');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return c;
+});
+
+function segColor(s, i, n, t) {
+  switch (s.look.pat) {
+    case 1: return ((i >> 2) & 1) ? s.colorB : s.color;
+    case 2: return (i % 6 === 3) ? s.colorB : s.color;
+    case 4: return s.fade[Math.min(11, Math.floor((i / Math.max(1, n)) * 12))];
+    case 5: return RAINBOW[(i * 2 + t) % 36];
+    default: return ((i >> 2) & 1) ? s.color2 : s.color;
+  }
+}
+function drawSnake(c, s, b, t, now, z) {
+  const segs = s.segs, n = segs.length, r = s.r, m = r * 2;
+  const vis = (p) => p.x > b.x0 - m && p.x < b.x1 + m && p.y > b.y0 - m && p.y < b.y1 + m;
+  if (s.ghost) c.globalAlpha = 0.3;
+  if (s.boosting) {
+    const ga = c.globalAlpha; c.globalAlpha = ga * 0.28; c.fillStyle = s.color; c.beginPath();
+    for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + r * 1.7, p.y); c.arc(p.x, p.y, r * 1.7, 0, TAU); }
+    c.fill(); c.globalAlpha = ga;
+  }
+  c.fillStyle = s.outline; c.beginPath();
+  for (let i = n - 1; i >= 0; i--) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + r + 2.5, p.y); c.arc(p.x, p.y, r + 2.5, 0, TAU); }
+  c.fill();
+  for (let i = n - 1; i >= 0; i--) { const p = segs[i]; if (!vis(p)) continue; c.fillStyle = segColor(s, i, n, t); c.beginPath(); c.arc(p.x, p.y, r, 0, TAU); c.fill(); }
+  if (s.look.pat === 3) {
+    c.fillStyle = s.colorB; c.beginPath();
+    for (let i = 2; i < n - 1; i += 3) {
+      const p = segs[i]; if (!vis(p)) continue;
+      const q = segs[i - 1], dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy) || 1, side = (i % 2 ? 1 : -1) * r * 0.42;
+      const x = p.x - dy / d * side, y = p.y + dx / d * side; c.moveTo(x + r * 0.26, y); c.arc(x, y, r * 0.26, 0, TAU);
+    }
+    c.fill();
+  }
+  c.fillStyle = 'rgba(255,255,255,0.13)'; c.beginPath();
+  for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x - r * 0.2 + r * 0.38, p.y - r * 0.3); c.arc(p.x - r * 0.2, p.y - r * 0.3, r * 0.38, 0, TAU); }
+  c.fill();
+  if (vis(segs[0])) { drawEyes(c, s, now); drawHat(c, s, now); if (s.bot) drawAntenna(c, s, now); }
+  c.globalAlpha = 1;
+}
+function drawEyes(c, s, now) {
+  const h = s.segs[0], r = s.r, ca = Math.cos(s.ang), sa = Math.sin(s.ang), px = -sa, py = ca;
+  const style = EYES[s.look.eye].id;
+  let lx = Math.cos(s.targetAng), ly = Math.sin(s.targetAng);
+  if (style === 'shades') {
+    c.save(); c.translate(h.x, h.y); c.rotate(s.ang);
+    c.fillStyle = '#120d22'; c.strokeStyle = '#120d22'; c.lineWidth = r * 0.14;
+    for (const side of [-1, 1]) { c.beginPath(); c.arc(r * 0.34, side * r * 0.46, r * 0.38, 0, TAU); c.fill(); }
+    c.beginPath(); c.moveTo(r * 0.34, -r * 0.1); c.lineTo(r * 0.34, r * 0.1); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,0.35)';
+    for (const side of [-1, 1]) { c.beginPath(); c.arc(r * 0.44, side * r * 0.46 - r * 0.12, r * 0.09, 0, TAU); c.fill(); }
+    c.restore(); return;
+  }
+  const ew = style === 'googly' ? r * 0.44 : r * 0.36;
+  for (const side of [-1, 1]) {
+    const ex = h.x + ca * r * 0.32 + px * r * 0.48 * side, ey = h.y + sa * r * 0.32 + py * r * 0.48 * side;
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(ex, ey, ew, 0, TAU); c.fill();
+    let ox = lx, oy = ly;
+    if (style === 'googly') { ox = Math.cos(s.targetAng + Math.sin(now * 0.011 + side * 2 + s.id) * 0.9); oy = Math.sin(s.targetAng + Math.sin(now * 0.011 + side * 2 + s.id) * 0.9); }
+    const po = style === 'googly' ? r * 0.18 : r * 0.13, pr = style === 'googly' ? r * 0.23 : r * 0.19;
+    c.fillStyle = '#15102a'; c.beginPath(); c.arc(ex + ox * po, ey + oy * po, pr, 0, TAU); c.fill();
+    if (style === 'sleepy') { c.fillStyle = s.color; c.beginPath(); c.arc(ex, ey, ew * 1.06, Math.PI, TAU); c.fill(); c.strokeStyle = s.outline; c.lineWidth = r * 0.07; c.beginPath(); c.moveTo(ex - ew, ey); c.lineTo(ex + ew, ey); c.stroke(); }
+  }
+  if (style === 'angry') {
+    c.save(); c.translate(h.x, h.y); c.rotate(s.ang); c.strokeStyle = '#15102a'; c.lineWidth = r * 0.13; c.lineCap = 'round';
+    for (const side of [-1, 1]) { c.beginPath(); c.moveTo(r * 0.02, side * r * 0.9); c.lineTo(r * 0.62, side * r * 0.32); c.stroke(); }
+    c.restore();
+  }
+}
+function drawHat(c, s, now) {
+  const id = HATS[s.look.hat].id; if (id === 'none') return;
+  const h = s.segs[0], r = s.r, bx = h.x, by = h.y - r * 0.55;
+  c.save(); c.lineJoin = 'round';
+  if (id === 'party') {
+    c.fillStyle = s.colorB; c.beginPath(); c.moveTo(bx - r * 0.5, by); c.lineTo(bx + r * 0.5, by); c.lineTo(bx + r * 0.08, by - r * 1.5); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = r * 0.1; c.beginPath(); c.moveTo(bx - r * 0.32, by - r * 0.5); c.lineTo(bx + r * 0.38, by - r * 0.45); c.moveTo(bx - r * 0.14, by - r * 1.0); c.lineTo(bx + r * 0.24, by - r * 0.97); c.stroke();
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx + r * 0.08, by - r * 1.55, r * 0.18, 0, TAU); c.fill();
+  } else if (id === 'cap') {
+    c.fillStyle = s.colorB; c.beginPath(); c.arc(bx, by + r * 0.1, r * 0.62, Math.PI, TAU); c.fill();
+    c.fillStyle = shade(PALETTE[s.look.c2], 0.7); c.beginPath(); c.ellipse(bx + r * 0.6, by + r * 0.1, r * 0.5, r * 0.14, 0, 0, TAU); c.fill();
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx, by - r * 0.52, r * 0.1, 0, TAU); c.fill();
+  } else if (id === 'flower') {
+    const fx = bx + r * 0.45, fy = by - r * 0.15;
+    c.fillStyle = '#ffd1e8';
+    for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + now * 0.0006; c.beginPath(); c.arc(fx + Math.cos(a) * r * 0.24, fy + Math.sin(a) * r * 0.24, r * 0.2, 0, TAU); c.fill(); }
+    c.fillStyle = '#ffd447'; c.beginPath(); c.arc(fx, fy, r * 0.16, 0, TAU); c.fill();
+  } else if (id === 'crown') {
+    c.fillStyle = '#ffd447'; c.strokeStyle = '#a8740f'; c.lineWidth = r * 0.08; c.beginPath();
+    c.moveTo(bx - r * 0.6, by); c.lineTo(bx - r * 0.6, by - r * 0.7); c.lineTo(bx - r * 0.3, by - r * 0.35); c.lineTo(bx, by - r * 0.9); c.lineTo(bx + r * 0.3, by - r * 0.35); c.lineTo(bx + r * 0.6, by - r * 0.7); c.lineTo(bx + r * 0.6, by); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#ff5d7d'; c.beginPath(); c.arc(bx, by - r * 0.22, r * 0.12, 0, TAU); c.fill();
+  } else if (id === 'horns') {
+    c.fillStyle = '#fff1d6'; c.strokeStyle = '#b39a74'; c.lineWidth = r * 0.06;
+    for (const side of [-1, 1]) { c.beginPath(); c.moveTo(bx + side * r * 0.2, by + r * 0.1); c.quadraticCurveTo(bx + side * r * 0.95, by - r * 0.1, bx + side * r * 0.75, by - r * 0.95); c.quadraticCurveTo(bx + side * r * 0.55, by - r * 0.3, bx + side * r * 0.5, by + r * 0.15); c.closePath(); c.fill(); c.stroke(); }
+  } else if (id === 'halo') {
+    c.strokeStyle = '#ffe58a'; c.lineWidth = r * 0.16; c.shadowColor = '#ffe58a'; c.shadowBlur = r * 0.8;
+    c.beginPath(); c.ellipse(bx, by - r * 0.75 + Math.sin(now * 0.004) * r * 0.08, r * 0.6, r * 0.2, 0, 0, TAU); c.stroke();
+  }
+  c.restore();
+}
+function drawAntenna(c, s, now) {
+  const h = s.segs[0], r = s.r, hasHat = HATS[s.look.hat].id !== 'none';
+  const x0 = h.x - r * (hasHat ? 0.62 : 0.2), y0 = h.y - r * 0.7, x1 = x0 - r * 0.25, y1 = y0 - r * 1.0;
+  c.strokeStyle = C.bot; c.lineWidth = Math.max(2, r * 0.1); c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+  c.globalAlpha = (s.ghost ? 0.3 : 1) * (0.55 + 0.45 * Math.sin(now * 0.01));
+  c.fillStyle = C.bot; c.beginPath(); c.arc(x1, y1, r * 0.24, 0, TAU); c.fill();
+  c.globalAlpha = s.ghost ? 0.3 : 1;
+}
+function render(now) {
+  const z = cam.z, t = Math.floor(now / 50) % 36;
+  const thP = THEMES[themePrev], thC = THEMES[themeCur], tf = themeFade;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = tf < 1 ? mixHex(thP.floor, thC.floor, tf) : thC.floor; ctx.fillRect(0, 0, W, H);
+  ctx.setTransform(DPR * z, 0, 0, DPR * z, DPR * (W / 2 - cam.x * z), DPR * (H / 2 - cam.y * z));
+  const b = { x0: cam.x - W / 2 / z, x1: cam.x + W / 2 / z, y0: cam.y - H / 2 / z, y1: cam.y + H / 2 / z };
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, worldR, 0, TAU); ctx.clip();
+  if (tf < 1) drawThemeLayer(thP, 1 - tf, b, now);
+  drawThemeLayer(thC, tf, b, now);
+  ctx.restore();
+  ctx.beginPath(); ctx.rect(b.x0 - 10, b.y0 - 10, b.x1 - b.x0 + 20, b.y1 - b.y0 + 20); ctx.arc(0, 0, worldR, 0, TAU, true);
+  ctx.fillStyle = 'rgba(4,3,10,0.62)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, worldR, 0, TAU); ctx.strokeStyle = tf < 0.5 ? thP.edge : thC.edge; ctx.globalAlpha = 0.55; ctx.lineWidth = 8 / Math.max(0.5, z); ctx.stroke(); ctx.globalAlpha = 1;
+
+  const tt = now * 0.003;
+  const drawFood = (f) => {
+    if (f.x < b.x0 - 30 || f.x > b.x1 + 30 || f.y < b.y0 - 30 || f.y > b.y1 + 30) return;
+    const rr = f.r * (1 + 0.12 * Math.sin(tt + f.ph)) * 2.4;
+    ctx.drawImage(foodSprites[f.c], f.x - rr, f.y - rr, rr * 2, rr * 2);
+  };
+  for (let i = 0; i < activeSlots; i++) drawFood(slots[i]);
+  for (const f of drops) { if (f.eaten) continue; ctx.globalAlpha = Math.min(1, f.life / 3); drawFood(f); }
+  ctx.globalAlpha = 1;
+
+  for (const s of snakes) if (s !== player) drawSnake(ctx, s, b, t, now, z);
+  if (player && player.alive) {
+    drawSnake(ctx, player, b, t, now, z);
+    if (botDriving && botViz) {
+      const h = player.segs[0], r = player.r; ctx.lineCap = 'round';
+      for (let k = 0; k < NB; k++) {
+        const p = botViz.p[k], a = player.ang + TB[k], len = r + 18 + p * 110, chosen = k === botViz.chosen;
+        ctx.strokeStyle = chosen && botViz.reflex ? C.accent : C.bot; ctx.globalAlpha = chosen ? 0.95 : 0.15 + p * 0.6; ctx.lineWidth = (chosen ? 4 : 2.5) / z;
+        ctx.beginPath(); ctx.moveTo(h.x + Math.cos(a) * (r + 8), h.y + Math.sin(a) * (r + 8)); ctx.lineTo(h.x + Math.cos(a) * len, h.y + Math.sin(a) * len); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.font = `600 ${13 / z}px Lexend, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  for (const s of snakes) {
+    const h = s.segs[0]; if (h.x < b.x0 || h.x > b.x1 || h.y < b.y0 || h.y > b.y1) continue;
+    const lift = s.r + (HATS[s.look.hat].id !== 'none' || s.bot ? s.r * 1.3 : 0) + 10 / z;
+    ctx.fillStyle = s === player ? 'rgba(244,239,254,0.95)' : s.kind === 'remote' ? 'rgba(244,239,254,0.85)' : 'rgba(244,239,254,0.55)';
+    ctx.globalAlpha = s.ghost ? 0.4 : 1;
+    ctx.fillText(s.kind === 'remote' && s.bot ? s.name + ' (bot)' : s.name, h.x, h.y - lift);
+  }
+  ctx.globalAlpha = 1;
+}
+function drawMini() {
+  const w = mini.width, h = mini.height, R = Math.min(w, h) / 2 - 2 * DPR;
+  mctx.clearRect(0, 0, w, h);
+  mctx.fillStyle = 'rgba(18,13,38,0.78)'; mctx.beginPath(); mctx.arc(w / 2, h / 2, R, 0, TAU); mctx.fill();
+  mctx.strokeStyle = C.danger; mctx.globalAlpha = 0.5; mctx.lineWidth = 1.5 * DPR; mctx.stroke(); mctx.globalAlpha = 1;
+  for (const s of snakes) {
+    if (s === player) continue;
+    mctx.fillStyle = s.kind === 'remote' ? C.ink : s.color; mctx.globalAlpha = s.kind === 'remote' ? 0.95 : 0.55;
+    const x = w / 2 + s.x / worldR * R, y = h / 2 + s.y / worldR * R, rr = (s.kind === 'remote' ? 2.4 : 1.5) * DPR + s.r / 40 * DPR;
+    mctx.beginPath(); mctx.arc(x, y, rr, 0, TAU); mctx.fill();
+  }
+  mctx.globalAlpha = 1;
+  if (player && player.alive) {
+    mctx.fillStyle = botDriving ? C.bot : C.accent; mctx.beginPath(); mctx.arc(w / 2 + player.x / worldR * R, h / 2 + player.y / worldR * R, 3.4 * DPR, 0, TAU); mctx.fill();
+  }
+}
+function previewSnake(look, name, w) {
+  const s = { id: 7, kind: 'preview', name, look, segs: [], r: 13, ang: 0, targetAng: 0.2, boosting: false, bot: false, ghost: false };
+  applyLook(s, look); s._w = w; return s;
+}
+function drawPreview(cv, look, now) {
+  const r = cv.getBoundingClientRect(); if (r.width < 2) return;
+  const w = r.width, h = r.height;
+  if (cv.width !== Math.round(w * DPR) || cv.height !== Math.round(h * DPR)) { cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR); }
+  const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, w, h);
+  const th = THEMES[themeCur]; if (!cv._pats) cv._pats = {};
+  if (!cv._pats[themeCur]) cv._pats[themeCur] = c.createPattern(tileFor(th), 'repeat');
+  c.fillStyle = th.floor; c.fillRect(0, 0, w, h); c.fillStyle = cv._pats[themeCur]; c.fillRect(0, 0, w, h);
+  const s = previewSnake(look, '', w), scale = Math.min(1.25, h / 70); s.r = 11 * scale;
+  const n = Math.max(10, Math.floor((w * 0.62) / (s.r * 0.45))), headX = w * 0.78, cy = h / 2 + 4 * scale;
+  const ph = now * 0.004;
+  for (let i = 0; i < n; i++) { const x = headX - i * s.r * 0.45; s.segs.push({ x, y: cy + Math.sin(ph - i * 0.32) * h * 0.16 }); }
+  s.ang = Math.atan2(s.segs[0].y - s.segs[1].y, s.segs[0].x - s.segs[1].x); s.targetAng = s.ang + Math.sin(now * 0.0015) * 0.6;
+  s.outline = shade(s.color, 0.42);
+  drawSnake(c, s, { x0: -1e5, x1: 1e5, y0: -1e5, y1: 1e5 }, Math.floor(now / 50) % 36, now, 1);
+}
+
+/* ================= HUD & screens ================= */
+const app = $('app');
+const screens = ['menu', 'locker', 'online', 'death', 'train'];
+function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', mode === 'play' && !name); }
+function showMenu() {
+  mode = 'menu'; if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
+  player = null; botDriving = false; updateBanner();
+  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); showScreen('menu');
+}
+function startGame(opts = {}) {
+  mode = 'play'; showScreen(null);
+  if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
+  const pos = findSpawn(false);
+  player = makeSnake({ kind: 'player', name: cleanName(profile.name), look: profile.look, mass: START_MASS, pos, ang: Math.atan2(-pos[1], -pos[0]) });
+  snakes.push(player); cam.x = player.x; cam.y = player.y;
+  run = { max: 0 }; lastKiller = null; botDriving = false; botWatch = !!opts.watch; input.last = performance.now();
+  if (opts.watch && botReady()) setBot(true, 'watch');
+  updateBanner(); updateDock(); updateRoomChip(); boardTick = 0; SFX.spawn();
+}
+function onPlayerDeath(killer) {
+  const wasBot = botDriving; botDriving = false; updateBanner(); SFX.death(); setBoostSound(false);
+  lastKiller = killer === 'edge' ? 'edge' : killer && killer.kind === 'remote' ? killer.peer : killer && (killer.kind === 'rnpc' || killer.kind === 'npc') ? 'n' + killer.npcId : null;
+  profile.games++; save(); checkUnlocks();
+  const name = killer === 'edge' ? null : killer && killer.name;
+  setTimeout(() => {
+    if (mode !== 'play' || (player && player.alive)) return;
+    mode = 'dead';
+    $('deathWho').textContent = wasBot ? 'Your bot crashed' : 'You crashed';
+    $('deathWho').className = wasBot ? 'eyebrow bot' : 'eyebrow';
+    $('deathTitle').textContent = name ? `Ran into ${name}` : 'Hit the edge of the arena';
+    $('dRun').textContent = fmt(run.max); $('dBestYou').textContent = fmt(profile.bestYou); $('dBestBot').textContent = fmt(profile.bestBot);
+    let tip;
+    if (!botReady()) tip = sampCount >= MIN_TRAIN ? `Your bot has ${fmt(sampCount)} of your moves to study. Train it now.` : `Your bot is still watching you. ${fmt(sampCount)} of ${MIN_TRAIN} moves recorded so far.`;
+    else if (wasBot) tip = `Bots copy their teacher. Every game you play gives it more to learn${profile.reflex ? '' : ', and Survival reflexes (in the menu) help it dodge'}.`;
+    else tip = newSince > 0 ? `You have ${fmt(newSince)} new moves your bot hasn't studied yet.` : 'Your bot is up to date with your moves.';
+    $('deathTip').textContent = tip;
+    $('againBtn').textContent = gameKind === 'online' ? 'Respawn' : 'Play again';
+    $('deathMenuBtn').textContent = gameKind === 'online' ? 'Leave room' : 'Menu';
+    $('deathTrainBtn').disabled = sampCount < MIN_TRAIN && !trainJob;
+    $('deathTrainBtn').textContent = trainJob ? 'See training' : 'Train my bot';
+    showScreen('death');
+  }, 900);
+}
+function setBot(on, reason) {
+  if (on && !botReady()) { toast('Train your bot first: play a bit, then press Train bot.'); return; }
+  if (!player || !player.alive) return;
+  const was = botDriving;
+  botDriving = on; player.bot = on; botP.fill(1 / NB); botViz = null;
+  if (was !== on) { if (on) SFX.botOn(); else SFX.botOff(); }
+  if (!on) { input.last = performance.now(); botWatch = false; }
+  $('bannerText').textContent = reason === 'auto' ? 'You went quiet, so your bot took over' : reason === 'watch' ? 'Watching your bot play' : 'Your bot is driving';
+  updateBanner(); updateDock();
+}
+function updateBanner() {
+  $('botBanner').hidden = !botDriving;
+  const chip = $('driverChip'); chip.textContent = botDriving ? 'Bot driving' : 'You'; chip.classList.toggle('is-bot', botDriving);
+}
+let boardTick = 0;
+function updateHud() {
+  if (player && player.alive) $('lenVal').textContent = fmt(player.mass * 10);
+  if (++boardTick % 12 !== 1) return;
+  const list = snakes.slice().sort((a, b) => b.mass - a.mass);
+  const rank = player ? list.indexOf(player) + 1 : 0;
+  $('rankVal').textContent = rank ? `Rank ${rank} of ${list.length}` : 'Rank –';
+  const ol = $('boardList'); ol.textContent = '';
+  const top = list.slice(0, 6);
+  const addRow = (s, i) => {
+    const li = document.createElement('li');
+    if (s === player) { li.classList.add('me'); if (botDriving) li.classList.add('bot'); }
+    if (s.kind === 'remote') li.classList.add('friend');
+    const a = document.createElement('span'); a.className = 'n'; a.textContent = i + 1;
+    const b = document.createElement('span'); b.className = 'nm'; b.textContent = s === player ? (botDriving ? `${s.name} (bot)` : s.name) : s.kind === 'remote' && s.bot ? `${s.name} (bot)` : s.name;
+    const c = document.createElement('span'); c.className = 'sc'; c.textContent = fmt(s.mass * 10);
+    li.append(a, b, c); ol.append(li);
+  };
+  top.forEach(addRow);
+  if (player && rank > 6) { const g = document.createElement('li'); g.className = 'gap'; g.textContent = '···'; ol.append(g); addRow(player, rank - 1); }
+  if (boardTick % 120 === 1) updateDock();
+}
+function updateRoomChip() {
+  const t = $('roomText');
+  if (gameKind === 'online' && online.code) {
+    const n = online.players;
+    t.textContent = `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${TIERS[online.tier].name}${online.room && !online.connected ? ' · reconnecting' : ''}`;
+    $('exitBtn').textContent = 'Leave';
+  } else { t.textContent = botWatch ? 'Solo · watching your bot' : 'Solo'; $('exitBtn').textContent = 'Exit'; }
+}
+function updateDock() {
+  const top = $('dockTop'), sub = $('dockSub'), meter = $('dockMeter');
+  if (trainJob) {
+    const pct = Math.min(99, Math.floor(trainJob.done / trainJob.total * 100));
+    top.textContent = 'Training your bot…'; sub.textContent = `${pct}% · keep playing`; meter.style.width = pct + '%';
+  } else if (!botReady()) {
+    top.textContent = 'Bot: not trained yet';
+    sub.textContent = sampCount >= MIN_TRAIN ? `${fmt(sampCount)} moves recorded · ready to train` : `${fmt(sampCount)} / ${MIN_TRAIN} moves recorded`;
+    meter.style.width = Math.min(100, sampCount / MIN_TRAIN * 100) + '%';
+  } else {
+    const lv = botLevel(); top.textContent = `Level ${lv.n} ${lv.name}`;
+    sub.textContent = `${fmt(newSince)} new move${newSince === 1 ? '' : 's'} to learn`;
+    const have = profile.practice + newSince;
+    meter.style.width = (lv.next ? clamp((have - lv.from) / (lv.next - lv.from), 0, 1) * 100 : 100) + '%';
+  }
+  const tb = $('trainBtn'); tb.disabled = !!trainJob || sampCount < MIN_TRAIN; tb.textContent = trainJob ? 'Training…' : 'Train bot';
+  const bb = $('botBtn'); bb.disabled = !botReady() || !player || !player.alive; bb.classList.toggle('driving', botDriving);
+  $('botBtnLabel').textContent = botDriving ? 'Take back' : 'Bot takes over';
+  $('dockAuto').checked = !!profile.auto;
+}
+function updateBotCard() {
+  const lv = botLevel();
+  $('bcName').textContent = botReady() ? `Level ${lv.n} · ${lv.name}` : 'Not trained yet';
+  const have = profile.practice + newSince;
+  $('bcMeter').style.width = (botReady() ? (lv.next ? clamp((have - lv.from) / (lv.next - lv.from), 0, 1) * 100 : 100) : Math.min(100, sampCount / MIN_TRAIN * 100)) + '%';
+  $('bcLine').textContent = trainJob ? 'Training right now…'
+    : !botReady() ? (sampCount >= MIN_TRAIN ? `It has ${fmt(sampCount)} of your moves to study. Train it to wake it up.` : `Play a game and it starts watching how you steer (${fmt(sampCount)} of ${MIN_TRAIN} moves so far).`)
+    : lv.next ? `${fmt(Math.max(0, lv.next - have))} more moves to reach level ${lv.n + 1}.${newSince ? ` ${fmt(newSince)} new moves are waiting to be studied.` : ''}` : 'Top level. It has learned a huge amount from you.';
+  $('bcMoves').textContent = fmt(profile.practice);
+  $('bcAcc').textContent = profile.acc == null ? '–' : Math.round(profile.acc * 100) + '%';
+  $('bcBest').textContent = profile.bestBot ? fmt(profile.bestBot) : '–';
+  $('reflexChk').checked = !!profile.reflex; $('autoChk').checked = !!profile.auto;
+  $('bcTrain').disabled = !!trainJob || sampCount < MIN_TRAIN;
+  $('bcTrain').textContent = trainJob ? 'Training…' : 'Train now';
+}
+function updateMenuButtons() {
+  const w = $('watchBtn'); w.disabled = !botReady(); w.textContent = botReady() ? 'Watch my bot play' : 'Watch my bot play (train it first)';
+}
+let toastTimer = 0;
+function toast(msg) {
+  const box = $('toastBox'); box.textContent = '';
+  const d = document.createElement('div'); d.className = 'toast'; d.textContent = msg; box.append(d);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { box.textContent = ''; }, 2800);
+}
+
+/* ---------- training screen ---------- */
+function openTrainScreen() {
+  if (!trainJob && !startTraining()) return;
+  $('trainTitle').textContent = 'Teaching your bot…'; $('trainResult').hidden = true;
+  $('trainDone').textContent = mode === 'menu' ? 'Back to the menu' : player && player.alive ? 'Back to the arena' : gameKind === 'online' ? 'Respawn' : 'Play again';
+  showScreen('train'); drawAccChart(); updateTrainScreen();
+}
+function updateTrainScreen() {
+  const j = trainJob; if (!j) return;
+  const pct = j.done / j.total * 100;
+  $('trainBar').style.width = pct.toFixed(1) + '%';
+  $('trainStatus').textContent = `Practice round ${Math.min(j.ep + 1, j.epochs)} of ${j.epochs} · studying ${fmt(j.nTr)} moves${j.newAtStart ? ` (${fmt(j.newAtStart)} new)` : ''}`;
+}
+function showTrainResult() {
+  const j = lastJob; if (!j) return;
+  const last = j.accs[j.accs.length - 1];
+  $('trainBar').style.width = '100%';
+  const lv = botLevel();
+  $('trainTitle').textContent = j.fresh ? 'Your bot is awake!' : j.newAtStart ? `Your bot learned ${fmt(j.newAtStart)} new moves` : 'Your bot practiced again';
+  $('trainStatus').textContent = `Level ${lv.n} · ${lv.name}`;
+  $('trainAcc').textContent = Math.round(last.exact * 100) + '%';
+  $('trainAccText').textContent = `of the time it picks the same move you did on moves it never studied, and ${Math.round(last.near * 100)}% of the time it picks your move or the one right next to it.`;
+  $('trainResult').hidden = false; drawAccChart(j);
+}
+function drawAccChart(jobArg) {
+  const j = jobArg || trainJob || lastJob; const cv = $('accChart'); const r = cv.getBoundingClientRect(); if (r.width < 2) return;
+  const w = r.width, h = r.height; cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR);
+  const c = cv.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, w, h);
+  const L = 38, R = 12, T = 10, B = 22, pw = w - L - R, ph = h - T - B;
+  c.font = '500 11px "Chakra Petch", ui-monospace, monospace'; c.lineWidth = 1;
+  for (const v of [0, 25, 50, 75, 100]) {
+    const y = T + ph * (1 - v / 100); c.strokeStyle = 'rgba(244,239,254,0.1)'; c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke();
+    c.fillStyle = C.muted; c.textAlign = 'right'; c.textBaseline = 'middle'; c.fillText(v + '%', L - 6, y);
+  }
+  if (!j) return;
+  const E = Math.max(2, j.epochs);
+  c.fillStyle = C.muted; c.textBaseline = 'top'; c.textAlign = 'left'; c.fillText('Round 1', L, T + ph + 6); c.textAlign = 'right'; c.fillText(`Round ${j.epochs}`, L + pw, T + ph + 6);
+  const xOf = (i) => L + pw * i / (E - 1), yOf = (v) => T + ph * (1 - v);
+  const A = j.accs; if (!A.length) return;
+  c.setLineDash([4, 3]); c.strokeStyle = C.muted; c.lineWidth = 1.5; c.beginPath(); A.forEach((a, i) => (i ? c.lineTo(xOf(i), yOf(a.near)) : c.moveTo(xOf(i), yOf(a.near)))); c.stroke(); c.setLineDash([]);
+  c.beginPath(); A.forEach((a, i) => (i ? c.lineTo(xOf(i), yOf(a.exact)) : c.moveTo(xOf(i), yOf(a.exact)))); c.lineTo(xOf(A.length - 1), yOf(0)); c.lineTo(xOf(0), yOf(0)); c.closePath();
+  c.fillStyle = 'rgba(82,229,255,0.12)'; c.fill();
+  c.strokeStyle = C.bot; c.lineWidth = 2.5; c.beginPath(); A.forEach((a, i) => (i ? c.lineTo(xOf(i), yOf(a.exact)) : c.moveTo(xOf(i), yOf(a.exact)))); c.stroke();
+  const li = A.length - 1; c.fillStyle = C.bot; c.beginPath(); c.arc(xOf(li), yOf(A[li].exact), 4, 0, TAU); c.fill();
+}
+
+/* ---------- locker ---------- */
+function openLocker() { $('lockerName').value = profile.name; buildLocker(); showScreen('locker'); }
+function buildLocker() {
+  const mkSw = (rowId, key) => {
+    const row = $(rowId); row.textContent = '';
+    PALETTE.forEach((col, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'swatch'; b.style.background = col;
+      b.setAttribute('aria-label', `Color ${i + 1}`); b.setAttribute('aria-pressed', String(profile.look[key] === i));
+      b.addEventListener('click', () => { profile.look[key] = i; save(); buildLocker(); });
+      row.append(b);
+    });
+  };
+  mkSw('c1Row', 'c1'); mkSw('c2Row', 'c2');
+  const mkOpts = (rowId, arr, key) => {
+    const row = $(rowId); row.textContent = '';
+    arr.forEach((it, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'opt';
+      const ok = isUnlocked(it); b.disabled = !ok; b.setAttribute('aria-pressed', String(profile.look[key] === i));
+      const t = document.createElement('span'); t.textContent = it.name; b.append(t);
+      if (!ok) { const sm = document.createElement('small'); sm.textContent = `Unlock: ${it.lock.text}`; b.append(sm); }
+      b.addEventListener('click', () => { profile.look[key] = i; save(); buildLocker(); });
+      row.append(b);
+    });
+  };
+  mkOpts('patRow', PATTERNS, 'pat'); mkOpts('eyeRow', EYES, 'eye'); mkOpts('hatRow', HATS, 'hat');
+  const tr = $('themeRow'); tr.textContent = '';
+  const addTheme = (label, val, th) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.setAttribute('aria-pressed', String(profile.theme === val));
+    const t = document.createElement('span');
+    if (th) { const sw = document.createElement('i'); sw.className = 'sw'; sw.style.background = `linear-gradient(135deg, ${th.floor} 50%, ${th.edge} 50%)`; t.append(sw); }
+    t.append(label); b.append(t);
+    if (val < 0) { const sm = document.createElement('small'); sm.textContent = 'Changes every 45 seconds'; b.append(sm); }
+    b.addEventListener('click', () => { profile.theme = val; themeClock = 0; if (val >= 0) setTheme(val); save(); buildLocker(); });
+    tr.append(b);
+  };
+  addTheme('Auto', -1, null);
+  THEMES.forEach((th, i) => addTheme(th.name, i, th));
+  const sr = $('slotRow'); sr.textContent = '';
+  profile.slots.forEach((code, i) => {
+    const d = document.createElement('div'); d.className = 'slot';
+    const cv = document.createElement('canvas'); cv.dataset.slot = String(i); d.append(cv);
+    const p = document.createElement('p'); p.textContent = code == null ? `Slot ${i + 1}: empty` : `Look ${i + 1}`; d.append(p);
+    const row = document.createElement('div'); row.className = 'row';
+    const wear = document.createElement('button'); wear.type = 'button'; wear.className = 'btn small'; wear.textContent = 'Wear'; wear.disabled = code == null;
+    wear.addEventListener('click', () => { const l = unpackLook(code); for (const [k, arr] of [['pat', PATTERNS], ['eye', EYES], ['hat', HATS]]) if (!isUnlocked(arr[l[k]])) l[k] = 0; profile.look = l; save(); buildLocker(); });
+    const sv = document.createElement('button'); sv.type = 'button'; sv.className = 'btn small'; sv.textContent = 'Save';
+    sv.addEventListener('click', () => { profile.slots[i] = packLook(profile.look); save(); buildLocker(); toast(`Saved to slot ${i + 1}`); });
+    row.append(wear, sv); d.append(row); sr.append(d);
+  });
+}
+
+/* ---------- online screen ---------- */
+function setOnlineStatus(msg, warn) { const el = $('onlineStatus'); el.textContent = msg; el.classList.toggle('warn', !!warn); }
+function updateOnlineScreen() {
+  if ($('online').hidden) return;
+  const body = $('onlineBody');
+  if (!online.apiTried) { setOnlineStatus('Connecting…'); body.hidden = true; return; }
+  if (!online.api) {
+    setOnlineStatus('Online play only works in the Claude version of this game, with everyone signed in and invited from the Share menu. The HTML file and public links can play solo, and your save file works in both.', true);
+    body.hidden = true; return;
+  }
+  body.hidden = false;
+  const { rooms, here } = lobbyRooms();
+  setOnlineStatus(online.connected === false ? 'Connecting to the lobby…' : here.length ? `Here now and not in a room: ${here.slice(0, 6).join(', ')}${here.length > 6 ? '…' : ''}` : 'Create a room, then tell your friends the 4-letter code. Rooms open now show up below.');
+  const ul = $('roomList'); ul.textContent = '';
+  if (!rooms.size) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'No rooms open yet.'; ul.append(li); return; }
+  for (const r of rooms.values()) {
+    const li = document.createElement('li');
+    const a = document.createElement('span'); a.className = 'rc'; a.textContent = r.code;
+    const b = document.createElement('span'); b.className = 'rn'; b.textContent = `${r.names.length} playing: ${r.names.join(', ')}`;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn small'; btn.textContent = 'Join';
+    btn.addEventListener('click', () => joinRoom(r.code, false));
+    li.append(a, b, btn); ul.append(li);
+  }
+}
+
+/* ================= arena backgrounds ================= */
+const THEMES = [
+  { name: 'Grape Night', floor: C.floor, edge: C.danger, style: 'dots', ink: C.dot },
+  { name: 'Deep Sea', floor: '#061a2c', edge: '#3fd0ff', style: 'bubbles', ink: 'rgba(120,205,255,0.24)' },
+  { name: 'Outer Space', floor: '#05060f', edge: '#b28cff', style: 'stars', ink: '#ffffff' },
+  { name: 'Lava Cave', floor: '#1d0a07', edge: '#ff8a3d', style: 'hex', ink: 'rgba(255,120,60,0.22)' },
+  { name: 'Night Meadow', floor: '#0c1d13', edge: '#a6e85b', style: 'grass', ink: 'rgba(150,225,120,0.22)' },
+  { name: 'Arcade Grid', floor: '#0e0b1f', edge: '#ff6fae', style: 'grid', ink: 'rgba(255,111,174,0.24)' },
+];
+let themeCur = 0, themePrev = 0, themeFade = 1, themeClock = 0;
+function rng(sd) { return () => { sd = (sd + 0x6d2b79f5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function tileFor(th) {
+  if (th.tile) return th.tile;
+  const c = document.createElement('canvas'), g = c.getContext('2d'), R = rng(th.name.length * 977 + 13);
+  const around = (w, h, fn) => { for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) fn(ox, oy); };
+  if (th.style === 'dots') {
+    c.width = 56; c.height = 48; g.fillStyle = th.ink;
+    for (const [x, y] of [[0, 0], [56, 0], [0, 48], [56, 48], [28, 24]]) { g.beginPath(); g.arc(x, y, 2.4, 0, TAU); g.fill(); }
+  } else if (th.style === 'bubbles') {
+    c.width = c.height = 180; g.strokeStyle = th.ink; g.fillStyle = th.ink; g.lineWidth = 1.5;
+    for (let i = 0; i < 16; i++) { const x = R() * 180, y = R() * 180, r = 2 + R() * 12; around(180, 180, (ox, oy) => { g.beginPath(); g.arc(x + ox, y + oy, r, 0, TAU); g.stroke(); g.beginPath(); g.arc(x + ox - r * 0.35, y + oy - r * 0.35, Math.max(0.8, r * 0.18), 0, TAU); g.fill(); }); }
+  } else if (th.style === 'stars') {
+    c.width = c.height = 256;
+    for (let i = 0; i < 95; i++) {
+      const x = R() * 256, y = R() * 256, big = R() > 0.9, r = big ? 1.5 + R() * 1.2 : 0.5 + R() * 0.9;
+      g.globalAlpha = 0.25 + R() * 0.6; const roll = R(); g.fillStyle = roll < 0.15 ? '#b28cff' : roll < 0.3 ? '#8fd3ff' : th.ink;
+      around(256, 256, (ox, oy) => { g.beginPath(); g.arc(x + ox, y + oy, r, 0, TAU); g.fill(); });
+    }
+    g.globalAlpha = 1;
+  } else if (th.style === 'hex') {
+    const s = 30; c.width = 90; c.height = 52; const h = 52; g.strokeStyle = th.ink; g.lineWidth = 2;
+    for (let i = -1; i <= 3; i++) for (let j = -1; j <= 2; j++) {
+      const cx = i * 1.5 * s, cy = j * h + (((i % 2) + 2) % 2) * h / 2; g.beginPath();
+      for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3, x = cx + Math.cos(a) * s * 0.92, y = cy + Math.sin(a) * (h / 2) * 0.92; if (k) g.lineTo(x, y); else g.moveTo(x, y); }
+      g.closePath(); g.stroke();
+    }
+  } else if (th.style === 'grass') {
+    c.width = c.height = 120; g.strokeStyle = th.ink; g.lineWidth = 1.6; g.lineCap = 'round';
+    for (let i = 0; i < 12; i++) { const x = R() * 120, y = R() * 120; around(120, 120, (ox, oy) => { g.beginPath(); g.moveTo(x + ox, y + oy); g.lineTo(x + ox - 3, y + oy - 7); g.moveTo(x + ox, y + oy); g.lineTo(x + ox, y + oy - 9); g.moveTo(x + ox, y + oy); g.lineTo(x + ox + 3, y + oy - 7); g.stroke(); }); }
+    g.fillStyle = 'rgba(255,209,232,0.3)';
+    for (let i = 0; i < 4; i++) { const x = R() * 120, y = R() * 120; around(120, 120, (ox, oy) => { g.beginPath(); g.arc(x + ox, y + oy, 1.8, 0, TAU); g.fill(); }); }
+  } else {
+    c.width = c.height = 80; g.strokeStyle = th.ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(0, 0.75); g.lineTo(80, 0.75); g.moveTo(0.75, 0); g.lineTo(0.75, 80); g.stroke();
+    g.globalAlpha = 0.5; g.beginPath(); g.moveTo(36, 40); g.lineTo(44, 40); g.moveTo(40, 36); g.lineTo(40, 44); g.stroke(); g.globalAlpha = 1;
+  }
+  th.tile = c; return c;
+}
+function mixHex(a, b, t) {
+  if (!/^#[0-9a-f]{6}$/i.test(a) || !/^#[0-9a-f]{6}$/i.test(b)) return t < 0.5 ? a : b;
+  const A = hexRgb(a), B = hexRgb(b);
+  return `rgb(${Math.round(A[0] + (B[0] - A[0]) * t)},${Math.round(A[1] + (B[1] - A[1]) * t)},${Math.round(A[2] + (B[2] - A[2]) * t)})`;
+}
+function setTheme(i) { i = clamp(int(i), 0, THEMES.length - 1); if (i === themeCur) return; themePrev = themeCur; themeCur = i; themeFade = 0; }
+function updateTheme(dt) {
+  if (themeFade < 1) themeFade = Math.min(1, themeFade + dt / 2.5);
+  if (profile.theme < 0) { themeClock += dt; if (themeClock > 45) { themeClock = 0; setTheme((themeCur + 1) % THEMES.length); } }
+}
+function drawThemeLayer(th, a, b, now) {
+  if (a <= 0.01) return;
+  if (!th.pattern) th.pattern = ctx.createPattern(tileFor(th), 'repeat');
+  let tx = 0, ty = 0;
+  if (th.style === 'bubbles') ty = -((now * 0.025) % tileFor(th).height);
+  else if (th.style === 'stars') { tx = cam.x * 0.45; ty = cam.y * 0.45; }
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(tx, ty); ctx.fillStyle = th.pattern;
+  ctx.fillRect(b.x0 - tx, b.y0 - ty, b.x1 - b.x0, b.y1 - b.y0); ctx.restore();
+}
+
+/* ================= sound effects (made with Web Audio, no sound files) ================= */
+const sfx = { ctx: null, master: null, noise: null, boostGain: null, boostOn: false, lastEat: 0, combo: 0 };
+function audioInit() {
+  try {
+    if (sfx.ctx) { if (sfx.ctx.state === 'suspended') sfx.ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    const c = new AC(); sfx.ctx = c;
+    sfx.master = c.createGain(); sfx.master.gain.value = profile.sound ? profile.volume : 0; sfx.master.connect(c.destination);
+    const buf = c.createBuffer(1, c.sampleRate, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    sfx.noise = buf;
+    const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1100; bp.Q.value = 0.9;
+    const g = c.createGain(); g.gain.value = 0; src.connect(bp); bp.connect(g); g.connect(sfx.master); src.start(); sfx.boostGain = g;
+  } catch (e) { sfx.ctx = null; }
+}
+function applyVolume() { if (sfx.master) sfx.master.gain.setTargetAtTime(profile.sound ? profile.volume : 0, sfx.ctx.currentTime, 0.03); }
+function tone(freq, dur, type, vol, slideTo, delay) {
+  const c = sfx.ctx; if (!c || !profile.sound || c.state !== 'running') return;
+  const t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t); if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(sfx.master); o.start(t); o.stop(t + dur + 0.03);
+}
+function noiseHit(dur, freq, vol, delay) {
+  const c = sfx.ctx; if (!c || !profile.sound || c.state !== 'running' || !sfx.noise) return;
+  const t = c.currentTime + (delay || 0), s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = sfx.noise; f.type = 'lowpass'; f.frequency.setValueAtTime(freq, t); f.frequency.exponentialRampToValueAtTime(Math.max(60, freq * 0.2), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(sfx.master); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.03);
+}
+const SFX = {
+  eat(v) {
+    const now = performance.now(); if (now - sfx.lastEat < 45) return;
+    if (now - sfx.lastEat > 700) sfx.combo = 0; sfx.lastEat = now; sfx.combo = Math.min(24, sfx.combo + 1);
+    const f = 470 * Math.pow(2, sfx.combo / 24); tone(f, 0.07, 'triangle', v >= 2 ? 0.16 : 0.1);
+    if (v >= 2) tone(f * 1.5, 0.09, 'sine', 0.07, null, 0.035);
+  },
+  death() { tone(440, 0.75, 'sawtooth', 0.12, 50); noiseHit(0.45, 1800, 0.22); },
+  pop() { tone(260, 0.16, 'sine', 0.07, 90); noiseHit(0.12, 900, 0.06); },
+  kill() { [660, 880, 1320].forEach((f, i) => tone(f, 0.13, 'square', 0.07, null, i * 0.075)); },
+  botOn() { [520, 780, 1040].forEach((f, i) => tone(f, 0.07, 'square', 0.07, null, i * 0.06)); },
+  botOff() { [1040, 780, 520].forEach((f, i) => tone(f, 0.07, 'square', 0.07, null, i * 0.06)); },
+  trainDone() { [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.22, 'triangle', 0.1, null, i * 0.09)); },
+  unlock() { [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 0.12, 'sine', 0.08, null, i * 0.05)); },
+  spawn() { tone(300, 0.28, 'sine', 0.12, 660); },
+  join() { tone(620, 0.12, 'sine', 0.09, 930); },
+  click() { tone(880, 0.035, 'triangle', 0.05); },
+};
+function setBoostSound(on) {
+  on = !!on && profile.sound; if (on === sfx.boostOn || !sfx.boostGain) return; sfx.boostOn = on;
+  sfx.boostGain.gain.setTargetAtTime(on ? 0.07 : 0, sfx.ctx.currentTime, on ? 0.04 : 0.08);
+}
+function syncSoundUI() {
+  $('soundChk').checked = !!profile.sound; $('volIn').value = String(Math.round(profile.volume * 100)); $('volIn').disabled = !profile.sound;
+  const m = $('muteBtn'); m.textContent = profile.sound ? 'Sound on' : 'Sound off'; m.setAttribute('aria-pressed', String(!profile.sound));
+}
+function toggleSound() { profile.sound = !profile.sound; audioInit(); applyVolume(); if (!profile.sound) setBoostSound(false); save(); syncSoundUI(); }
+
+/* ================= save file (.zip) ================= */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xffffffff; for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let offset = 0;
+  const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | Math.floor(d.getSeconds() / 2), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.data), size = f.data.length;
+    const lh = new Uint8Array(30 + name.length), lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0x0800, true); lv.setUint16(8, 0, true);
+    lv.setUint16(10, time, true); lv.setUint16(12, date, true); lv.setUint32(14, crc, true); lv.setUint32(18, size, true); lv.setUint32(22, size, true);
+    lv.setUint16(26, name.length, true); lv.setUint16(28, 0, true); lh.set(name, 30);
+    parts.push(lh, f.data);
+    const ch = new Uint8Array(46 + name.length), cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(8, 0x0800, true); cv.setUint16(10, 0, true);
+    cv.setUint16(12, time, true); cv.setUint16(14, date, true); cv.setUint32(16, crc, true); cv.setUint32(20, size, true); cv.setUint32(24, size, true);
+    cv.setUint16(28, name.length, true); cv.setUint32(42, offset, true); ch.set(name, 46);
+    central.push(ch); offset += lh.length + size;
+  }
+  const cdSize = central.reduce((a, c) => a + c.length, 0), end = new Uint8Array(22), ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true); ev.setUint32(12, cdSize, true); ev.setUint32(16, offset, true);
+  return new Blob(parts.concat(central, [end]), { type: 'application/zip' });
+}
+function parseZip(u8) {
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 22 - 65535); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('not a zip');
+  const count = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true); const files = new Map(), dec = new TextDecoder();
+  for (let k = 0; k < count && k < 64; k++) {
+    if (p + 46 > u8.length || dv.getUint32(p, true) !== 0x02014b50) throw new Error('bad zip');
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+    const name = dec.decode(u8.subarray(p + 46, p + 46 + nlen));
+    if (lho + 30 > u8.length) throw new Error('bad zip');
+    const start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
+    if (start + csize > u8.length) throw new Error('bad zip');
+    files.set(name.split('/').pop(), { method, data: u8.subarray(start, start + csize) });
+    p += 46 + nlen + xlen + clen;
+  }
+  return files;
+}
+async function unzipEntry(e) {
+  if (e.method === 0) return e.data;
+  if (e.method === 8 && typeof DecompressionStream !== 'undefined') {
+    const out = await new Response(new Blob([e.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+    return new Uint8Array(out);
+  }
+  throw new Error('unsupported compression');
+}
+const slug = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 20);
+function buildSaveZip() {
+  const enc = new TextEncoder();
+  const data = { format: 'noodle-bots-save', version: 1, savedAt: new Date().toISOString(), profile: Object.assign({}, profile, { look: packLook(profile.look) }), newSince };
+  const files = [{ name: 'noodlebots-save.json', data: enc.encode(JSON.stringify(data, null, 2)) }];
+  if (botReady()) files.push({ name: 'bot-brain.bin', data: getWeightBytes(brain) });
+  if (sampCount > 0) files.push({ name: 'moves.bin', data: packSamples(SAVE_SAMPLES) });
+  files.push({ name: 'README.txt', data: enc.encode('This is a Noodle Bots save file.\r\nIt holds your name, your snake\'s look, your saved looks, your stats and your trained bot.\r\nTo use it, open Noodle Bots and choose Load save in the menu.\r\n') });
+  return makeZip(files);
+}
+let dlApiPromise = Promise.resolve(null);
+function saveMsg(t) { $('saveMsg').textContent = t; }
+async function exportSave() {
+  save();
+  const blob = buildSaveZip(), fname = `noodle-bots-save-${slug(profile.name) || 'player'}.zip`;
+  const inClaude = !!(window.claude && typeof window.claude.use === 'function');
+  if (inClaude) {
+    const dl = await dlApiPromise;
+    if (!dl) { saveMsg("Downloads aren't available in this view."); return; }
+    try { await dl.save({ filename: fname, data: blob }); saveMsg('Save downloaded. Keep the .zip somewhere safe.'); }
+    catch (e) {
+      const code = e && e.code;
+      saveMsg(code === 'declined' ? 'Download cancelled.' : code === 'rate_limited' ? 'A download is already waiting for you to confirm.' : "Couldn't download the save here.");
+    }
+  } else {
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = fname; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    saveMsg('Save downloaded. Keep the .zip somewhere safe.');
+  }
+}
+async function importSave(file) {
+  try {
+    if (file.size > 20 * 1024 * 1024) throw new Error('too big');
+    const files = parseZip(new Uint8Array(await file.arrayBuffer()));
+    const js = files.get('noodlebots-save.json'); if (!js) throw new Error('no save inside');
+    const d = JSON.parse(new TextDecoder().decode(await unzipEntry(js)));
+    if (!d || d.format !== 'noodle-bots-save') throw new Error('wrong format');
+    let newBrain = null;
+    const bf = files.get('bot-brain.bin');
+    if (bf) { const b = makeBrain(); if (setWeights(b, await unzipEntry(bf))) newBrain = b; }
+    let moves = null; const mf = files.get('moves.bin'); if (mf) moves = await unzipEntry(mf);
+    applyProfileData(d.profile);
+    newSince = clamp(int(d.newSince), 0, 1e7);
+    trainJob = null; lastJob = null; brain = newBrain;
+    sampCount = 0; sampHead = 0; if (moves) loadSamples(moves);
+    if (profile.theme >= 0) setTheme(profile.theme);
+    save(); applyVolume(); syncSoundUI(); checkUnlocks();
+    $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); updateDock(); setLobbyPresence();
+    saveMsg(`Loaded the save for ${cleanName(profile.name)}${botReady() ? ', bot included' : ''}.`);
+    SFX.unlock();
+  } catch (e) {
+    saveMsg("That file isn't a Noodle Bots save. Choose the .zip you downloaded from this game.");
+  }
+}
+
+/* ================= input ================= */
+function activity() { input.last = performance.now(); }
+const blurIfPlaying = () => { if (mode === 'play' && document.activeElement && document.activeElement.blur) document.activeElement.blur(); };
+canvas.addEventListener('pointermove', (e) => { input.px = e.clientX - canvasRect.left; input.py = e.clientY - canvasRect.top; input.has = true; if (!(input.left || input.right)) input.mode = e.pointerType === 'touch' ? 'touch' : 'mouse'; activity(); });
+canvas.addEventListener('pointerdown', (e) => {
+  input.px = e.clientX - canvasRect.left; input.py = e.clientY - canvasRect.top; input.has = true; input.mode = e.pointerType === 'touch' ? 'touch' : 'mouse';
+  if (e.pointerType === 'mouse' && e.button === 0) input.mBoost = true;
+  if (e.pointerType === 'touch') { try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ } }
+  activity();
+});
+const endPointer = (e) => { if (e.pointerType === 'mouse') input.mBoost = false; };
+canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
+window.addEventListener('blur', () => { input.mBoost = input.kBoost = input.tBoost = input.left = input.right = false; });
+window.addEventListener('keydown', (e) => {
+  const tag = e.target && e.target.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  const k = e.code;
+  if (k === 'Space' || k === 'ArrowUp' || k === 'KeyW') { input.kBoost = true; if (mode === 'play') e.preventDefault(); }
+  else if (k === 'ArrowLeft' || k === 'KeyA') { input.left = true; input.mode = 'keys'; }
+  else if (k === 'ArrowRight' || k === 'KeyD') { input.right = true; input.mode = 'keys'; }
+  else if (k === 'KeyB') { if (mode === 'play' && !e.repeat) setBot(!botDriving, 'manual'); }
+  else if (k === 'KeyM') { if (!e.repeat) toggleSound(); }
+  else return;
+  activity();
+});
+window.addEventListener('keyup', (e) => {
+  const k = e.code;
+  if (k === 'Space' || k === 'ArrowUp' || k === 'KeyW') { input.kBoost = false; if (mode === 'play') e.preventDefault(); }
+  else if (k === 'ArrowLeft' || k === 'KeyA') input.left = false;
+  else if (k === 'ArrowRight' || k === 'KeyD') input.right = false;
+});
+const bb = $('boostBtn');
+bb.addEventListener('pointerdown', (e) => { e.preventDefault(); input.tBoost = true; activity(); });
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) bb.addEventListener(ev, () => { input.tBoost = false; });
+
+$('botBtn').addEventListener('click', () => { setBot(!botDriving, 'manual'); blurIfPlaying(); });
+$('takeBackBtn').addEventListener('click', () => { setBot(false); blurIfPlaying(); });
+$('trainBtn').addEventListener('click', () => { if (startTraining()) toast('Training started. Keep playing while your bot studies.'); blurIfPlaying(); });
+$('dockAuto').addEventListener('change', (e) => { profile.auto = e.target.checked; save(); blurIfPlaying(); });
+$('exitBtn').addEventListener('click', () => { if (gameKind === 'online') leaveRoom(false); else showMenu(); });
+$('nameIn').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
+$('lockerName').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
+$('lockerBtn').addEventListener('click', openLocker);
+$('lockerDone').addEventListener('click', showMenu);
+$('soloBtn').addEventListener('click', () => { if (gameKind !== 'solo') setupSoloWorld(); startGame({ watch: false }); });
+$('watchBtn').addEventListener('click', () => { if (gameKind !== 'solo') setupSoloWorld(); startGame({ watch: true }); });
+$('onlineBtn').addEventListener('click', () => { showScreen('online'); updateOnlineScreen(); });
+$('onlineBack').addEventListener('click', showMenu);
+$('createBtn').addEventListener('click', () => joinRoom(newCode(), true));
+$('joinBtn').addEventListener('click', () => joinRoom($('codeIn').value.trim(), false));
+$('codeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom($('codeIn').value.trim(), false); });
+$('reflexChk').addEventListener('change', (e) => { profile.reflex = e.target.checked; save(); });
+$('autoChk').addEventListener('change', (e) => { profile.auto = e.target.checked; save(); });
+$('bcTrain').addEventListener('click', openTrainScreen);
+$('bcReset').addEventListener('click', () => { $('resetConfirm').hidden = false; });
+$('resetNo').addEventListener('click', () => { $('resetConfirm').hidden = true; });
+$('resetYes').addEventListener('click', () => {
+  brain = null; trainJob = null; lastJob = null; sampCount = 0; sampHead = 0; newSince = 0;
+  profile.practice = 0; profile.acc = null; profile.near = null; profile.sessions = 0; profile.bestBot = 0;
+  save(); $('resetConfirm').hidden = true; updateBotCard(); updateMenuButtons(); updateDock(); toast('Your bot was reset.');
+});
+$('againBtn').addEventListener('click', () => startGame({ watch: botWatch && botReady() }));
+$('deathTrainBtn').addEventListener('click', openTrainScreen);
+$('deathMenuBtn').addEventListener('click', () => { if (gameKind === 'online') leaveRoom(false); else showMenu(); });
+$('trainDone').addEventListener('click', () => {
+  if (player && player.alive) { mode = 'play'; showScreen(null); }
+  else if (mode === 'menu') showMenu();
+  else startGame({ watch: false });
+});
+$('exportBtn').addEventListener('click', exportSave);
+$('importIn').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) importSave(f); e.target.value = ''; });
+$('soundChk').addEventListener('change', (e) => { profile.sound = e.target.checked; audioInit(); applyVolume(); if (!profile.sound) setBoostSound(false); save(); syncSoundUI(); });
+$('volIn').addEventListener('input', (e) => { profile.volume = clamp(Number(e.target.value) / 100, 0, 1); audioInit(); applyVolume(); saveSoon(); });
+$('volIn').addEventListener('change', () => SFX.eat(2));
+$('muteBtn').addEventListener('click', () => { toggleSound(); blurIfPlaying(); });
+document.addEventListener('pointerdown', audioInit, true);
+document.addEventListener('keydown', audioInit, true);
+document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn') SFX.click(); }, true);
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); if (online.room) sendPresence(performance.now()); });
+window.addEventListener('pagehide', () => save());
+window.addEventListener('resize', resize);
+
+/* ================= main loop ================= */
+let last = performance.now(), saveT = 0;
+function loop(now) {
+  const dt = Math.min(0.034, Math.max(0, (now - last) / 1000)); last = now;
+  if (trainJob) {
+    stepTraining($('train').hidden ? 4 : 14);
+    if (frame % 6 === 0) { updateTrainScreen(); if (mode === 'play') updateDock(); else if (!$('menu').hidden) updateBotCard(); }
+  }
+  step(dt, now);
+  updateTheme(dt);
+  updateCam(dt);
+  render(now);
+  if (mode === 'play') { updateHud(); if (frame % 10 === 0) drawMini(); }
+  if (!$('menu').hidden) drawPreview($('menuPreview'), profile.look, now);
+  if (!$('locker').hidden) {
+    drawPreview($('lockerPreview'), profile.look, now);
+    if (frame % 3 === 0) for (const cv of document.querySelectorAll('#slotRow canvas')) { const code = profile.slots[+cv.dataset.slot]; if (code != null) drawPreview(cv, unpackLook(code), now); }
+  }
+  saveT += dt; if (saveT > 60 && mode === 'play') { saveT = 0; save(); }
+  requestAnimationFrame(loop);
+}
+
+function boot() {
+  load();
+  resize();
+  setupSoloWorld();
+  cam.x = 0; cam.y = 0;
+  checkUnlocks();
+  $('nameIn').value = profile.name;
+  updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip();
+  themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; syncSoundUI();
+  dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
+  showScreen('menu');
+  initOnline();
+  requestAnimationFrame((t) => { last = t; loop(t); });
+}
+const hot = window.claude && window.claude.hot;
+try { if (hot && typeof hot.snapshot === 'function') hot.snapshot(() => { save(); return {}; }); } catch (e) { /* ignore */ }
+if (hot && typeof hot.ready === 'function') hot.ready(boot); else boot();
+})();
+</script>
+</body>
+</html>
