@@ -3777,7 +3777,14 @@ tapButton($('musicBtn'), () => { toggleMusic(); blurIfPlaying(); });
 document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn' && t.id !== 'inviteBtn') SFX.click(); }, true);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); if (online.room) sendPresence(performance.now()); });
 window.addEventListener('pagehide', () => { save(); if (online.kind === 'web' && online.room) { try { online.room.leave(); } catch (e) { /* ignore */ } } });
-window.addEventListener('resize', () => { resize(); updateDock(); updateRoomChip(); boardTick = 0; });
+// Phones can turn sideways without a resize event arriving in time (or at all inside an app). If the
+// canvas kept its old shape the browser would stretch the picture, so watch the canvas itself too.
+function onViewChange() { resize(); updateDock(); updateRoomChip(); boardTick = 0; }
+window.addEventListener('resize', onViewChange);
+window.addEventListener('orientationchange', () => { for (const ms of [60, 250, 600, 1200]) setTimeout(onViewChange, ms); });
+try { if (window.visualViewport) window.visualViewport.addEventListener('resize', onViewChange); } catch (e) { /* ignore */ }
+try { if (typeof ResizeObserver === 'function') { const ro = new ResizeObserver(() => onViewChange()); ro.observe(canvas); ro.observe(mini); } } catch (e) { /* ignore */ }
+const sizeOff = () => Math.abs(canvas.clientWidth - W) > 1 || Math.abs(canvas.clientHeight - H) > 1 || canvas.width !== Math.round(W * DPR) || canvas.height !== Math.round(H * DPR);
 
 /* ================= main loop ================= */
 let last = performance.now(), saveT = 0;
@@ -3811,6 +3818,7 @@ function loop(now) {
   try { step(dt, now); } catch (e) { reportGlitch('game', e); }
   try {
     updateTheme(dt);
+    if (frame % 10 === 0 && sizeOff()) onViewChange();
     updateCam(dt);
     render(now);
     if (mode === 'play') { updateHud(); if (frame % 10 === 0) drawMini(); }
@@ -3856,6 +3864,7 @@ function boot() {
     brains: () => [...online.brains.entries()].map(([k, e]) => [k, !!e.done]),
     fillSamples: (n) => { const f = new Float32Array(FEAT); for (let i = 0; i < n; i++) { for (let k = 0; k < FEAT; k++) f[k] = Math.random() * 2 - 1; pushSample(f, (Math.random() * 18) | 0, true); } return sampCount; },
     timeSave: () => { const t = performance.now(); save(); return Math.round(performance.now() - t); },
+    size: () => ({ W: Math.round(W), H: Math.round(H), cw: canvas.width, ch: canvas.height, css: [canvas.clientWidth, canvas.clientHeight], dpr: +DPR.toFixed(2) }),
     state: () => ({ alive: !!(player && player.alive), boosting: !!(player && player.boosting), wantBoost: !!(player && player.wantBoost), tAng: player ? +player.targetAng.toFixed(2) : null, bot: botDriving, botReason, dpr: +DPR.toFixed(2), inputMode: input.mode }),
     autoBot: () => { setBot(true, 'auto'); return botDriving; },
     tune: (o) => { Object.assign(TAG_TUNE, o || {}); return TAG_TUNE; },
