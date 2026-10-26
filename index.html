@@ -404,6 +404,36 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .chal-list .cp{font:500 12px var(--f-num);color:var(--muted);font-variant-numeric:tabular-nums}
 .chal-list .meter{grid-column:2 / 4}
 .chal-list .meter > div{background:var(--accent)}
+/* ---------- menu links, coach, stats, settings ---------- */
+.menu-links{display:flex;flex-wrap:wrap;gap:8px}
+.menu-links .btn{flex:1 1 auto}
+.newbie{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);padding:2px 6px;border-radius:6px}
+.coach{grid-column:1/-1;grid-row:3;justify-self:center;align-self:end;pointer-events:auto;display:grid;gap:8px;width:min(440px,calc(100vw - 32px));box-sizing:border-box;padding:12px 14px;border-radius:16px;background:var(--panel-strong);border:2px solid var(--accent);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.coach-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.coach-step{font:700 12px var(--f-num);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.coach-text{font-size:15px;line-height:1.4;font-weight:500}
+.coach .row{justify-content:flex-end}
+.coach .row .btn{flex:0 0 auto}
+.coach .meter > div{background:var(--accent)}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.statgrid div{display:grid;gap:3px;padding:10px;border-radius:12px;background:rgba(244,239,254,.06);min-width:0}
+.statgrid span{font-size:11px;color:var(--muted)}
+.statgrid b{font-family:var(--f-num);font-size:19px;font-variant-numeric:tabular-nums}
+.trophies{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.trophy{display:grid;grid-template-columns:36px minmax(0,1fr);gap:4px 10px;align-items:center;padding:10px;border-radius:12px;border:1px solid var(--line)}
+.trophy .ic{grid-row:span 3;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:20px;background:rgba(244,239,254,.06);filter:grayscale(1);opacity:.5}
+.trophy.got{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.trophy.got .ic{filter:none;opacity:1;background:color-mix(in srgb,var(--accent) 25%,transparent)}
+.trophy b{font-size:14px}
+.trophy small{font-size:12px;color:var(--muted)}
+.trophy .meter > div{background:var(--accent)}
+.setopts{display:grid;gap:6px}
+.setopts .opt{width:100%}
+#app.swap .dock{flex-direction:row-reverse}
+@media (max-height:520px) and (orientation:landscape){.coach{grid-row:2/4;align-self:start;justify-self:start;width:min(300px,38vw);padding:8px 10px;gap:5px}.coach-text{font-size:13px;line-height:1.3}.coach-step{font-size:11px}}
+.rivals{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rival{display:inline-flex;align-items:center;gap:6px;padding:5px 6px 5px 10px;border-radius:999px;border:1px solid var(--line);font-size:13px;background:rgba(244,239,254,.06)}
+.rival button{appearance:none;border:0;background:rgba(244,239,254,.12);color:var(--ink);width:22px;height:22px;border-radius:50%;cursor:pointer;font:700 12px var(--f-body)}
 /* ---------- piece-by-piece builder ---------- */
 .build-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .pieces{display:flex;flex-wrap:wrap;gap:5px;min-height:30px;align-items:center;padding:8px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
@@ -425,7 +455,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <p class="big" id="lenVal">0</p>
       <p class="sub"><span id="rankVal">Rank –</span><span class="chip" id="driverChip">You</span></p>
       <p class="iqline"><span class="iqbar" aria-hidden="true"><i id="iqFill"></i></span><span id="iqVal">Bot smarts 10%</span><span id="genVal"></span></p>
-      <div class="roomchip" id="roomChip"><span id="roomText">Solo</span><button class="chipbtn icon" id="inviteBtn" type="button" hidden aria-label="Invite friends" title="Invite friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M19 8v6"/><path d="M16 11h6"/></svg></button><button class="chipbtn icon" id="chatBtn" type="button" hidden aria-label="Quick chat" aria-expanded="false" title="Quick chat (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg></button><button class="chipbtn icon" id="muteBtn" type="button" aria-pressed="true" aria-label="Sound effects" title="Sound effects (M)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg></button><button class="chipbtn icon" id="musicBtn" type="button" aria-pressed="true" aria-label="Calm music" title="Calm music (N)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg></button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
+      <div class="roomchip" id="roomChip"><span id="roomText">Solo</span><button class="chipbtn icon" id="inviteBtn" type="button" hidden aria-label="Invite friends" title="Invite friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M19 8v6"/><path d="M16 11h6"/></svg></button><button class="chipbtn icon" id="pauseBtn" type="button" hidden aria-label="Pause" title="Pause (P)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button><button class="chipbtn icon" id="chatBtn" type="button" hidden aria-label="Quick chat" aria-expanded="false" title="Quick chat (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg></button><button class="chipbtn icon" id="muteBtn" type="button" aria-pressed="true" aria-label="Sound effects" title="Sound effects (M)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg></button><button class="chipbtn icon" id="musicBtn" type="button" aria-pressed="true" aria-label="Calm music" title="Calm music (N)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg></button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
       <div class="chatpop" id="chatPop" hidden role="group" aria-label="Quick chat"></div>
     </div>
     <div class="board"><p class="lbl">Biggest noodles</p><ol id="boardList"></ol></div>
@@ -442,6 +472,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="banner" id="botBanner" hidden><span class="pulse" aria-hidden="true"></span><span id="bannerText">Your bot is driving</span><button class="btn small" id="takeBackBtn" type="button">Take back <kbd>B</kbd></button></div>
       <div id="toastBox" aria-live="polite"></div>
     </div>
+    <div class="coach" id="coach" hidden><div class="coach-head"><span class="coach-step" id="coachStep">Step 1 of 6</span><button class="linkbtn" id="coachSkip" type="button">Skip tutorial</button></div><p class="coach-text" id="coachText"></p><div class="meter small"><div id="coachMeter"></div></div><div class="row"><button class="btn primary small" id="coachNext" type="button" hidden>Next</button></div></div>
     <div class="bottom">
       <div class="dock">
         <button class="btn boost" id="boostBtn" type="button">Boost</button>
@@ -496,12 +527,14 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <div class="optrow" id="optTag" hidden><button type="button" class="opt" data-tag="1v1">1v1<small>Pass It on</small></button><button type="button" class="opt" data-tag="run">Run<small>You vs 3 hunters</small></button><button type="button" class="opt" data-tag="hunt">Hunt<small>You + 2 bots vs 1</small></button></div>
         <div class="optrow" id="optBots" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-bots="1">1</button><button type="button" class="opt" data-bots="3">3</button><button type="button" class="opt" data-bots="6">6</button><button type="button" class="opt" data-bots="9">9</button></div>
         <div class="optrow" id="optDiff" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-diff="easy">Easy</button><button type="button" class="opt" data-diff="normal">Normal</button><button type="button" class="opt" data-diff="hard">Hard</button></div>
+        <div class="group" id="optRivals" hidden><p class="lbl">Friends' bots</p><div class="rivals" id="rivalList"></div><input type="file" id="rivalIn" class="vh" accept=".zip,application/zip"><label class="btn small" for="rivalIn">Add a friend's bot</label><p class="modeinfo" id="rivalInfo">Ask a friend to tap Download save on their menu and send you the file. Their trained bot joins your Bot Battles.</p></div>
       </div>
       <div class="play-row">
         <button class="btn primary big" id="soloBtn" type="button">Play solo</button>
         <button class="btn big" id="onlineBtn" type="button">Play with friends</button>
       </div>
       <button class="btn bot big" id="watchBtn" type="button">Watch my bot play</button>
+      <div class="menu-links"><button class="btn small" id="tutBtn" type="button">How to play</button><button class="btn small" id="statsBtn" type="button">Stats &amp; trophies</button><button class="btn small" id="setBtn" type="button">Settings</button></div>
       <ol class="how">
         <li><span><b>Play.</b> Steer with your mouse, or drag your thumb anywhere on a phone. Hold click, Space or Boost to go fast. The game records how you steer.</span></li>
         <li><span><b>Train.</b> Press Train bot. A small brain studies your moves right here in your browser.</span></li>
@@ -688,6 +721,41 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <button class="btn primary" id="trainDone" type="button">Back to the arena</button>
     </div>
   </section>
+
+  <!-- Pause -->
+  <section id="pause" class="screen" hidden>
+    <div class="card">
+      <p class="eyebrow">Solo</p>
+      <h2>Paused</h2>
+      <p class="tip">Nothing moves while you're paused, and your bot won't take over.</p>
+      <div class="row"><button class="btn primary" id="resumeBtn" type="button">Keep playing</button><button class="btn" id="pauseMenuBtn" type="button">Menu</button></div>
+    </div>
+  </section>
+
+  <!-- Stats & trophies -->
+  <section id="stats" class="screen" hidden>
+    <div class="card wide">
+      <div class="card-head"><h2>Stats &amp; trophies</h2><button class="btn primary small" id="statsDone" type="button">Done</button></div>
+      <div class="statgrid" id="statGrid"></div>
+      <div class="group"><p class="lbl" id="trophyHead">Trophies</p><div class="trophies" id="trophyList"></div></div>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section id="settings" class="screen" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Settings</h2><button class="btn primary small" id="setDone" type="button">Done</button></div>
+      <div class="group"><p class="lbl">Steering on a touch screen</p>
+        <div class="setopts">
+          <button type="button" class="opt" data-steer="auto"><span>Smart</span><small>Hold your finger where you want to go, or drag it like a joystick.</small></button>
+          <button type="button" class="opt" data-steer="point"><span>Point</span><small>Your snake always heads toward your finger.</small></button>
+          <button type="button" class="opt" data-steer="joy"><span>Joystick</span><small>Drag from wherever you touch, like a thumbstick.</small></button>
+        </div>
+      </div>
+      <div class="group"><p class="lbl">Buttons</p><label class="switch" for="swapChk"><input type="checkbox" id="swapChk"><span class="track"></span><span>Swap the button sides (Boost on the right)</span></label></div>
+      <div class="group"><p class="lbl">Graphics</p><label class="switch" for="smoothChk"><input type="checkbox" id="smoothChk"><span class="track"></span><span>Smooth mode: less detail so it runs faster on older tablets</span></label></div>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -712,7 +780,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.4';
+const GAME_VERSION = '2.5';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -737,7 +805,7 @@ const HATS = [
   { id: 'phones', name: 'Headphones', lock: { type: 'stars', v: 8, text: 'Get 8 ⭐' } },
   { id: 'bunny', name: 'Bunny ears', lock: { type: 'stars', v: 15, text: 'Get 15 ⭐' } },
 ];
-const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [10000, 'Arena Shark'], [20000, 'Mega Noodle'], [40000, 'Legend'], [80000, 'Your Twin']];
+const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [10000, 'Arena Shark'], [20000, 'Mega Noodle'], [40000, 'Legend'], [80000, 'Your Twin'], [130000, 'Mythic Noodle'], [200000, 'Galaxy Brain'], [300000, 'Noodle Royalty'], [450000, 'Ultimate Twin']];
 
 // Arena bot genes: greed, caution, wander, boost, hunter, food spread, turn cost, look-ahead
 const GENES = [[0.3, 2.5], [0.3, 3], [0, 0.6], [0, 0.2], [0, 1], [0, 0.8], [0, 0.2], [0.6, 1.4]];
@@ -792,7 +860,8 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, ach: null, set: { steer: 'auto', swap: false, smooth: false },
+  st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
 
@@ -817,6 +886,13 @@ function applyProfileData(p) {
     .map((e) => ({ g: e.g.map((v, i) => clamp(v, GENES[i][0], GENES[i][1])), f: clamp(e.f, 0, 1e7) }));
   if (typeof p.npcGen === 'number' && isFinite(p.npcGen)) profile.npcGen = clamp(Math.floor(p.npcGen), 0, 1e9);
   if (typeof p.stars === 'number' && isFinite(p.stars)) profile.stars = clamp(Math.floor(p.stars), 0, 1e6);
+  if (typeof p.tutDone === 'boolean') profile.tutDone = p.tutDone;
+  if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
+  if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true };
+  if (p.st && typeof p.st === 'object') {
+    const n = (v) => clamp(int(v), 0, 1e9), w = p.st.wins && typeof p.st.wins === 'object' ? p.st.wins : {};
+    profile.st = { snacks: n(p.st.snacks), longest: n(p.st.longest), wins: { tag: n(w.tag), ctl: n(w.ctl), br: n(w.br), bb: n(w.bb) }, powers: n(p.st.powers), online: n(p.st.online), rivalWins: n(p.st.rivalWins) };
+  }
   if (p.daily && typeof p.daily === 'object' && typeof p.daily.day === 'string' && Array.isArray(p.daily.list)) {
     const list = p.daily.list.slice(0, 3).filter((c) => c && CHAL[c.id] && typeof c.n === 'number' && typeof c.p === 'number')
       .map((c) => ({ id: c.id, n: clamp(Math.floor(c.n), 1, 1e6), p: clamp(Math.floor(c.p), 0, 1e6), done: !!c.done }));
@@ -874,6 +950,56 @@ function isUnlocked(item) {
 let unlockedKeys = null;
 function unlockSnapshot() { const s = new Set(); for (const [arr, tag] of [[PATTERNS, 'p'], [EYES, 'e'], [HATS, 'h']]) arr.forEach((it, i) => { if (isUnlocked(it)) s.add(tag + i); }); return s; }
 function creditKill(name) { profile.kills++; toast(`You took out ${name}`); SFX.kill(); checkUnlocks(); chal('kill'); }
+/* ---------- trophies ---------- */
+const ACH = [
+  { id: 'grad', ic: '🎓', name: 'Graduate', text: 'Finish the How to play tutorial', n: 1, v: () => (profile.tutDone ? 1 : 0) },
+  { id: 'snack1', ic: '🍬', name: 'Snack Attack', text: 'Eat 1,000 snacks', n: 1000, v: () => profile.st.snacks },
+  { id: 'snack2', ic: '🍰', name: 'Bottomless', text: 'Eat 10,000 snacks', n: 10000, v: () => profile.st.snacks },
+  { id: 'ko1', ic: '💥', name: 'Take-out Artist', text: 'Take out 10 snakes', n: 10, v: () => profile.kills },
+  { id: 'ko2', ic: '🥷', name: 'Noodle Ninja', text: 'Take out 100 snakes', n: 100, v: () => profile.kills },
+  { id: 'len1', ic: '📏', name: 'Big Noodle', text: 'Reach length 2,000', n: 2000, v: () => profile.bestYou },
+  { id: 'len2', ic: '🐍', name: 'Giant Noodle', text: 'Reach length 5,000', n: 5000, v: () => profile.bestYou },
+  { id: 'surv', ic: '⏱️', name: 'Survivor', text: 'Stay alive 5 minutes in one game', n: 300, v: () => profile.st.longest },
+  { id: 'teach', ic: '🧑‍🏫', name: 'Bot Teacher', text: 'Train your bot 5 times', n: 5, v: () => profile.sessions },
+  { id: 'twin', ic: '🤖', name: 'Twin Maker', text: 'Get your bot to level 9', n: 9, v: () => (botReady() ? botLevel().n : 0) },
+  { id: 'tag', ic: '🏃', name: 'Tag Champ', text: 'Win 5 rounds of Tag', n: 5, v: () => profile.st.wins.tag },
+  { id: 'ctl', ic: '👑', name: 'Leader of the Pack', text: 'Win 3 games of Capture the Leader', n: 3, v: () => profile.st.wins.ctl },
+  { id: 'br', ic: '🏆', name: 'Last One Standing', text: 'Win 3 Shrinking Arena rounds', n: 3, v: () => profile.st.wins.br },
+  { id: 'bb', ic: '⚔️', name: 'Robot Wars', text: 'Win 5 Bot Battles', n: 5, v: () => profile.st.wins.bb },
+  { id: 'rival', ic: '🤝', name: 'Rival Crusher', text: "Beat a friend's bot in Bot Battle", n: 1, v: () => profile.st.rivalWins },
+  { id: 'power', ic: '⚡', name: 'Powered Up', text: 'Use powers 25 times', n: 25, v: () => profile.st.powers },
+  { id: 'stars', ic: '⭐', name: 'Star Collector', text: 'Earn 10 stars', n: 10, v: () => profile.stars || 0 },
+  { id: 'party', ic: '👋', name: 'Party Noodle', text: 'Play 5 games with friends', n: 5, v: () => profile.st.online },
+  { id: 'style', ic: '🎨', name: 'Fashion Noodle', text: 'Build a custom snake with 10+ pieces', n: 10, v: () => profile.skin.length },
+];
+function checkAch(quiet) {
+  const had = new Set(profile.ach || []), first = !profile.ach, got = [];
+  for (const a of ACH) if (!had.has(a.id) && a.v() >= a.n) { had.add(a.id); got.push(a); }
+  profile.ach = [...had];
+  if (!got.length) return;
+  if (first || quiet) { if (first && got.length) setTimeout(() => toast(`You already earned ${got.length} troph${got.length === 1 ? 'y' : 'ies'}! See Stats & trophies.`), 1500); }
+  else { got.forEach((a, i) => setTimeout(() => { toast(`🏆 Trophy unlocked: ${a.name}!`); SFX.unlock(); }, i * 2900)); }
+  save(false);
+}
+function openStats() {
+  checkAch(true);
+  const st = profile.st, g = $('statGrid'); g.textContent = '';
+  const tiles = [['Games played', fmt(profile.games)], ['Best length', fmt(profile.bestYou)], ['Bot best length', fmt(profile.bestBot)], ['Take-outs', fmt(profile.kills)],
+    ['Snacks eaten', fmt(st.snacks)], ['Longest life', fmtTime(st.longest)], ['Stars', `${fmt(profile.stars || 0)} ⭐`], ['Bot level', botReady() ? `${botLevel().n} · ${botLevel().name}` : '–'],
+    ['Tag wins', fmt(st.wins.tag)], ['Capture wins', fmt(st.wins.ctl)], ['Arena wins', fmt(st.wins.br)], ['Bot Battle wins', fmt(st.wins.bb)]];
+  for (const [l, v] of tiles) { const d = document.createElement('div'), a = document.createElement('span'), b = document.createElement('b'); a.textContent = l; b.textContent = v; d.append(a, b); g.append(d); }
+  const list = $('trophyList'); list.textContent = ''; const had = new Set(profile.ach || []);
+  for (const a of ACH) {
+    const d = document.createElement('div'); d.className = 'trophy' + (had.has(a.id) ? ' got' : '');
+    const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = a.ic;
+    const nm = document.createElement('b'); nm.textContent = a.name;
+    const tx = document.createElement('small'); const v = Math.min(a.v(), a.n); tx.textContent = had.has(a.id) ? a.text + ' ✓' : `${a.text} · ${fmt(v)}/${fmt(a.n)}`;
+    const m = document.createElement('div'); m.className = 'meter small'; const f = document.createElement('div'); f.style.width = (had.has(a.id) ? 100 : Math.round(v / a.n * 100)) + '%'; m.append(f);
+    d.append(ic, nm, tx, m); list.append(d);
+  }
+  $('trophyHead').textContent = `Trophies · ${had.size} of ${ACH.length}`;
+  showScreen('stats');
+}
 /* ---------- daily challenges: three a day, each worth a star ---------- */
 const CHAL = {
   eat: { g: 0, n: [150, 300], text: (n) => `Eat ${fmt(n)} snacks` },
@@ -940,6 +1066,7 @@ function checkUnlocks() {
     toast(`New in your locker: ${arr[+k.slice(1)].name}`); SFX.unlock();
   }
   unlockedKeys = now;
+  if (typeof ACH !== 'undefined' && profile.ach) checkAch();
 }
 
 /* ================= brain (tiny neural net) ================= */
@@ -1453,21 +1580,8 @@ function npcThink(s) {
 const botIn = new Float32Array(FEAT), botP = new Float32Array(NB).fill(1 / NB);
 let botViz = null;
 function botThink(s) {
-  sense(s, botIn);
-  const out = forward(brain, botIn);
-  let mx = -1e9; for (let j = 0; j < NB; j++) if (out[j] > mx) mx = out[j];
-  let sum = 0; const p = new Float32Array(NB); for (let j = 0; j < NB; j++) { p[j] = Math.exp(out[j] - mx); sum += p[j]; }
-  let best = 0;
-  for (let j = 0; j < NB; j++) { botP[j] = botP[j] * 0.45 + (p[j] / sum) * 0.55; if (botP[j] > botP[best]) best = j; }
-  let reflex = false;
-  if (profile.reflex) {
-    const order = Array.from({ length: NB }, (_, i) => i).sort((a, b) => botP[b] - botP[a]);
-    const sb = safeBin(s, best, order); if (sb !== best) { reflex = true; best = sb; }
-  }
-  s.targetAng = wrapA(s.ang + TB[best]);
-  const pb = 1 / (1 + Math.exp(-out[NB]));
-  s.wantBoost = s.wantBoost ? pb > 0.4 : pb > 0.6;
-  botViz = { p: Array.from(botP), chosen: best, reflex };
+  const r = brainSteer(s, brain, botIn, botP, profile.reflex);
+  botViz = { p: Array.from(botP), chosen: r.best, reflex: r.reflex };
   if (s.ab) botAbility(s, botIn, null);
 }
 
@@ -1534,7 +1648,7 @@ function eatAround(s, dt) {
     const fi = qbuf[q], f = foodAt(fi); if (!f || f.eaten) continue;
     const dx = s.x - f.x, dy = s.y - f.y, d = Math.sqrt(dx * dx + dy * dy);
     if (d < s.r + f.r + 6) {
-      if (match.m !== 'tag') s.mass += f.v; if (s === player) { SFX.eat(f.v); if (!botDriving) chal('eat'); }
+      if (match.m !== 'tag') s.mass += f.v; if (s === player) { SFX.eat(f.v); profile.st.snacks++; if (!botDriving) chal('eat'); if (tut.on) tut.eats++; }
       if (s.ab && !s.fx) s.charge = Math.min(ABIL[s.ab].cost, s.charge + f.v * 10);
       if (fi < MAX_SLOTS) { if (gameKind === 'online') logEat(fi * 1000 + (slotGen[fi] % 1000)); slotGen[fi]++; setSlot(fi); }
       else { f.eaten = true; if (gameKind === 'online' && f.id) { logEat(f.id); eatenDrops.set(f.id, performance.now()); } }
@@ -1645,7 +1759,7 @@ function useAbility(s, now) {
     if (gameKind === 'online') online.fzOut.push({ id: myKey().slice(0, 6) + '.' + (++fzSeq), x: Math.round(s.x), y: Math.round(s.y), it: s.it ? 1 : 0, t: now });
     if (s === player) toast(n ? `Froze ${n} snake${n === 1 ? '' : 's'}!` : 'Freeze! Nobody was close enough this time.');
   }
-  if (s === player) { abilStats.me++; SFX.power(s.ab); chal('power'); }
+  if (s === player) { abilStats.me++; SFX.power(s.ab); chal('power'); profile.st.powers++; }
   else { abilStats.bot++; if (player && player.alive && mode === 'play' && Math.hypot(s.x - player.x, s.y - player.y) < 800) SFX.power(s.ab, true); }
   return true;
 }
@@ -1796,7 +1910,7 @@ function spawnModeBot(o) {
   else { pos = o.pos || tagSpot(); ang = Math.random() * TAU; mass = TAG_MASS; }
   let ni = 0, name = '', look;
   if (o.role === 'M') look = miniLook(t);
-  else { ni = o.ni !== undefined ? o.ni : pickName(); name = NPC_NAMES[ni]; look = o.look || randomLook(); }
+  else { ni = o.ni !== undefined ? o.ni : pickName(); name = o.name || NPC_NAMES[ni]; look = o.look || randomLook(); }
   const sn = makeSnake({ kind: 'npc', name, nameIdx: ni, look, mass, pos, ang, npc: newNpcMind(), npcId: npcIdNext++ });
   sn.team = t; sn.role = o.role; sn.orbit = Math.random() * TAU; sn.thinkIn = Math.floor(Math.random() * 4); sn.grace = 1; sn.stam = 1; sn.spd = o.spd || 1;
   if (match.m === 'br' && match.names) match.names['b' + sn.npcId] = sn.name;
@@ -1821,7 +1935,9 @@ function startMatch(cfg) {
     queue: [], overAt: 0, runner: '', myRespawnAt: 0, itTime: 0, made: 0, wasIt: false, started: now, ab: !!cfg.ab };
   if (gameKind === 'online' && m === 'tag' && match.v !== '1v1') match.v = 'evo';
   const humans = gameKind === 'solo' ? ['me'] : orderedHumans(old.tm);
-  if (m === 'br') { if (humans.length + match.sz < 2) match.sz = 2 - humans.length; match.R0 = clamp(1100 + 110 * (humans.length + match.sz), 1400, 2600); }
+  const riv = m === 'br' && match.bot && gameKind === 'solo' ? rivals.filter((r) => rivalBrain(r)) : [];
+  match.rivals = riv.length;
+  if (m === 'br') { if (humans.length + match.sz + riv.length < 2) match.sz = 2 - humans.length - riv.length; match.R0 = clamp(1100 + 110 * (humans.length + match.sz + riv.length), 1400, 2600); match.riv = riv; }
   const R = arenaFor(match); match.bases = [[-R * 0.6, 0], [R * 0.6, 0]];
   match.tEnd = now + 1000 * (m === 'ctl' ? 300 : m === 'br' ? BR.end : match.v === '1v1' ? 120 : TAG_TUNE.time); match.tl = (match.tEnd - now) / 1000;
   if (gameKind === 'solo') setupWorld((Math.random() * 4294967296) >>> 0, R, foodFor(R));
@@ -1843,7 +1959,12 @@ function setupCtl(humans) {
   countMinis();
 }
 function setupBr(humans) {
-  match.slotN = humans.length + match.sz; match.slotOff = Math.random() * TAU;
+  const riv = match.riv || []; match.riv = null;
+  match.slotN = humans.length + match.sz + riv.length; match.slotOff = Math.random() * TAU;
+  riv.forEach((r, j) => {
+    const sn = spawnModeBot({ role: 'B', pos: brSpot(humans.length + match.sz + j), look: unpackLook(r.look), name: `${r.name}'s bot` });
+    sn.rival = r.brain; sn.bot = true; if (r.sk) applyLook(sn, sn.look, parseSkin(r.sk));
+  });
   humans.forEach((k, i) => { match.tm[k] = [-1, 'P', i]; match.names[k] = k === myKey() ? cleanName(profile.name) : (online.remotes.get(k) || {}).name || 'A friend'; });
   for (let j = 0; j < match.sz; j++) spawnModeBot({ role: 'B', pos: brSpot(humans.length + j) });
 }
@@ -2077,7 +2198,7 @@ function nearestRunner(sn) {
   return best;
 }
 function modeThink(sn) {
-  if (match.m === 'br') { npcThink(sn); return; }
+  if (match.m === 'br') { if (sn.rival) rivalThink(sn); else npcThink(sn); return; }
   const iq = match.m === 'tag' && match.v !== '1v1' && sn.it ? npcIQ * TAG_TUNE.hunterIq : npcIQ;
   if (sn.orbit === undefined) sn.orbit = Math.random() * TAU;
   let tx = sn.x + Math.cos(sn.ang) * 200, ty = sn.y + Math.sin(sn.ang) * 200, wt = 0.4, food = 0.8, boost = false, dangerMul = 1, brainRef = null, hint = null;
@@ -2233,6 +2354,7 @@ function renderModeSel() {
   for (const b of document.querySelectorAll('[data-ab]')) { const id = b.dataset.ab, okHere = ms.base !== 'tag' || ABIL[id].tag; b.disabled = !okHere; b.setAttribute('aria-pressed', String(id === ms.ab && okHere)); }
   $('modeInfo').textContent = MODE_INFO[ms.m];
   const brLike = ms.m === 'br' || ms.m === 'bb';
+  $('optRivals').hidden = ms.m !== 'bb'; if (ms.m === 'bb') renderRivals();
   $('optCtl').hidden = ms.m !== 'ctl'; $('optTag').hidden = !tagLike; $('optDiff').hidden = !(ms.m === 'ctl' || tagLike || brLike); $('optBots').hidden = !brLike;
   $('optBase').hidden = $('optAbil').hidden = $('abilInfo').hidden = !ab;
   if (ab) { const A = ABIL[ms.ab] || ABIL.jump; $('abilInfo').textContent = `${A.name} · ${fmt(A.cost)} bits. ${ms.base === 'tag' && A.tagInfo ? A.tagInfo : A.info}`; }
@@ -2278,7 +2400,10 @@ function showResult() {
   $('resNext').hidden = gameKind !== 'online';
   updateResultNext(performance.now());
   profile.games++; save(false); checkUnlocks();
-  if (r.won && match.m === 'tag') chal('tag');
+  if (r.won && match.m === 'tag') { chal('tag'); profile.st.wins.tag++; }
+  if (r.won && match.m === 'ctl') profile.st.wins.ctl++;
+  if (r.won && match.m === 'br') { if (match.bot) { profile.st.wins.bb++; if (match.rivals) profile.st.rivalWins++; } else profile.st.wins.br++; }
+  checkAch();
   if (r.won && match.m === 'ctl') chal('ctl');
   if (match.m === 'br' && !match.bot && (r.won || (match.myPlace && match.myPlace <= 3))) chal('br');
   if (match.m === 'br' && match.bot && r.won) chal('bb');
@@ -2458,10 +2583,11 @@ function step(dt, now) {
       humanControl(player);
       if (frame % 3 === 0 && now - input.last < 4000 && match.m !== 'tag') record(player);
       if (anyInputHeld()) input.last = now;
-      if (profile.auto && botReady() && now - input.last > AWAY_MS) setBot(true, 'auto');
+      if (profile.auto && botReady() && now - input.last > AWAY_MS && !tut.on) setBot(true, 'auto');
     }
   }
   abilTick(dt, now);
+  tutTick();
   for (const s of snakes) { if (s.kind === 'remote' || s.kind === 'rnpc') moveRemote(s, dt, now); else moveSnake(s, dt); }
   buildSegGrid();
 
@@ -2515,6 +2641,9 @@ function step(dt, now) {
     }
   }
   if (player && player.alive && mode === 'play' && player.boosting) run.boosted = true;
+  if (tut.on && player && player.alive && player.wantBoost && !botDriving) tut.boostT += dt;
+  if (frame % 30 === 0 && player && player.alive && run.time > profile.st.longest) profile.st.longest = Math.floor(run.time);
+  if (frame % 240 === 0 && profile.ach) checkAch();
   if (frame % 30 === 0 && player && player.alive && mode === 'play' && !botDriving && (match.m === 'classic' || match.m === 'br')) {
     const L = Math.floor(player.mass * 10); chalMax('len', L); if (!run.boosted) chalMax('nob', L); chalMax('surv', run.time);
   }
@@ -2846,7 +2975,7 @@ async function joinRoom(code, create) {
     setRoomHash(null);
     return;
   } finally { online.busy = false; $('createBtn').disabled = $('joinBtn').disabled = false; }
-  online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0; chal('friends');
+  online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0; chal('friends'); profile.st.online++;
   online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = [];
   online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear(); online.brains.clear();
   gameKind = 'online'; myDeaths = 0; match = { m: 'classic' };
@@ -3078,6 +3207,7 @@ function resize() {
   const r = canvas.getBoundingClientRect(); W = r.width; H = r.height;
   const dev = Math.min(2, window.devicePixelRatio || 1), cap = Math.min(1, Math.sqrt(4.2e6 / Math.max(1, W * H * dev * dev)));
   DPR = Math.max(0.75, dev * Math.min(cap, typeof dprScale === 'number' ? dprScale : 1));
+  if (profile.set && profile.set.smooth) DPR = Math.min(DPR, 1);
   canvasRect = { left: r.left, top: r.top };
   const cw = Math.round(W * DPR), ch = Math.round(H * DPR); let changed = false;
   if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; changed = true; }
@@ -3172,7 +3302,8 @@ function drawSnakeBody(c, s, b, t, now, z) {
     for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + r + 10, p.y); c.arc(p.x, p.y, r + 10, 0, TAU); }
     c.fill(); c.globalAlpha = ga;
   }
-  if (s.boosting) {
+  const smooth = profile.set.smooth;
+  if (s.boosting && !smooth) {
     const ga = c.globalAlpha; c.globalAlpha = ga * 0.28; c.fillStyle = s.color; c.beginPath();
     for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x + r * 1.7, p.y); c.arc(p.x, p.y, r * 1.7, 0, TAU); }
     c.fill(); c.globalAlpha = ga;
@@ -3191,9 +3322,11 @@ function drawSnakeBody(c, s, b, t, now, z) {
     }
     c.fill();
   }
-  c.fillStyle = 'rgba(255,255,255,0.13)'; c.beginPath();
-  for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x - r * 0.2 + r * 0.38, p.y - r * 0.3); c.arc(p.x - r * 0.2, p.y - r * 0.3, r * 0.38, 0, TAU); }
-  c.fill();
+  if (!smooth) {
+    c.fillStyle = 'rgba(255,255,255,0.13)'; c.beginPath();
+    for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x - r * 0.2 + r * 0.38, p.y - r * 0.3); c.arc(p.x - r * 0.2, p.y - r * 0.3, r * 0.38, 0, TAU); }
+    c.fill();
+  }
   if (vis(segs[0])) { drawEyes(c, s, now); if (s.role === 'L' && match.m === 'ctl') drawLeaderCrown(c, s); else drawHat(c, s, now); if (s.bot) drawAntenna(c, s, now); }
   c.globalAlpha = 1;
 }
@@ -3341,7 +3474,7 @@ function render(now) {
     if (s.chat) { ctx.font = `700 ${15 / z}px Lexend, system-ui, sans-serif`; drawChat(s, h, h.y - lift - (s.it ? 16 / z : 0) - 14 / z, z, now); ctx.font = `600 ${13 / z}px Lexend, system-ui, sans-serif`; }
   }
   ctx.globalAlpha = 1;
-  if (joy.active && mode === 'play') {
+  if (joy.active && mode === 'play' && (joy.dragged || profile.set.steer === 'joy')) {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     let dx = joy.x - joy.ox, dy = joy.y - joy.oy; const d = Math.hypot(dx, dy); if (d > 46) { dx *= 46 / d; dy *= 46 / d; }
     ctx.globalAlpha = 0.45; ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(joy.ox, joy.oy, 46, 0, TAU); ctx.stroke();
@@ -3386,7 +3519,7 @@ function drawPreview(cv, look, now, skin) {
 
 /* ================= HUD & screens ================= */
 const app = $('app');
-const screens = ['menu', 'locker', 'online', 'death', 'train', 'result'];
+const screens = ['menu', 'locker', 'online', 'death', 'train', 'result', 'pause', 'stats', 'settings'];
 function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', (mode === 'play' || mode === 'spec') && !name); }
 /* ---------- quick chat: preset messages only, so it stays friendly ---------- */
 const QC = ['GG!', 'Nice one!', 'Help!', 'Watch this!', 'Oops!', '😂'];
@@ -3426,6 +3559,130 @@ function drawChat(s, h, top, z, now) {
   ctx.moveTo(h.x - 6 / z, y + hh - 1 / z); ctx.lineTo(h.x, y + hh + 7 / z); ctx.lineTo(h.x + 6 / z, y + hh - 1 / z); ctx.fill();
   ctx.fillStyle = '#17122c'; ctx.fillText(ch.text, h.x, y + hh - 5 / z); ctx.globalAlpha = 1;
 }
+/* ---------- settings ---------- */
+function applySettings() { app.classList.toggle('swap', !!profile.set.swap); }
+function openSettings() {
+  for (const b of document.querySelectorAll('[data-steer]')) b.setAttribute('aria-pressed', String(b.dataset.steer === profile.set.steer));
+  $('swapChk').checked = !!profile.set.swap; $('smoothChk').checked = !!profile.set.smooth;
+  showScreen('settings');
+}
+/* ---------- pause (solo only) ---------- */
+let paused = false, pausedAt = 0;
+function pauseGame() {
+  if (paused || gameKind !== 'solo' || !(mode === 'play' || mode === 'spec')) return;
+  paused = true; pausedAt = performance.now();
+  input.mBoost = input.kBoost = input.tBoost = input.tBoost2 = input.left = input.right = false; joy.active = false; joy.id = -1;
+  setBoostSound(false); closeChat(); showScreen('pause');
+}
+// Everything that runs on the clock moves later by however long we were paused, so nothing runs out meanwhile.
+function shiftTimes(d) {
+  for (const k of ['tEnd', 'started', 'myRespawnAt', 'overAt']) if (match[k]) match[k] += d;
+  if (match.queue) for (const q of match.queue) q.at += d;
+  if (match.nb) match.nb.until += d;
+  for (const s of snakes) { for (const k of ['fxStart', 'fxEnd', 'fxT0', 'slowEnd']) if (s[k]) s[k] += d; if (s.chat) s.chat.until += d; }
+  for (const g of fxRings) g.t += d;
+}
+function resumeGame() {
+  if (!paused) return;
+  const now = performance.now(); shiftTimes(now - pausedAt); paused = false;
+  input.last = now; last = now; showScreen(null);
+}
+/* ---------- friends' bots for Bot Battle ---------- */
+const RIVAL_KEY = 'noodlebots.v2.rivals';
+let rivals = [];
+function loadRivals() {
+  try { const a = JSON.parse(localStorage.getItem(RIVAL_KEY) || '[]'); if (Array.isArray(a)) rivals = a.filter((r) => r && typeof r.w === 'string').slice(0, 4).map((r) => ({ name: cleanName(r.name), look: int(r.look), sk: typeof r.sk === 'string' ? r.sk : null, w: r.w, lvl: clamp(int(r.lvl, 1), 1, 20), brain: null })); } catch (e) { rivals = []; }
+}
+function saveRivals() { try { localStorage.setItem(RIVAL_KEY, JSON.stringify(rivals.map((r) => ({ name: r.name, look: r.look, sk: r.sk, w: r.w, lvl: r.lvl })))); } catch (e) { /* storage full */ } }
+function rivalBrain(r) { if (!r.brain) { const b = makeBrain(); if (setWeights(b, b64ToBytes(r.w))) r.brain = b; } return r.brain; }
+function renderRivals() {
+  const box = $('rivalList'); box.textContent = '';
+  if (!rivals.length) { const e = document.createElement('span'); e.className = 'modeinfo'; e.textContent = 'None yet.'; box.append(e); }
+  rivals.forEach((r, i) => {
+    const c = document.createElement('span'); c.className = 'rival'; c.append(`${r.name}'s bot · Lv ${r.lvl}`);
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.setAttribute('aria-label', `Remove ${r.name}'s bot`);
+    x.addEventListener('click', () => { rivals.splice(i, 1); saveRivals(); renderRivals(); });
+    c.append(x); box.append(c);
+  });
+}
+async function importRival(file) {
+  const info = $('rivalInfo');
+  try {
+    if (file.size > 20 * 1024 * 1024) throw new Error('too big');
+    const files = parseZip(new Uint8Array(await file.arrayBuffer()));
+    const js = files.get('noodlebots-save.json'), bf = files.get('bot-brain.bin');
+    if (!js) throw new Error('not a save');
+    const d = JSON.parse(new TextDecoder().decode(await unzipEntry(js)));
+    if (!d || d.format !== 'noodle-bots-save') throw new Error('not a save');
+    if (!bf) { info.textContent = "That save doesn't have a trained bot yet. Your friend needs to train their bot first."; return; }
+    const bytes = await unzipEntry(bf), test = makeBrain(); if (!setWeights(test, bytes)) throw new Error('bad brain');
+    const p = d.profile || {}, prac = clamp(int(p.practice), 0, 1e9); let lvl = 2; for (let i = 1; i < LEVELS.length; i++) if (prac >= LEVELS[i][0]) lvl = i + 1;
+    const r = { name: cleanName(p.name), look: int(p.look), sk: (Array.isArray(p.skin) ? p.skin.filter((k) => Number.isInteger(k) && k >= 0 && k < PALETTE.length).slice(0, SKIN_MAX).join('') : typeof p.skin === 'string' && parseSkin(p.skin) ? p.skin.slice(0, SKIN_MAX) : '') || null, w: bytesToB64(bytes), lvl, brain: test };
+    rivals = rivals.filter((x) => x.name !== r.name); rivals.unshift(r); rivals = rivals.slice(0, 4); saveRivals(); renderRivals();
+    info.textContent = `${r.name}'s bot joined! It will fight in your solo Bot Battles.`; SFX.unlock();
+  } catch (e) { info.textContent = "That file isn't a Noodle Bots save. Ask your friend for the .zip from Download save."; }
+}
+// A bot brain (yours or a friend's) steering any snake.
+function brainSteer(s, br, buf, P, reflex) {
+  sense(s, buf);
+  const out = forward(br, buf);
+  let mx = -1e9; for (let j = 0; j < NB; j++) if (out[j] > mx) mx = out[j];
+  let sum = 0; for (let j = 0; j < NB; j++) sum += Math.exp(out[j] - mx);
+  let best = 0;
+  for (let j = 0; j < NB; j++) { P[j] = P[j] * 0.45 + (Math.exp(out[j] - mx) / sum) * 0.55; if (P[j] > P[best]) best = j; }
+  let used = false;
+  if (reflex) { const order = Array.from({ length: NB }, (_, i) => i).sort((a, b) => P[b] - P[a]); const sb = safeBin(s, best, order); if (sb !== best) { used = true; best = sb; } }
+  s.targetAng = wrapA(s.ang + TB[best]);
+  const pb = 1 / (1 + Math.exp(-out[NB]));
+  s.wantBoost = s.wantBoost ? pb > 0.4 : pb > 0.6;
+  return { best, reflex: used };
+}
+const rivalBuf = new Float32Array(FEAT);
+function rivalThink(sn) { if (!sn.rivP) sn.rivP = new Float32Array(NB).fill(1 / NB); brainSteer(sn, sn.rival, rivalBuf, sn.rivP, true); sn.thinkIn = 2; }
+/* ---------- How to play: a guided first game ---------- */
+const tut = { on: false, step: 0, t0: 0, turn: 0, lastAng: null, eats: 0, boostT: 0 };
+const TUT = [
+  { text: () => (coarse() ? 'Drag your finger anywhere on the screen to steer. Try a few big turns!' : 'Move your mouse to steer. Your snake follows it. Try a few big turns!'), p: () => tut.turn / 5 },
+  { text: () => 'Eat 15 snacks: steer into the glowing dots. Each one makes you longer.', p: () => tut.eats / 15 },
+  { text: () => (coarse() ? 'Hold the Boost button to zoom! Boosting costs a little length, so use it wisely.' : 'Hold the mouse button (or Space) to boost! Boosting costs a little length, so use it wisely.'), p: () => tut.boostT / 1.5 },
+  { text: () => "The big rule: if your face touches another snake, you crash. Get other snakes to bump into YOU instead! (You can't crash during this lesson.)", p: () => (performance.now() - tut.t0) / 9000, next: true },
+  { text: () => `Your bot learns by watching you steer. Keep playing so it can study your moves: ${fmt(Math.min(sampCount, MIN_TRAIN))} of ${MIN_TRAIN}.`, p: () => sampCount / MIN_TRAIN, skip: () => botReady() || !!trainJob },
+  { text: () => 'Tap Train bot. A tiny brain studies how you play, right on your device.', p: () => (trainJob || botReady() ? 1 : 0), skip: () => botReady() },
+  { text: () => (botReady() ? 'Now tap Use bot (or press B) and watch your bot drive like you! Tap Take back anytime.' : 'Your bot is studying… when it finishes, tap Use bot to watch it drive like you.'), p: () => (botDriving ? 1 : 0) },
+  { text: () => "You did it! Try Shrinking Arena, Bot Battle, Tag and more from the menu. Have fun!", p: () => 1, next: true, last: true },
+];
+function startTutorial() {
+  match = { m: 'classic' }; abilClassic = false; setupSoloWorld();
+  startGame({ watch: false });
+  Object.assign(tut, { on: true, step: 0, t0: performance.now(), turn: 0, lastAng: null, eats: 0, boostT: 0 });
+  updateCoach();
+}
+function endTutorial(done) {
+  tut.on = false; $('coach').hidden = true;
+  if (done && !profile.tutDone) { profile.tutDone = true; profile.stars = (profile.stars || 0) + 1; toast('Tutorial complete! +1 ⭐'); SFX.trainDone(); save(false); checkAch(); }
+}
+function tutTick() {
+  if (!tut.on) return;
+  if (mode !== 'play' && mode !== 'dead') { endTutorial(false); return; }
+  if (player && player.alive) {
+    player.grace = Math.max(player.grace, 0.3);   // practice: no crashing during the lesson
+    if (tut.lastAng != null) tut.turn += Math.abs(wrapA(player.ang - tut.lastAng));
+    tut.lastAng = player.ang;
+  }
+  const S = TUT[tut.step];
+  if (S.skip && S.skip()) { tut.step++; tut.t0 = performance.now(); updateCoach(); return; }
+  if (!S.next && S.p() >= 1) { tut.step = Math.min(TUT.length - 1, tut.step + 1); tut.t0 = performance.now(); SFX.unlock(); updateCoach(); return; }
+  if (frame % 10 === 0) updateCoach();
+}
+function updateCoach() {
+  const c = $('coach'); c.hidden = !tut.on; if (!tut.on) return;
+  const S = TUT[tut.step], p = clamp(S.p(), 0, 1);
+  $('coachStep').textContent = S.last ? 'All done!' : `Step ${tut.step + 1} of ${TUT.length - 1}`;
+  const tx = S.text(); if ($('coachText').textContent !== tx) $('coachText').textContent = tx;
+  $('coachMeter').style.width = Math.round(p * 100) + '%';
+  $('coachNext').hidden = !(S.next && (S.last || p >= 1)); $('coachNext').textContent = S.last ? 'Finish' : 'Next';
+  $('coachSkip').hidden = !!S.last;
+}
 /* ---------- watching other snakes after you crash ---------- */
 const spec = { on: false, target: null };
 function specCandidates() {
@@ -3448,14 +3705,16 @@ function updateSpecBar() {
   if ($('specInfo').textContent !== info) $('specInfo').textContent = info;
   $('specRespawn').hidden = br && gameKind === 'online'; $('specRespawn').textContent = br ? 'New round' : gameKind === 'online' ? 'Respawn' : 'Play again';
 }
+function updateTutBtn() { const b = $('tutBtn'); b.textContent = ''; b.append('How to play'); if (!profile.tutDone && profile.games < 3) { const n = document.createElement('span'); n.className = 'newbie'; n.textContent = 'New? Start here'; b.append(' ', n); b.classList.add('primary'); } else b.classList.remove('primary'); }
 function showMenu() {
+  paused = false; if (tut.on) endTutorial(false);
   if (mode !== 'menu') save();
   stopSpectate(); closeChat();
   if (gameKind === 'solo') abilClassic = false;
   if (inModes() && gameKind === 'solo') { match = { m: 'classic' }; setupSoloWorld(); }
   mode = 'menu'; if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
   player = null; botDriving = false; updateBanner();
-  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); renderModeSel(); updateDailyCard(); showScreen('menu');
+  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); renderModeSel(); updateDailyCard(); updateTutBtn(); showScreen('menu');
 }
 function startGame(opts = {}) {
   stopSpectate();
@@ -3547,6 +3806,7 @@ function updateRoomChip() {
   if (t.textContent !== txt) t.textContent = txt;
   if ($('exitBtn').textContent !== ex) $('exitBtn').textContent = ex;
   const onl = gameKind === 'online' && !!online.code;
+  if ($('pauseBtn').hidden !== onl) $('pauseBtn').hidden = onl;
   if ($('chatBtn').hidden !== !onl) { $('chatBtn').hidden = !onl; if (!onl) closeChat(); }
   const inv = gameKind === 'online' && !!online.code && online.kind === 'web';
   if ($('inviteBtn').hidden !== !inv) { $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv); }
@@ -4114,7 +4374,7 @@ canvas.addEventListener('pointerdown', (e) => {
   if (isTouchLike(e)) {
     // First finger steers: hold it where you want to go, or drag it like a joystick. Another finger boosts.
     // A first finger always steers, even if the browser never told us the last one lifted (that used to leave you unable to move).
-    if (!joy.active || e.isPrimary) { if (e.isPrimary) input.tBoost2 = false; joy.active = true; joy.id = e.pointerId; joy.ox = joy.x = x; joy.oy = joy.y = y; joy.dragged = false; input.px = x; input.py = y; input.has = true; input.mode = 'touch'; }
+    if (!joy.active || e.isPrimary) { if (e.isPrimary) input.tBoost2 = false; joy.active = true; joy.id = e.pointerId; joy.ox = joy.x = x; joy.oy = joy.y = y; joy.dragged = false; input.px = x; input.py = y; input.has = true; input.mode = profile.set.steer === 'joy' ? 'keys' : 'touch'; }
     else input.tBoost2 = true;
   } else { input.px = x; input.py = y; input.has = true; input.mode = 'mouse'; if (e.button === 0) input.mBoost = true; }
   humanInput();
@@ -4126,8 +4386,10 @@ window.addEventListener('pointermove', (e) => {
     if (!joy.active || e.pointerId !== joy.id) return;
     joy.x = x; joy.y = y;
     const dx = x - joy.ox, dy = y - joy.oy;
-    if (!joy.dragged && dx * dx + dy * dy > 22 * 22) joy.dragged = true;
+    const steer = profile.set.steer, th = steer === 'joy' ? 6 : 22;
+    if (steer !== 'point' && !joy.dragged && dx * dx + dy * dy > th * th) joy.dragged = true;
     if (joy.dragged) { input.joyAng = Math.atan2(dy, dx); input.mode = 'joy'; }
+    else if (steer === 'joy') input.mode = 'keys';
     else { input.px = x; input.py = y; input.has = true; input.mode = 'touch'; }
     humanInput();
   } else {
@@ -4145,6 +4407,8 @@ window.addEventListener('blur', () => { input.mBoost = input.kBoost = input.tBoo
 window.addEventListener('keydown', (e) => {
   const tag = e.target && e.target.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
   const k = e.code;
+  if (paused) { if ((k === 'KeyP' || k === 'Escape' || k === 'Space') && !e.repeat) { e.preventDefault(); resumeGame(); } return; }
+  if ((k === 'KeyP' || k === 'Escape') && !e.repeat && gameKind === 'solo' && (mode === 'play' || mode === 'spec')) { pauseGame(); return; }
   if (k === 'Space' || k === 'ArrowUp' || k === 'KeyW') { input.kBoost = true; if (mode === 'play') e.preventDefault(); }
   else if (k === 'ArrowLeft' || k === 'KeyA') { input.left = true; input.mode = 'keys'; }
   else if (k === 'ArrowRight' || k === 'KeyD') { input.right = true; input.mode = 'keys'; }
@@ -4196,6 +4460,20 @@ $('nameIn').addEventListener('input', (e) => { profile.name = e.target.value.sli
 $('lockerName').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
 $('lockerBtn').addEventListener('click', openLocker);
 $('lockerDone').addEventListener('click', showMenu);
+$('tutBtn').addEventListener('click', startTutorial);
+$('statsBtn').addEventListener('click', openStats);
+$('statsDone').addEventListener('click', showMenu);
+$('setBtn').addEventListener('click', openSettings);
+$('setDone').addEventListener('click', showMenu);
+for (const b of document.querySelectorAll('[data-steer]')) b.addEventListener('click', () => { profile.set.steer = b.dataset.steer; save(false); openSettings(); });
+$('swapChk').addEventListener('change', (e) => { profile.set.swap = e.target.checked; save(false); applySettings(); });
+$('smoothChk').addEventListener('change', (e) => { profile.set.smooth = e.target.checked; save(false); resize(); });
+$('rivalIn').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) importRival(f); e.target.value = ''; });
+tapButton($('pauseBtn'), () => { pauseGame(); });
+$('resumeBtn').addEventListener('click', resumeGame);
+$('pauseMenuBtn').addEventListener('click', () => { paused = false; showMenu(); });
+tapButton($('coachNext'), () => { const S = TUT[tut.step]; if (S.last) endTutorial(true); else { tut.step++; tut.t0 = performance.now(); updateCoach(); } });
+$('coachSkip').addEventListener('click', () => endTutorial(false));
 for (const b of document.querySelectorAll('[data-bots]')) b.addEventListener('click', () => setModeSel({ bots: +b.dataset.bots }));
 $('deathWatchBtn').addEventListener('click', () => startSpectate());
 tapButton($('specNext'), () => { nextSpec(); blurIfPlaying(); });
@@ -4254,7 +4532,7 @@ document.addEventListener('click', (e) => { const t = e.target && e.target.close
 const clearTouches = () => { joy.active = false; joy.id = -1; input.tBoost = input.tBoost2 = false; };
 // If every finger is off the screen, nothing can still be held down, whatever pointer events got lost.
 for (const ev of ['touchend', 'touchcancel']) window.addEventListener(ev, (e) => { if (!e.touches || e.touches.length === 0) clearTouches(); }, { passive: true });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); clearTouches(); input.mBoost = input.kBoost = input.left = input.right = false; } if (online.room) sendPresence(performance.now(), true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { if (gameKind === 'solo' && mode === 'play' && player && player.alive) pauseGame(); save(); clearTouches(); input.mBoost = input.kBoost = input.left = input.right = false; } if (online.room) sendPresence(performance.now(), true); });
 window.addEventListener('pageshow', () => setTimeout(onViewChange, 50));
 window.addEventListener('pagehide', () => { save(); if (online.kind === 'web' && online.room) { try { online.room.leave(); } catch (e) { /* ignore */ } } });
 // Phones can turn sideways without a resize event arriving in time (or at all inside an app). If the
@@ -4295,7 +4573,7 @@ function loop(now) {
       if (frame % 6 === 0) { updateTrainScreen(); if (mode === 'play') updateDock(); else if (!$('menu').hidden) updateBotCard(); }
     }
   } catch (e) { trainJob = null; reportGlitch('training', e); }
-  try { step(dt, now); } catch (e) { reportGlitch('game', e); }
+  try { if (!paused) step(dt, now); } catch (e) { reportGlitch('game', e); }
   try {
     updateTheme(dt);
     if (frame % 10 === 0) { fitApp(); if (sizeOff()) onViewChange(); }
@@ -4320,7 +4598,7 @@ function boot() {
   checkUnlocks();
   $('nameIn').value = profile.name;
   $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}`;
-  ensureDaily(); buildChat(); updateDailyCard();
+  ensureDaily(); buildChat(); updateDailyCard(); loadRivals(); applySettings(); updateTutBtn(); checkAch(true);
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
@@ -4351,7 +4629,7 @@ function boot() {
     flashTest: () => { dprScale = dprScale === 1 ? 0.85 : 1; resize(); const px = ctx.getImageData(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 1, 1).data; return [px[0], px[1], px[2], px[3]]; },
     appH: () => ({ app: Math.round(document.getElementById('app').getBoundingClientRect().height), inner: innerHeight, version: GAME_VERSION }),
     size: () => ({ W: Math.round(W), H: Math.round(H), cw: canvas.width, ch: canvas.height, css: [canvas.clientWidth, canvas.clientHeight], dpr: +DPR.toFixed(2) }),
-    state: () => ({ alive: !!(player && player.alive), boosting: !!(player && player.boosting), wantBoost: !!(player && player.wantBoost), tAng: player ? +player.targetAng.toFixed(2) : null, bot: botDriving, botReason, dpr: +DPR.toFixed(2), inputMode: input.mode }),
+    state: () => ({ alive: !!(player && player.alive), boosting: !!(player && player.boosting), wantBoost: !!(player && player.wantBoost), tAng: player ? +player.targetAng.toFixed(2) : null, bot: botDriving, botReason, dpr: +DPR.toFixed(2), inputMode: input.mode, ready: botReady() }),
     autoBot: () => { setBot(true, 'auto'); return botDriving; },
     tune: (o) => { Object.assign(TAG_TUNE, o || {}); return TAG_TUNE; },
     simTag: (v, diff, rounds) => {
@@ -4365,6 +4643,17 @@ function boot() {
       simAuto = false; res.avgLast = Math.round(res.avgLast / res.rounds); return res;
     },
     teamBrain: (t) => !!teamBrain(t),
+    tut: () => ({ on: tut.on, step: tut.step, turn: +tut.turn.toFixed(1), eats: tut.eats, boostT: +tut.boostT.toFixed(1), coach: !$('coach').hidden, text: $('coachText').textContent }),
+    tutJump: (s) => { tut.step = s; tut.t0 = performance.now() - 20000; updateCoach(); },
+    paused: () => paused,
+    ach: () => ({ got: profile.ach, st: profile.st }),
+    rivals: () => rivals.map((r) => [r.name, r.lvl, !!r.brain]),
+    rivalSnakes: () => snakes.filter((sn) => sn.rival).map((sn) => [sn.name, sn.alive]),
+    setOf: () => ({ set: profile.set, dpr: +DPR.toFixed(2), swap: app.classList.contains('swap') }),
+    levels: () => LEVELS.length,
+    toFood: () => { if (!player) return false; let best = null, bd = 1e18; for (let i = 0; i < activeSlots; i++) { const f = foodAt(i); if (!f || f.eaten) continue; const d = (f.x - player.x) ** 2 + (f.y - player.y) ** 2; if (d < bd && d > 900) { bd = d; best = f; } } if (!best) return false; const a = player.ang; player.x = best.x - Math.cos(a) * 4; player.y = best.y - Math.sin(a) * 4; for (const p of player.segs) { p.x = player.x; p.y = player.y; } return true; },
+    inputMode: () => input.mode,
+    setProf: (k, v) => { profile[k] = v; checkAch(); return profile.ach; },
     br: () => ({ m: match.m, bot: !!match.bot, st: match.st, left: match.m === 'br' ? brLeft().length : 0, here: brAliveHere(), out: [...(match.out || [])], wins: match.wins, R: Math.round(worldR), Rt: Math.round(worldTargetR), R0: match.R0, win: match.win, why: match.why, place: match.myPlace, tm: match.tm, round: match.round }),
     brAge: (sec) => { match.started -= sec * 1000; },
     killBots: (n) => { let k = 0; for (const sn of [...snakes]) if (sn.kind === 'npc' && sn.role === 'B' && k < n) { killSnake(sn, null); k++; } return k; },
