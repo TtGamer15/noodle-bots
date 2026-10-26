@@ -780,7 +780,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.5';
+const GAME_VERSION = '2.5.1';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -978,7 +978,8 @@ function checkAch(quiet) {
   profile.ach = [...had];
   if (!got.length) return;
   if (first || quiet) { if (first && got.length) setTimeout(() => toast(`You already earned ${got.length} troph${got.length === 1 ? 'y' : 'ies'}! See Stats & trophies.`), 1500); }
-  else { got.forEach((a, i) => setTimeout(() => { toast(`🏆 Trophy unlocked: ${a.name}!`); SFX.unlock(); }, i * 2900)); }
+  else if (got.length === 1) { toast(`🏆 Trophy unlocked: ${got[0].name}!`); SFX.unlock(); }
+  else { toast(`🏆 ${got.length} new trophies: ${got.map((a) => a.name).join(', ')}!`); SFX.unlock(); }
   save(false);
 }
 function openStats() {
@@ -1061,9 +1062,9 @@ function updateDailyCard() {
 }
 function checkUnlocks() {
   const now = unlockSnapshot();
-  if (unlockedKeys) for (const k of now) if (!unlockedKeys.has(k)) {
-    const arr = k[0] === 'p' ? PATTERNS : k[0] === 'e' ? EYES : HATS;
-    toast(`New in your locker: ${arr[+k.slice(1)].name}`); SFX.unlock();
+  if (unlockedKeys) {
+    const fresh = [...now].filter((k) => !unlockedKeys.has(k)).map((k) => (k[0] === 'p' ? PATTERNS : k[0] === 'e' ? EYES : HATS)[+k.slice(1)].name);
+    if (fresh.length) { toast(fresh.length <= 2 ? `New in your locker: ${fresh.join(' and ')}` : `${fresh.length} new things in your locker!`); SFX.unlock(); }
   }
   unlockedKeys = now;
   if (typeof ACH !== 'undefined' && profile.ach) checkAch();
@@ -4344,11 +4345,13 @@ async function importSave(file) {
     if (bf) { const b = makeBrain(); if (setWeights(b, await unzipEntry(bf))) newBrain = b; }
     let moves = null; const mf = files.get('moves.bin'); if (mf) moves = await unzipEntry(mf);
     applyProfileData(d.profile);
+    if (!d.profile || !Array.isArray(d.profile.ach)) profile.ach = null;   // older save: count its trophies quietly
     newSince = clamp(int(d.newSince), 0, 1e7);
     trainJob = null; lastJob = null; brain = newBrain;
     sampCount = 0; sampHead = 0; if (moves) loadSamples(moves);
     if (profile.theme >= 0) setTheme(profile.theme);
-    save(); applyVolume(); syncSoundUI(); checkUnlocks();
+    unlockedKeys = unlockSnapshot(); checkAch(true);   // catch up on unlocks quietly instead of a pile of sounds
+    save(); applyVolume(); syncSoundUI(); updateTutBtn();
     $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); updateDock(); setLobbyPresence();
     saveMsg(`Loaded the save for ${cleanName(profile.name)}${botReady() ? ', bot included' : ''}.`);
     SFX.unlock();
@@ -4613,6 +4616,7 @@ function boot() {
     joinFromHash();
     window.addEventListener('hashchange', joinFromHash);
   }
+  if (window.NB_DEBUG) { window.__sfx = []; for (const k of Object.keys(SFX)) { const f = SFX[k]; SFX[k] = function (...a) { window.__sfx.push([k, Math.round(performance.now())]); return f.apply(this, a); }; } }
   if (window.NB_DEBUG) window.__nb = {
     info: () => ({ kind: gameKind, mode, players: online.players, isHost: online.isHost, code: online.code, me: online.myPeer, snakes: snakes.map((sn) => [sn.kind, sn.name, Math.round(sn.x), Math.round(sn.y), sn.team, sn.role, sn.it ? 1 : 0, Math.round(sn.mass)]) }),
     match: () => ({ m: match.m, st: match.st, mc: match.mc, win: match.win, why: match.why, it: [...(match.it || [])], tl: Math.round(match.tl || 0), sd: !!match.sd, tm: match.tm, mid: match.mid, v: match.v }),
