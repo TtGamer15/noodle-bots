@@ -712,7 +712,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.3';
+const GAME_VERSION = '2.4';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -2478,7 +2478,9 @@ function step(dt, now) {
       // Whoever drives the front of their head into another snake (its body or the side of its head) crashes.
       dying.push([s, o]);
       // Two faces meeting head-on: both crash together, so it's never a coin flip about who goes first.
-      if ((o.kind === 'player' || (o.kind === 'npc' && npcHost)) && o.alive && !o.phase && o.grace <= 0 && ca * Math.cos(o.ang) + sa * Math.sin(o.ang) < -0.5 && Math.hypot(hx - o.x, hy - o.y) < 1.6 * (s.r + o.r)) headOn.push([o, s]);
+      // Only when the other snake's face is really on ours, though: ramming the side of someone's neck is a clean take-out.
+      if ((o.kind === 'player' || (o.kind === 'npc' && npcHost)) && o.alive && !o.phase && o.grace <= 0 && ca * Math.cos(o.ang) + sa * Math.sin(o.ang) < -0.5 &&
+        headBoxHit(o.x, o.y, Math.cos(o.ang), Math.sin(o.ang), o.r * 1.35, hx, hy, s.r)) headOn.push([o, s]);
       break;
     }
   }
@@ -4397,6 +4399,13 @@ function boot() {
       o.x = hx; o.y = hy; o.ang = o.targetAng = oa; o.thinkIn = 1e9; o.grace = 0; o.ab = ''; endFx(o); o.slowEnd = 0; o.wantBoost = false; return o.name;
     },
     deaths: () => deathLog.slice(-6),
+    rammer: (lead, lat, angDeg, wm) => {
+      const o = snakes.find((sn) => sn.kind === 'npc' && !sn.role); if (!o || !player) return 0;
+      o.mass = wm || player.mass; updateSize(o); const n = segCount(o.mass), a = player.ang, oa = a + angDeg * Math.PI / 180;
+      const hx = player.x + Math.cos(a) * lead - Math.sin(a) * lat, hy = player.y + Math.sin(a) * lead + Math.cos(a) * lat;
+      o.segs = []; for (let i = 0; i < n; i++) o.segs.push({ x: hx - Math.cos(oa) * i * o.spacing, y: hy - Math.sin(oa) * i * o.spacing });
+      o.x = hx; o.y = hy; o.ang = o.targetAng = oa; o.thinkIn = 1e9; o.grace = 0; o.ab = ''; endFx(o); o.slowEnd = 0; o.wantBoost = false; return o.name;
+    },
     botAlive: () => snakes.filter((sn) => sn.kind === 'npc').length,
     grow: (m) => { if (player) { player.mass = m; bodyFollow(player); } },
     tp: (x, y) => { if (!player) return false; player.x = x; player.y = y; for (const p of player.segs) { p.x = x; p.y = y; } player.grace = 3; return true; },
