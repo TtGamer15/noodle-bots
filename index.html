@@ -362,7 +362,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 @media (max-height:500px) and (orientation:landscape){#hud{padding-top:max(8px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}.screen{padding-top:max(12px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}}
 @media (max-height:320px) and (orientation:landscape){#hud{padding-top:max(6px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(6px,env(safe-area-inset-bottom,0px))}}
 /* ---------- abilities ---------- */
-@media (min-width:1000px){.modetabs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:1000px){.modetabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .abils{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .abils .opt{min-width:0}
 .abopt span{display:flex;align-items:center;gap:6px;font-weight:600}
@@ -380,6 +380,30 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 @media (max-height:500px) and (orientation:landscape){.btn.abil{padding:5px 10px}#app.abil-on .teach{width:128px}#app.abil-on .teach-sub{display:none}}
 @media (max-width:360px) and (orientation:portrait){.ab-txt b{font-size:12px}.abils{grid-template-columns:repeat(2,minmax(0,1fr))}#app.abil-on .dock .btn{white-space:normal;line-height:1.1;padding:7px 4px;font-size:12px;gap:4px;text-align:center}#app.abil-on #botBtn svg{display:none}}
 @media (prefers-reduced-motion:reduce){.btn.abil.ready{animation:none}}
+/* ---------- spectating ---------- */
+.specbar{justify-self:center;pointer-events:auto;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-radius:18px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);max-width:100%;min-width:0;box-sizing:border-box}
+.spec-txt{min-width:0;display:grid;gap:2px;flex:1}
+.spec-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spec-info{font-size:12px;color:var(--muted)}
+#app.spec .dock{display:none}
+@media (max-width:640px) and (orientation:portrait){.specbar{grid-row:2;justify-self:stretch}}
+/* ---------- quick chat ---------- */
+.chatpop{pointer-events:auto;margin-top:6px;display:flex;flex-wrap:wrap;width:min(300px,calc(100vw - 40px));box-sizing:border-box;gap:6px;padding:8px;border-radius:16px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(8px);justify-self:start;max-width:100%}
+.chatpop button{flex:1 1 auto;appearance:none;border:1px solid var(--line);background:rgba(244,239,254,.08);color:var(--ink);font:600 14px var(--f-body);padding:9px 12px;border-radius:12px;cursor:pointer;touch-action:manipulation;white-space:nowrap}
+.chatpop button:active{transform:translateY(1px)}
+.chatpop button:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
+/* ---------- daily challenges ---------- */
+.daily{border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);background:color-mix(in srgb,var(--accent) 6%,transparent);border-radius:16px;padding:14px;display:grid;gap:10px}
+.daily-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stars{font:700 15px var(--f-num);color:var(--accent);font-variant-numeric:tabular-nums}
+.chal-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.chal-list li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:4px 10px;align-items:center;font-size:14px}
+.chal-list .chk{grid-row:span 2;width:24px;height:24px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;font:700 12px var(--f-num);color:var(--muted)}
+.chal-list li.done .chk{background:var(--accent);border-color:transparent;color:var(--accent-ink)}
+.chal-list li.done .ct{color:var(--muted);text-decoration:line-through}
+.chal-list .cp{font:500 12px var(--f-num);color:var(--muted);font-variant-numeric:tabular-nums}
+.chal-list .meter{grid-column:2 / 4}
+.chal-list .meter > div{background:var(--accent)}
 /* ---------- piece-by-piece builder ---------- */
 .build-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .pieces{display:flex;flex-wrap:wrap;gap:5px;min-height:30px;align-items:center;padding:8px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
@@ -401,7 +425,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <p class="big" id="lenVal">0</p>
       <p class="sub"><span id="rankVal">Rank –</span><span class="chip" id="driverChip">You</span></p>
       <p class="iqline"><span class="iqbar" aria-hidden="true"><i id="iqFill"></i></span><span id="iqVal">Bot smarts 10%</span><span id="genVal"></span></p>
-      <div class="roomchip" id="roomChip"><span id="roomText">Solo</span><button class="chipbtn icon" id="inviteBtn" type="button" hidden aria-label="Invite friends" title="Invite friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M19 8v6"/><path d="M16 11h6"/></svg></button><button class="chipbtn icon" id="muteBtn" type="button" aria-pressed="true" aria-label="Sound effects" title="Sound effects (M)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg></button><button class="chipbtn icon" id="musicBtn" type="button" aria-pressed="true" aria-label="Calm music" title="Calm music (N)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg></button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
+      <div class="roomchip" id="roomChip"><span id="roomText">Solo</span><button class="chipbtn icon" id="inviteBtn" type="button" hidden aria-label="Invite friends" title="Invite friends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M19 8v6"/><path d="M16 11h6"/></svg></button><button class="chipbtn icon" id="chatBtn" type="button" hidden aria-label="Quick chat" aria-expanded="false" title="Quick chat (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg></button><button class="chipbtn icon" id="muteBtn" type="button" aria-pressed="true" aria-label="Sound effects" title="Sound effects (M)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></svg></button><button class="chipbtn icon" id="musicBtn" type="button" aria-pressed="true" aria-label="Calm music" title="Calm music (N)"><svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg><svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/><path d="M3 3l18 18"/></svg></button><button class="chipbtn" id="exitBtn" type="button">Exit</button></div>
+      <div class="chatpop" id="chatPop" hidden role="group" aria-label="Quick chat"></div>
     </div>
     <div class="board"><p class="lbl">Biggest noodles</p><ol id="boardList"></ol></div>
     <div class="midstack">
@@ -433,6 +458,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         </button>
         <label class="switch" for="dockAuto"><input type="checkbox" id="dockAuto"><span class="track"></span><span>Auto when away</span></label>
       </div>
+      <div class="specbar" id="specBar" hidden><div class="spec-txt"><p class="lbl">Watching</p><p class="spec-name" id="specName">–</p><p class="spec-info" id="specInfo"></p></div><button class="btn small" id="specNext" type="button">Next</button><button class="btn primary small" id="specRespawn" type="button">Respawn</button></div>
       <canvas id="minimap" aria-hidden="true"></canvas>
     </div>
   </div>
@@ -459,6 +485,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
           <button type="button" class="modetab" data-mode="ctl" aria-pressed="false">Capture the Leader</button>
           <button type="button" class="modetab" data-mode="tag" aria-pressed="false">Tag</button>
           <button type="button" class="modetab" data-mode="abil" aria-pressed="false">Abilities</button>
+          <button type="button" class="modetab" data-mode="br" aria-pressed="false">Shrinking Arena</button>
+          <button type="button" class="modetab" data-mode="bb" aria-pressed="false">Bot Battle</button>
         </div>
         <p class="modeinfo" id="modeInfo"></p>
         <div class="optrow" id="optCtl" hidden><span class="lbl">Teams</span><button type="button" class="opt" data-ctl="1">1v1</button><button type="button" class="opt" data-ctl="2">2v2</button><button type="button" class="opt" data-ctl="3">3v3</button></div>
@@ -466,6 +494,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <div class="abils" id="optAbil" hidden role="group" aria-label="Your power"></div>
         <p class="modeinfo" id="abilInfo" hidden></p>
         <div class="optrow" id="optTag" hidden><button type="button" class="opt" data-tag="1v1">1v1<small>Pass It on</small></button><button type="button" class="opt" data-tag="run">Run<small>You vs 3 hunters</small></button><button type="button" class="opt" data-tag="hunt">Hunt<small>You + 2 bots vs 1</small></button></div>
+        <div class="optrow" id="optBots" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-bots="1">1</button><button type="button" class="opt" data-bots="3">3</button><button type="button" class="opt" data-bots="6">6</button><button type="button" class="opt" data-bots="9">9</button></div>
         <div class="optrow" id="optDiff" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-diff="easy">Easy</button><button type="button" class="opt" data-diff="normal">Normal</button><button type="button" class="opt" data-diff="hard">Hard</button></div>
       </div>
       <div class="play-row">
@@ -480,6 +509,11 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       </ol>
       </div>
       <div class="col">
+      <div class="daily" id="dailyCard">
+        <div class="daily-head"><p class="lbl">Daily challenges</p><span class="stars" id="starCount">0 ⭐</span></div>
+        <ul class="chal-list" id="chalList"></ul>
+        <p class="bc-line" id="dailyNext"></p>
+      </div>
       <div class="botcard">
         <div class="botcard-head">
           <span class="botface"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg></span>
@@ -631,6 +665,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <p class="tip" id="deathTip"></p>
       <div class="row">
         <button class="btn primary" id="againBtn" type="button">Play again</button>
+        <button class="btn" id="deathWatchBtn" type="button">Watch others</button>
         <button class="btn" id="deathTrainBtn" type="button">Train my bot</button>
         <button class="btn" id="deathMenuBtn" type="button">Menu</button>
       </div>
@@ -677,7 +712,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.1';
+const GAME_VERSION = '2.2';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -691,12 +726,16 @@ const CUSTOM_PAT = 6, SKIN_MAX = 20;
 const EYES = [
   { id: 'classic', name: 'Classic' }, { id: 'sleepy', name: 'Sleepy' }, { id: 'angry', name: 'Grumpy' }, { id: 'googly', name: 'Googly' },
   { id: 'shades', name: 'Shades', lock: { type: 'games', v: 10, text: 'Play 10 games' } },
+  { id: 'starry', name: 'Star eyes', lock: { type: 'stars', v: 25, text: 'Get 25 ⭐' } },
 ];
 const HATS = [
   { id: 'none', name: 'None' }, { id: 'party', name: 'Party hat' }, { id: 'cap', name: 'Cap' }, { id: 'flower', name: 'Flower' },
   { id: 'crown', name: 'Crown', lock: { type: 'best', v: 1000, text: 'Reach length 1,000' } },
   { id: 'horns', name: 'Horns', lock: { type: 'kills', v: 5, text: 'Take out 5 snakes' } },
   { id: 'halo', name: 'Halo', lock: { type: 'botBest', v: 500, text: 'Bot reaches 500' } },
+  { id: 'wizard', name: 'Wizard hat', lock: { type: 'stars', v: 3, text: 'Get 3 ⭐' } },
+  { id: 'phones', name: 'Headphones', lock: { type: 'stars', v: 8, text: 'Get 8 ⭐' } },
+  { id: 'bunny', name: 'Bunny ears', lock: { type: 'stars', v: 15, text: 'Get 15 ⭐' } },
 ];
 const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [10000, 'Arena Shark'], [20000, 'Mega Noodle'], [40000, 'Legend'], [80000, 'Your Twin']];
 
@@ -753,7 +792,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump' } };
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
 
@@ -763,7 +802,7 @@ function applyProfileData(p) {
   for (const k of ['auto', 'reflex', 'sound', 'music']) if (typeof p[k] === 'boolean') profile[k] = p[k];
   if (p.modeSel && typeof p.modeSel === 'object') {
     const ms = p.modeSel;
-    profile.modeSel = { m: ['classic', 'ctl', 'tag', 'abil'].includes(ms.m) ? ms.m : 'classic', ctl: clamp(int(ms.ctl, 1), 1, 3), tag: ['1v1', 'run', 'hunt'].includes(ms.tag) ? ms.tag : '1v1', diff: ['easy', 'normal', 'hard'].includes(ms.diff) ? ms.diff : 'normal',
+    profile.modeSel = { m: ['classic', 'ctl', 'tag', 'abil', 'br', 'bb'].includes(ms.m) ? ms.m : 'classic', bots: [1, 3, 6, 9].includes(ms.bots) ? ms.bots : 3, ctl: clamp(int(ms.ctl, 1), 1, 3), tag: ['1v1', 'run', 'hunt'].includes(ms.tag) ? ms.tag : '1v1', diff: ['easy', 'normal', 'hard'].includes(ms.diff) ? ms.diff : 'normal',
       base: ms.base === 'tag' ? 'tag' : 'classic', ab: typeof ms.ab === 'string' && Object.prototype.hasOwnProperty.call(ABIL, ms.ab) ? ms.ab : 'jump' };
   }
   if (typeof p.volume === 'number' && isFinite(p.volume)) profile.volume = clamp(p.volume, 0, 1);
@@ -777,6 +816,12 @@ function applyProfileData(p) {
     .filter((e) => e && Array.isArray(e.g) && e.g.length === GENES.length && e.g.every((v) => typeof v === 'number' && isFinite(v)) && typeof e.f === 'number' && isFinite(e.f))
     .map((e) => ({ g: e.g.map((v, i) => clamp(v, GENES[i][0], GENES[i][1])), f: clamp(e.f, 0, 1e7) }));
   if (typeof p.npcGen === 'number' && isFinite(p.npcGen)) profile.npcGen = clamp(Math.floor(p.npcGen), 0, 1e9);
+  if (typeof p.stars === 'number' && isFinite(p.stars)) profile.stars = clamp(Math.floor(p.stars), 0, 1e6);
+  if (p.daily && typeof p.daily === 'object' && typeof p.daily.day === 'string' && Array.isArray(p.daily.list)) {
+    const list = p.daily.list.slice(0, 3).filter((c) => c && CHAL[c.id] && typeof c.n === 'number' && typeof c.p === 'number')
+      .map((c) => ({ id: c.id, n: clamp(Math.floor(c.n), 1, 1e6), p: clamp(Math.floor(c.p), 0, 1e6), done: !!c.done }));
+    if (list.length === 3) profile.daily = { day: p.daily.day.slice(0, 10), list, bonus: !!p.daily.bonus };
+  }
 }
 let saveTimer = 0;
 function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => save(false), 500); }
@@ -823,11 +868,71 @@ function isUnlocked(item) {
   if (L.type === 'best') return profile.bestYou >= L.v;
   if (L.type === 'kills') return profile.kills >= L.v;
   if (L.type === 'botBest') return profile.bestBot >= L.v;
+  if (L.type === 'stars') return (profile.stars || 0) >= L.v;
   return false;
 }
 let unlockedKeys = null;
 function unlockSnapshot() { const s = new Set(); for (const [arr, tag] of [[PATTERNS, 'p'], [EYES, 'e'], [HATS, 'h']]) arr.forEach((it, i) => { if (isUnlocked(it)) s.add(tag + i); }); return s; }
-function creditKill(name) { profile.kills++; toast(`You took out ${name}`); SFX.kill(); checkUnlocks(); }
+function creditKill(name) { profile.kills++; toast(`You took out ${name}`); SFX.kill(); checkUnlocks(); chal('kill'); }
+/* ---------- daily challenges: three a day, each worth a star ---------- */
+const CHAL = {
+  eat: { g: 0, n: [150, 300], text: (n) => `Eat ${fmt(n)} snacks` },
+  len: { g: 0, n: [800, 1500], text: (n) => `Reach length ${fmt(n)} in one game` },
+  surv: { g: 0, n: [90, 180], text: (n) => `Stay alive ${n >= 120 ? n / 60 + ' minutes' : n + ' seconds'} in one game` },
+  nob: { g: 1, n: [500, 900], text: (n) => `Reach length ${fmt(n)} without boosting` },
+  kill: { g: 1, n: [2, 4], text: (n) => `Take out ${n} snakes` },
+  train: { g: 1, n: [1, 1], text: () => 'Train your bot' },
+  power: { g: 1, n: [3, 5], text: (n) => `Use your power ${n} times in Abilities` },
+  tag: { g: 2, n: [1, 1], text: () => 'Win a round of Tag' },
+  ctl: { g: 2, n: [1, 1], text: () => 'Win a game of Capture the Leader' },
+  br: { g: 2, n: [1, 1], text: () => 'Finish top 3 in Shrinking Arena' },
+  bb: { g: 2, n: [1, 1], text: () => 'Win a Bot Battle round' },
+  friends: { g: 2, n: [1, 1], text: () => 'Play a game with friends' },
+};
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function ensureDaily() {
+  const day = dayKey();
+  if (profile.daily && profile.daily.day === day) return;
+  let sd = 0; for (const ch of day) sd = (Math.imul(sd, 31) + ch.charCodeAt(0)) | 0;
+  const rnd = rng(sd), list = [];
+  for (let g = 0; g < 3; g++) {
+    const ids = Object.keys(CHAL).filter((id) => CHAL[id].g === g), id = ids[Math.floor(rnd() * ids.length)], C = CHAL[id];
+    list.push({ id, n: C.n[Math.floor(rnd() * 2)], p: 0, done: false });
+  }
+  profile.daily = { day, list, bonus: false };
+}
+function chalSet(id, v, add) {
+  if (!profile.daily) return;
+  if (profile.daily.day !== dayKey()) { ensureDaily(); updateDailyCard(); }
+  for (const c of profile.daily.list) {
+    if (c.id !== id || c.done) continue;
+    c.p = Math.min(c.n, add ? c.p + v : Math.max(c.p, Math.floor(v)));
+    if (c.p >= c.n) {
+      c.done = true; profile.stars = (profile.stars || 0) + 1; SFX.unlock();
+      toast(`Challenge done: ${CHAL[c.id].text(c.n)}! +1 ⭐`);
+      if (!profile.daily.bonus && profile.daily.list.every((x) => x.done)) { profile.daily.bonus = true; profile.stars += 2; setTimeout(() => toast('All 3 daily challenges done! +2 bonus ⭐'), 2900); }
+      save(false); checkUnlocks(); updateDailyCard();
+    }
+  }
+}
+const chal = (id, n = 1) => chalSet(id, n, true);
+const chalMax = (id, v) => chalSet(id, v, false);
+function updateDailyCard() {
+  ensureDaily();
+  const ul = $('chalList'); if (!ul) return; ul.textContent = '';
+  profile.daily.list.forEach((c, i) => {
+    const li = document.createElement('li'); if (c.done) li.classList.add('done');
+    const k = document.createElement('span'); k.className = 'chk'; k.textContent = c.done ? '✓' : String(i + 1);
+    const t = document.createElement('span'); t.className = 'ct'; t.textContent = CHAL[c.id].text(c.n);
+    const p = document.createElement('span'); p.className = 'cp'; p.textContent = c.done ? '⭐' : `${fmt(c.p)}/${fmt(c.n)}`;
+    const m = document.createElement('div'); m.className = 'meter small'; const f = document.createElement('div'); f.style.width = Math.round(c.p / c.n * 100) + '%'; m.append(f);
+    li.append(k, t, p, m); ul.append(li);
+  });
+  $('starCount').textContent = `${fmt(profile.stars || 0)} ⭐`;
+  const next = [...HATS, ...EYES].filter((it) => it.lock && it.lock.type === 'stars' && (profile.stars || 0) < it.lock.v).sort((a, b) => a.lock.v - b.lock.v)[0];
+  const end = new Date(); end.setHours(24, 0, 0, 0); const mins = Math.max(1, Math.round((end - new Date()) / 60000));
+  $('dailyNext').textContent = `${next ? `Next unlock: ${next.name} at ${next.lock.v} ⭐. ` : 'You unlocked every star prize! '}New challenges in ${mins >= 60 ? Math.floor(mins / 60) + 'h ' : ''}${mins % 60}m.`;
+}
 function checkUnlocks() {
   const now = unlockSnapshot();
   if (unlockedKeys) for (const k of now) if (!unlockedKeys.has(k)) {
@@ -996,7 +1101,7 @@ function finishTraining() {
   const last = j.accs[j.accs.length - 1] || { exact: 0, near: 0 };
   profile.practice += Math.max(1, j.newAtStart); newSince = Math.max(0, newSince - j.newAtStart);
   profile.acc = last.exact; profile.near = last.near; profile.sessions++;
-  lastJob = j; SFX.trainDone(); save(); checkUnlocks(); updateDock(); updateBotCard(); updateMenuButtons();
+  lastJob = j; SFX.trainDone(); save(); checkUnlocks(); updateDock(); updateBotCard(); updateMenuButtons(); chal('train');
   if (!$('train').hidden) showTrainResult(); else toast(`Training done. Your bot picks your move ${Math.round(last.exact * 100)}% of the time.`);
 }
 let lastJob = null;
@@ -1429,7 +1534,7 @@ function eatAround(s, dt) {
     const fi = qbuf[q], f = foodAt(fi); if (!f || f.eaten) continue;
     const dx = s.x - f.x, dy = s.y - f.y, d = Math.sqrt(dx * dx + dy * dy);
     if (d < s.r + f.r + 6) {
-      if (match.m !== 'tag') s.mass += f.v; if (s === player) SFX.eat(f.v);
+      if (match.m !== 'tag') s.mass += f.v; if (s === player) { SFX.eat(f.v); if (!botDriving) chal('eat'); }
       if (s.ab && !s.fx) s.charge = Math.min(ABIL[s.ab].cost, s.charge + f.v * 10);
       if (fi < MAX_SLOTS) { if (gameKind === 'online') logEat(fi * 1000 + (slotGen[fi] % 1000)); slotGen[fi]++; setSlot(fi); }
       else { f.eaten = true; if (gameKind === 'online' && f.id) { logEat(f.id); eatenDrops.set(f.id, performance.now()); } }
@@ -1540,7 +1645,7 @@ function useAbility(s, now) {
     if (gameKind === 'online') online.fzOut.push({ id: myKey().slice(0, 6) + '.' + (++fzSeq), x: Math.round(s.x), y: Math.round(s.y), it: s.it ? 1 : 0, t: now });
     if (s === player) toast(n ? `Froze ${n} snake${n === 1 ? '' : 's'}!` : 'Freeze! Nobody was close enough this time.');
   }
-  if (s === player) { abilStats.me++; SFX.power(s.ab); }
+  if (s === player) { abilStats.me++; SFX.power(s.ab); chal('power'); }
   else { abilStats.bot++; if (player && player.alive && mode === 'play' && Math.hypot(s.x - player.x, s.y - player.y) < 800) SFX.power(s.ab, true); }
   return true;
 }
@@ -1630,15 +1735,19 @@ const TAG_TUNE = { runnerSpd: 1.08, hunterSpd: 1, runnerRegen: 0.2, time: 90, he
   huntSpd: { easy: 0.93, normal: 1.0, hard: 1.03 }, flank: { easy: 0, normal: 0.8, hard: 0.9 } };
 const DIFF_IQ = { easy: 0.35, normal: 0.62, hard: 0.92 };
 const CTL_R = [0, 2000, 2400, 2800], CTL_MINIS = 10, LEADER_MASS = 450, GUARD_MASS = 70, MINI_MASS = 36, TAG_MASS = 50, CAPTURE_AT = 3;
-const ROLE_CODE = { L: 1, G: 2, M: 3, P: 4 }, CODE_ROLE = ['', 'L', 'G', 'M', 'P'];
+const ROLE_CODE = { L: 1, G: 2, M: 3, P: 4, B: 5, W: 6 }, CODE_ROLE = ['', 'L', 'G', 'M', 'P', 'B', 'W'];
+// Shrinking Arena: the edge closes in after a short head start; no respawns; last snake alive wins.
+const BR = { grace: 8, shrink: 140, end: 190, Rmin: 360, mass: 40 };
 const MODE_INFO = {
   classic: 'Eat, grow and dodge. Your bot learns by watching how you play.',
   ctl: 'Red vs Blue. Each Leader is big and guarded by 10 mini bots that drive like the bot you trained. A Leader respawns while their team has 3+ minis. Catch one with fewer than 3 and your team wins.',
   tag: 'Nobody dies here. Whoever is It glows red: touch someone with your head to tag them. Boost runs on stamina, so save it for close calls.',
   abil: 'Pick a power, then play Classic or Tag. Eating snacks and staying alive fill up your bits. When they are full, press E or tap the power button to use it. Bots get powers too!',
+  br: "Everyone against everyone while the edge of the arena closes in. There are no respawns: crash once and you're out. Last snake alive wins the round.",
+  bb: "Your trained bot fights on its own against other bots (and your friends' bots online) while the edge closes in. No respawns. Last bot alive wins, so train it well!",
 };
 let match = { m: 'classic' };
-const inModes = () => match.m === 'ctl' || match.m === 'tag';
+const inModes = () => match.m === 'ctl' || match.m === 'tag' || match.m === 'br';
 const isRef = () => gameKind === 'solo' || online.isHost;
 const myKey = () => (gameKind === 'online' && online.myPeer ? online.myPeer : 'me');
 function keyOf(s) { if (!s) return ''; if (s.kind === 'player') return myKey(); if (s.kind === 'remote') return s.peer; return 'b' + s.npcId; }
@@ -1646,6 +1755,7 @@ function friendly(a, b) { return match.m === 'ctl' && !!b && a.team >= 0 && a.te
 const fmtTime = (sec) => { sec = Math.max(0, Math.ceil(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; };
 function modeName(m) {
   const plus = (m.m === 'ctl' || m.m === 'tag' ? m.ab : abilClassic) ? ' + Abilities' : '';
+  if (m.m === 'br') return m.bot ? 'Bot Battle' : 'Shrinking Arena';
   if (m.m === 'ctl') return `Capture the Leader ${m.sz}v${m.sz}${plus}`;
   if (m.m === 'tag') return (m.v === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one') + plus;
   return 'Classic' + plus;
@@ -1653,10 +1763,11 @@ function modeName(m) {
 function newMatchCfg() {
   const ms = profile.modeSel;
   if (ms.m === 'abil') return ms.base === 'tag' ? { m: 'tag', sz: 1, v: ms.tag, df: ms.diff, ab: 1 } : { m: 'classic', ab: 1 };
+  if (ms.m === 'br' || ms.m === 'bb') return { m: 'br', sz: ms.bots, df: ms.diff, bot: ms.m === 'bb' ? 1 : 0 };
   return { m: ms.m, sz: ms.ctl, v: ms.tag, df: ms.diff };
 }
-function cfgOf(m) { return { m: m.m, sz: m.sz, v: m.v, df: m.df, ab: m.ab ? 1 : 0 }; }
-function arenaFor(m) { return m.m === 'ctl' ? CTL_R[clamp(m.sz, 1, 3)] : m.v === '1v1' ? 1300 : TAG_TUNE.arena; }
+function cfgOf(m) { return { m: m.m, sz: m.sz, v: m.v, df: m.df, ab: m.ab ? 1 : 0, bot: m.bot ? 1 : 0 }; }
+function arenaFor(m) { if (m.m === 'br') return m.R0 || 2000; return m.m === 'ctl' ? CTL_R[clamp(m.sz, 1, 3)] : m.v === '1v1' ? 1300 : TAG_TUNE.arena; }
 function foodFor(R) { return Math.min(MAX_SLOTS - 50, Math.round(SOLO_FOOD * (R / SOLO_R) ** 2)); }
 function setArena(R, food) { worldR = worldTargetR = R; activeSlots = food; for (let i = 0; i < MAX_SLOTS; i++) { const sl = slots[i]; sl.x = sl.ux * worldR; sl.y = sl.uy * worldR; } }
 function miniLook(t) { return { c1: TEAMS[t].pal, c2: TEAMS[t].pal2, pat: 2, eye: 0, hat: 0 }; }
@@ -1681,12 +1792,14 @@ function spawnModeBot(o) {
     const b = match.bases[t], a = o.role === 'M' ? (o.idx / CTL_MINIS) * TAU : Math.random() * TAU, rr = o.role === 'M' ? 190 + Math.random() * 50 : o.role === 'L' ? 20 : 150;
     pos = [b[0] + Math.cos(a) * rr, b[1] + Math.sin(a) * rr]; ang = Math.atan2(-b[1], -b[0]) + rand(-0.6, 0.6);
     mass = o.role === 'L' ? LEADER_MASS : o.role === 'G' ? GUARD_MASS : MINI_MASS;
-  } else { pos = o.pos || tagSpot(); ang = Math.random() * TAU; mass = TAG_MASS; }
+  } else if (match.m === 'br') { pos = o.pos || tagSpot(); ang = Math.atan2(-pos[1], -pos[0]); mass = BR.mass; }
+  else { pos = o.pos || tagSpot(); ang = Math.random() * TAU; mass = TAG_MASS; }
   let ni = 0, name = '', look;
   if (o.role === 'M') look = miniLook(t);
   else { ni = o.ni !== undefined ? o.ni : pickName(); name = NPC_NAMES[ni]; look = o.look || randomLook(); }
   const sn = makeSnake({ kind: 'npc', name, nameIdx: ni, look, mass, pos, ang, npc: newNpcMind(), npcId: npcIdNext++ });
   sn.team = t; sn.role = o.role; sn.orbit = Math.random() * TAU; sn.thinkIn = Math.floor(Math.random() * 4); sn.grace = 1; sn.stam = 1; sn.spd = o.spd || 1;
+  if (match.m === 'br' && match.names) match.names['b' + sn.npcId] = sn.name;
   snakes.push(sn); return sn;
 }
 function humanKeys() {
@@ -1702,17 +1815,18 @@ function orderedHumans(prevTm) {
 }
 function startMatch(cfg) {
   const now = performance.now(), old = match;
-  const m = cfg.m === 'tag' ? 'tag' : 'ctl';
-  match = { m, sz: clamp(int(cfg.sz, 1), 1, 3), v: ['1v1', 'run', 'hunt', 'evo'].includes(cfg.v) ? cfg.v : '1v1', df: DIFF_IQ[cfg.df] ? cfg.df : 'normal',
+  const m = cfg.m === 'tag' ? 'tag' : cfg.m === 'br' ? 'br' : 'ctl';
+  match = { m, sz: m === 'br' ? clamp(int(cfg.sz, 3), 0, 9) : clamp(int(cfg.sz, 1), 1, 3), bot: m === 'br' && !!cfg.bot, out: new Set(), order: [], names: {}, wins: m === 'br' && old.m === 'br' && old.wins ? old.wins : {}, v: ['1v1', 'run', 'hunt', 'evo'].includes(cfg.v) ? cfg.v : '1v1', df: DIFF_IQ[cfg.df] ? cfg.df : 'normal',
     mid: (Math.random() * 2147483647) | 0, round: (old.round || 0) + 1, st: 'play', win: null, why: '', sd: false, tm: {}, it: new Set(), mc: [0, 0], nb: null,
     queue: [], overAt: 0, runner: '', myRespawnAt: 0, itTime: 0, made: 0, wasIt: false, started: now, ab: !!cfg.ab };
   if (gameKind === 'online' && m === 'tag' && match.v !== '1v1') match.v = 'evo';
+  const humans = gameKind === 'solo' ? ['me'] : orderedHumans(old.tm);
+  if (m === 'br') { if (humans.length + match.sz < 2) match.sz = 2 - humans.length; match.R0 = clamp(1100 + 110 * (humans.length + match.sz), 1400, 2600); }
   const R = arenaFor(match); match.bases = [[-R * 0.6, 0], [R * 0.6, 0]];
-  match.tEnd = now + 1000 * (m === 'ctl' ? 300 : match.v === '1v1' ? 120 : TAG_TUNE.time); match.tl = (match.tEnd - now) / 1000;
+  match.tEnd = now + 1000 * (m === 'ctl' ? 300 : m === 'br' ? BR.end : match.v === '1v1' ? 120 : TAG_TUNE.time); match.tl = (match.tEnd - now) / 1000;
   if (gameKind === 'solo') setupWorld((Math.random() * 4294967296) >>> 0, R, foodFor(R));
   else { snakes = snakes.filter((sn) => sn.kind === 'remote'); player = null; drops = []; setArena(R, foodFor(R)); }
-  const humans = gameKind === 'solo' ? ['me'] : orderedHumans(old.tm);
-  if (m === 'ctl') setupCtl(humans); else setupTag(humans);
+  if (m === 'ctl') setupCtl(humans); else if (m === 'br') setupBr(humans); else setupTag(humans);
   placeLocal();
   toast(roleIntro());
 }
@@ -1728,6 +1842,47 @@ function setupCtl(humans) {
   }
   countMinis();
 }
+function setupBr(humans) {
+  match.slotN = humans.length + match.sz; match.slotOff = Math.random() * TAU;
+  humans.forEach((k, i) => { match.tm[k] = [-1, 'P', i]; match.names[k] = k === myKey() ? cleanName(profile.name) : (online.remotes.get(k) || {}).name || 'A friend'; });
+  for (let j = 0; j < match.sz; j++) spawnModeBot({ role: 'B', pos: brSpot(humans.length + j) });
+}
+function brSpot(i) { const a = (match.slotOff || 0) + i / Math.max(1, match.slotN || 1) * TAU, r = (match.R0 || 2000) * 0.62; return [Math.cos(a) * r, Math.sin(a) * r]; }
+// Keys of everyone still in this round.
+function brLeft() {
+  const keys = [];
+  for (const k of Object.keys(match.tm)) if (match.tm[k][1] === 'P' && !match.out.has(k)) keys.push(k);
+  for (const sn of snakes) if (sn.kind === 'npc' && sn.role === 'B' && sn.alive) keys.push(keyOf(sn));
+  return keys;
+}
+// What this screen can see: snakes still in the round.
+function brAliveHere() { let n = 0; for (const sn of snakes) if (sn.alive && (sn.role === 'B' || sn.role === 'P')) n++; return n; }
+function brName(k) { return (match.names && match.names[k]) || 'Someone'; }
+function brOut(k) {
+  if (match.m !== 'br' || match.st !== 'play' || match.out.has(k)) return;
+  match.out.add(k); match.order.push(k); brCheck();
+}
+function brCheck() {
+  if (match.m !== 'br' || match.st !== 'play') return;
+  const left = brLeft();
+  if (left.length <= 1) brWin(left[0] || match.order[match.order.length - 1] || '', 'last');
+}
+function brWin(k, how) {
+  match.wins[k] = (match.wins[k] || 0) + 1;
+  const human = !String(k).startsWith('b'), nm = brName(k) + (match.bot && human ? "'s bot" : '');
+  endMatch(k, how === 'time' ? `Time's up! ${nm} was the biggest snake left.` : `${nm} is the last snake standing!`);
+}
+function onBrPlayerDeath(killer) {
+  botDriving = false; updateBanner(); SFX.death(); setBoostSound(false);
+  lastKiller = killer === 'edge' ? 'edge' : killer && killer.kind === 'remote' ? killer.peer : killer && (killer.kind === 'rnpc' || killer.kind === 'npc') ? 'n' + killer.npcId : null;
+  match.myPlace = brAliveHere() + 1;
+  if (isRef()) brOut(myKey());
+  if (match.st === 'play') {
+    toast(match.bot ? `Your bot is out (${ordinal(match.myPlace)} place). Watching the rest…` : `You're out in ${ordinal(match.myPlace)} place! Watching the rest…`);
+    setTimeout(() => { if (match.st === 'play' && (!player || !player.alive) && mode === 'play') startSpectate(); }, 1200);
+  }
+}
+const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
 function setupTag(humans) {
   for (const k of humans) match.tm[k] = [-1, 'P'];
   if (match.v === '1v1') {
@@ -1760,8 +1915,18 @@ function placeLocal() {
     if (!match.waitToast) { match.waitToast = true; toast('Joining a team…'); }
     return;
   }
+  if (match.m === 'br' && (!tr || tr[1] !== 'P' || match.out.has(k) || match.st !== 'play')) {
+    // Late for this round (or already out): watch until the next one starts.
+    if (!tr && gameKind === 'online' && match.st === 'play') match.myRespawnAt = performance.now() + 500;
+    player = null; mode = 'play'; showScreen(null); startSpectate();
+    if (!match.lateToast) { match.lateToast = true; toast('This round already started. Watching until the next one!'); }
+    return;
+  }
+  stopSpectate();
   let pos, ang, mass;
-  if (match.m === 'ctl') {
+  if (match.m === 'br') {
+    pos = brSpot(tr[2] || 0); ang = Math.atan2(-pos[1], -pos[0]); mass = BR.mass;
+  } else if (match.m === 'ctl') {
     const t = tr ? tr[0] : 0, b = match.bases[t];
     pos = [b[0] + rand(-90, 90), b[1] + rand(-90, 90)]; ang = Math.atan2(-b[1], -b[0]); mass = tr && tr[1] === 'L' ? LEADER_MASS : GUARD_MASS;
   } else {
@@ -1776,7 +1941,8 @@ function placeLocal() {
   if (match.m === 'tag' && match.v !== '1v1') { if (match.runner === k) { player.spd = TAG_TUNE.runnerSpd; player.runner = true; } else player.spd = TAG_TUNE.hunterSpd; }
   snakes.push(player); cam.x = player.x; cam.y = player.y;
   mode = 'play'; showScreen(null); botDriving = false; botWatch = false; input.last = performance.now(); match.myRespawnAt = 0;
-  run = { max: 0, time: 0 }; lastKiller = null;
+  run = { max: 0, time: 0, boosted: false }; lastKiller = null; match.myPlace = 0;
+  if (match.m === 'br' && match.bot) { botDriving = true; player.bot = true; botReason = 'battle'; botP.fill(1 / NB); $('bannerText').textContent = botReady() ? 'Bot Battle: your bot is driving' : 'Bot Battle: your bot is not trained yet, so a beginner bot drives'; }
   syncRoles(); match.wasIt = player.it;
   updateBanner(); updateDock(); updateRoomChip(); boardTick = 0; SFX.spawn();
 }
@@ -1789,6 +1955,10 @@ function syncRoles() {
 }
 function roleIntro() {
   const k = myKey(), tr = match.tm[k];
+  if (match.m === 'br') {
+    if (!tr || tr[1] !== 'P') return 'Watching until the next round starts.';
+    return match.bot ? (botReady() ? 'Bot Battle! Your bot drives. Cheer it on!' : "Bot Battle! Your bot isn't trained yet, so a beginner bot drives for you.") : 'Last snake alive wins. Watch out, the edge is closing in!';
+  }
   if (match.m === 'ctl') { const t = tr ? TEAMS[tr[0]].name : 'your'; return tr && tr[1] === 'L' ? `You lead the ${t} team. Keep your minis alive!` : `You guard the ${t} team's Leader.`; }
   if (match.v === '1v1') return match.it.has(k) ? "You're It! Tag them with your head." : 'Run! Whoever is It glows red.';
   return match.it.has(k) ? 'Hunt the runner down before time runs out!' : 'Run! Survive until the clock hits zero.';
@@ -1807,6 +1977,7 @@ function leaderDown(t) {
   if (match.sd || match.mc[t] < CAPTURE_AT) endMatch(1 - t, `${TEAMS[t].name}'s Leader was captured${match.sd ? ' in sudden death' : ` with only ${match.mc[t]} mini${match.mc[t] === 1 ? '' : 's'} left`}.`);
 }
 function onModeBotDeath(sn) {
+  if (match.m === 'br') { if (match.st === 'play') { match.order.push(keyOf(sn)); brCheck(); } return; }
   if (match.st !== 'play' || match.m !== 'ctl') return;
   if (sn.role === 'G') match.queue.push({ at: performance.now() + 3000, team: sn.team, role: 'G', ni: sn.nameIdx, look: sn.look });
   else if (sn.role === 'L') {
@@ -1857,6 +2028,16 @@ function modeTick(dt, now) {
       countMinis();
       if (match.tl <= 0 && !match.sd) { match.sd = true; toast("Sudden death! Leaders can't respawn anymore."); }
       for (let i = match.queue.length - 1; i >= 0; i--) if (now >= match.queue[i].at) { spawnModeBot(match.queue[i]); match.queue.splice(i, 1); }
+    } else if (match.m === 'br') {
+      const el = (now - match.started) / 1000, p = clamp((el - BR.grace) / BR.shrink, 0, 1);
+      worldTargetR = match.R0 + (BR.Rmin - match.R0) * p;
+      if (frame % 15 === 0) brCheck();
+      if (match.st === 'play' && match.tl <= 0) {
+        // Time's up: the biggest snake still in wins.
+        let best = '', bm = -1;
+        for (const k of brLeft()) { const sn = k === myKey() ? player : k.startsWith('b') ? snakes.find((x) => keyOf(x) === k) : (online.remotes.get(k) || {}).snake; if (sn && sn.alive && sn.mass > bm) { bm = sn.mass; best = k; } }
+        brWin(best, 'time');
+      }
     } else {
       if (frame % 2 === 0) checkTags(now);
       if (match.st === 'play' && match.tl <= 0) {
@@ -1896,6 +2077,7 @@ function nearestRunner(sn) {
   return best;
 }
 function modeThink(sn) {
+  if (match.m === 'br') { npcThink(sn); return; }
   const iq = match.m === 'tag' && match.v !== '1v1' && sn.it ? npcIQ * TAG_TUNE.hunterIq : npcIQ;
   if (sn.orbit === undefined) sn.orbit = Math.random() * TAU;
   let tx = sn.x + Math.cos(sn.ang) * 200, ty = sn.y + Math.sin(sn.ang) * 200, wt = 0.4, food = 0.8, boost = false, dangerMul = 1, brainRef = null, hint = null;
@@ -2003,13 +2185,19 @@ function setPips(el, n) {
   [...el.children].forEach((d, i) => d.classList.toggle('on', i < n));
 }
 function updateModeBar() {
-  const on = inModes() && mode === 'play';
+  const on = inModes() && (mode === 'play' || mode === 'spec');
   app.classList.toggle('mode-on', inModes()); app.classList.toggle('tag-on', match.m === 'tag');
   $('modeBar').hidden = !on; if (!on) return;
   const tEl = $('mbTime');
   tEl.textContent = match.m === 'ctl' && match.sd ? 'Sudden death' : fmtTime(match.tl); tEl.classList.toggle('sd', match.m === 'ctl' && !!match.sd);
   const roleEl = $('mbRole'), me = player;
   $('mbStam').hidden = match.m !== 'tag';
+  if (match.m === 'br') {
+    $('mbRedWrap').hidden = $('mbBlueWrap').hidden = true; roleEl.classList.remove('it');
+    const left = brAliveHere(), closing = worldTargetR < worldR - 1 || (match.started && performance.now() - match.started > BR.grace * 1000 && worldR > BR.Rmin + 5);
+    roleEl.textContent = `${left} snake${left === 1 ? '' : 's'} left${closing ? ' · edge closing in' : ''}${spec.on ? ' · watching' : ''}`;
+    return;
+  }
   if (match.m === 'ctl') {
     $('mbRedWrap').hidden = $('mbBlueWrap').hidden = false;
     const r = match.mc[0] || 0, bl = match.mc[1] || 0;
@@ -2041,9 +2229,11 @@ function renderModeSel() {
   for (const b of document.querySelectorAll('[data-tag]')) b.setAttribute('aria-pressed', String(b.dataset.tag === ms.tag));
   for (const b of document.querySelectorAll('[data-diff]')) b.setAttribute('aria-pressed', String(b.dataset.diff === ms.diff));
   for (const b of document.querySelectorAll('[data-base]')) b.setAttribute('aria-pressed', String(b.dataset.base === ms.base));
+  for (const b of document.querySelectorAll('[data-bots]')) b.setAttribute('aria-pressed', String(+b.dataset.bots === ms.bots));
   for (const b of document.querySelectorAll('[data-ab]')) { const id = b.dataset.ab, okHere = ms.base !== 'tag' || ABIL[id].tag; b.disabled = !okHere; b.setAttribute('aria-pressed', String(id === ms.ab && okHere)); }
   $('modeInfo').textContent = MODE_INFO[ms.m];
-  $('optCtl').hidden = ms.m !== 'ctl'; $('optTag').hidden = !tagLike; $('optDiff').hidden = !(ms.m === 'ctl' || tagLike);
+  const brLike = ms.m === 'br' || ms.m === 'bb';
+  $('optCtl').hidden = ms.m !== 'ctl'; $('optTag').hidden = !tagLike; $('optDiff').hidden = !(ms.m === 'ctl' || tagLike || brLike); $('optBots').hidden = !brLike;
   $('optBase').hidden = $('optAbil').hidden = $('abilInfo').hidden = !ab;
   if (ab) { const A = ABIL[ms.ab] || ABIL.jump; $('abilInfo').textContent = `${A.name} · ${fmt(A.cost)} bits. ${ms.base === 'tag' && A.tagInfo ? A.tagInfo : A.info}`; }
   $('watchBtn').hidden = ms.m !== 'classic';
@@ -2052,13 +2242,18 @@ function renderModeSel() {
   line.textContent = ''; const b = document.createElement('b');
   const tagName = ms.tag === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one';
   if (ab) b.textContent = `Abilities · ${ms.base === 'tag' ? tagName : 'Classic'}`;
-  else b.textContent = ms.m === 'ctl' ? `Capture the Leader ${ms.ctl}v${ms.ctl}` : tagName;
+  else b.textContent = ms.m === 'ctl' ? `Capture the Leader ${ms.ctl}v${ms.ctl}` : brLike ? (ms.m === 'bb' ? 'Bot Battle' : 'Shrinking Arena') : tagName;
   line.append('Mode: ', b, ab ? `${tagLike ? `, ${ms.diff} bots` : ''}. Friends who join play your mode and use the power they picked.` : `, ${ms.diff} bots. Friends who join play your mode.`);
 }
 function resultFor() {
   const k = myKey(), out = { mode: modeName(match), title: '', won: false, labels: [], values: [] };
   const elapsed = fmtTime((match.overAt - (match.started || match.overAt)) / 1000);
-  if (match.m === 'ctl') {
+  if (match.m === 'br') {
+    const w = match.win, human = !String(w).startsWith('b');
+    out.won = w === k; out.title = out.won ? (match.bot ? 'Your bot wins!' : 'You win!') : `${brName(w)}${match.bot && human ? "'s bot" : ''} wins`;
+    out.labels = [match.bot ? "Your bot's wins" : 'Your wins', 'Your place', 'Round'];
+    out.values = [match.wins[k] || 0, out.won ? '1st' : match.myPlace ? ordinal(match.myPlace) : '–', match.round];
+  } else if (match.m === 'ctl') {
     const tr = match.tm[k], t = tr ? tr[0] : -1, w = match.win;
     out.won = t === w; out.title = t < 0 ? `${TEAMS[w] ? TEAMS[w].name : 'A'} team wins!` : out.won ? 'Your team wins!' : 'Your team lost';
     out.mode = `${modeName(match)} · ${TEAMS[w] ? TEAMS[w].name : ''} wins`;
@@ -2083,6 +2278,11 @@ function showResult() {
   $('resNext').hidden = gameKind !== 'online';
   updateResultNext(performance.now());
   profile.games++; save(false); checkUnlocks();
+  if (r.won && match.m === 'tag') chal('tag');
+  if (r.won && match.m === 'ctl') chal('ctl');
+  if (match.m === 'br' && !match.bot && (r.won || (match.myPlace && match.myPlace <= 3))) chal('br');
+  if (match.m === 'br' && match.bot && r.won) chal('bb');
+  stopSpectate();
   if (r.won) SFX.trainDone(); else SFX.death();
   mode = 'dead'; botDriving = false; updateBanner(); setBoostSound(false);
   showScreen('result');
@@ -2098,12 +2298,13 @@ function packMatch(now) {
   return { m: match.m, sz: match.sz, v: match.v, df: match.df, mid: match.mid, rd: match.round, st: match.st, tl: Math.round(match.tl), sd: match.sd ? 1 : 0,
     win: match.win, why: match.why, tm: match.tm, it: [...match.it], mc: match.mc, rn: match.runner || null, hs: match.huntSpot ? match.huntSpot.map(Math.round) : null,
     nb: match.nb && now < match.nb.until ? [match.nb.from, match.nb.to, Math.round(match.nb.until - now)] : null,
-    ov: match.st === 'over' ? Math.round(now - match.overAt) : 0, el: Math.round((now - (match.started || now)) / 1000), ab: match.ab ? 1 : 0 };
+    ov: match.st === 'over' ? Math.round(now - match.overAt) : 0, el: Math.round((now - (match.started || now)) / 1000), ab: match.ab ? 1 : 0,
+    br: match.m === 'br' ? { bot: match.bot ? 1 : 0, r0: Math.round(match.R0), rt: Math.round(worldTargetR), so: Math.round((match.slotOff || 0) * 1000) / 1000, sn: match.slotN || 1, out: [...match.out].slice(0, 30), wins: match.wins, nm: match.names } : null };
 }
 function applyMatchFromHost(md) {
   if (!md || typeof md !== 'object') return;
   const now = performance.now();
-  if (md.m !== 'ctl' && md.m !== 'tag') {
+  if (md.m !== 'ctl' && md.m !== 'tag' && md.m !== 'br') {
     abilClassic = md.ab === 1;
     if (online.awaitSpawnAt) { online.awaitSpawnAt = 0; if (!inModes()) startGame({ watch: false }); }
     if (inModes()) { match = { m: 'classic' }; for (const sn of snakes) { sn.team = -1; sn.role = ''; sn.it = false; } $('result').hidden = true; if (mode !== 'menu') startGame({ watch: false }); }
@@ -2111,11 +2312,11 @@ function applyMatchFromHost(md) {
   }
   const mid = int(md.mid), fresh = match.m !== md.m || match.mid !== mid, wasOver = match.st === 'over';
   if (fresh) {
-    match = { m: md.m, queue: [], myRespawnAt: 0, itTime: 0, made: 0, wasIt: false };
+    match = { m: md.m, queue: [], myRespawnAt: 0, itTime: 0, made: 0, wasIt: false, out: new Set(), order: [], names: {}, wins: {} };
     for (const [, sn] of online.rnpcs) { const i = snakes.indexOf(sn); if (i >= 0) snakes.splice(i, 1); sn.alive = false; }
     online.rnpcs.clear(); drops = [];
   }
-  match.m = md.m; match.mid = mid; match.sz = clamp(int(md.sz, 1), 1, 3); match.v = ['1v1', 'evo'].includes(md.v) ? md.v : '1v1'; match.df = DIFF_IQ[md.df] ? md.df : 'normal';
+  match.m = md.m; match.mid = mid; match.sz = md.m === 'br' ? clamp(int(md.sz, 3), 0, 9) : clamp(int(md.sz, 1), 1, 3); match.v = ['1v1', 'evo'].includes(md.v) ? md.v : '1v1'; match.df = DIFF_IQ[md.df] ? md.df : 'normal';
   match.ab = md.ab === 1; match.round = int(md.rd, 1); match.st = md.st === 'over' ? 'over' : 'play'; match.tl = clamp(num(md.tl), 0, 600); match.tEnd = now + match.tl * 1000; match.sd = md.sd === 1;
   match.win = typeof md.win === 'number' || typeof md.win === 'string' ? md.win : null; match.why = typeof md.why === 'string' ? cleanText(md.why, 120) : '';
   match.mc = Array.isArray(md.mc) ? [clamp(int(md.mc[0]), 0, 99), clamp(int(md.mc[1]), 0, 99)] : [0, 0];
@@ -2123,19 +2324,27 @@ function applyMatchFromHost(md) {
   if (Array.isArray(md.hs)) { match.huntSpot = [clamp(num(md.hs[0]), -4000, 4000), clamp(num(md.hs[1]), -4000, 4000)]; match.runSpot = [-match.huntSpot[0], -match.huntSpot[1]]; }
   match.started = now - clamp(num(md.el), 0, 3600) * 1000;
   const tm = {};
-  if (md.tm && typeof md.tm === 'object') for (const k of Object.keys(md.tm).slice(0, 40)) { const v = md.tm[k]; if (Array.isArray(v) && (v[0] === 0 || v[0] === 1 || v[0] === -1) && ROLE_CODE[v[1]] && k.length <= 32) tm[k] = [v[0], v[1]]; }
+  if (md.tm && typeof md.tm === 'object') for (const k of Object.keys(md.tm).slice(0, 40)) { const v = md.tm[k]; if (Array.isArray(v) && (v[0] === 0 || v[0] === 1 || v[0] === -1) && ROLE_CODE[v[1]] && k.length <= 32) tm[k] = v.length > 2 ? [v[0], v[1], clamp(int(v[2]), 0, 40)] : [v[0], v[1]]; }
   match.tm = tm;
   match.it = new Set(Array.isArray(md.it) ? md.it.filter((x) => typeof x === 'string' && x.length <= 32).slice(0, 40) : []);
   match.nb = Array.isArray(md.nb) && typeof md.nb[0] === 'string' && typeof md.nb[1] === 'string' ? { from: md.nb[0], to: md.nb[1], until: now + clamp(num(md.nb[2]), 0, 3000) } : null;
+  if (md.m === 'br' && md.br && typeof md.br === 'object') {
+    const b = md.br; match.bot = b.bot === 1; match.R0 = clamp(num(b.r0, 2000), 600, 4000); match.slotOff = num(b.so); match.slotN = clamp(int(b.sn, 1), 1, 40);
+    match.out = new Set(Array.isArray(b.out) ? b.out.filter((x) => typeof x === 'string' && x.length <= 32).slice(0, 40) : []);
+    const wins = {}; if (b.wins && typeof b.wins === 'object') for (const k of Object.keys(b.wins).slice(0, 40)) if (k.length <= 32) wins[k] = clamp(int(b.wins[k]), 0, 999);
+    const nm = {}; if (b.nm && typeof b.nm === 'object') for (const k of Object.keys(b.nm).slice(0, 40)) if (k.length <= 32 && typeof b.nm[k] === 'string') nm[k] = cleanName(b.nm[k]);
+    match.wins = wins; match.names = nm;
+  }
   const R = arenaFor(match); match.bases = [[-R * 0.6, 0], [R * 0.6, 0]];
   if (match.st === 'over') match.overAt = now - clamp(num(md.ov), 0, 10000);
   const waiting = !!online.awaitSpawnAt; online.awaitSpawnAt = 0;
-  if (fresh || (waiting && !player)) { if (worldR !== R) setArena(R, foodFor(R)); $('result').hidden = true; placeLocal(); toast(roleIntro()); }
+  if (fresh || (waiting && !player)) { if (fresh || match.m !== 'br') { if (worldR !== R) setArena(R, foodFor(R)); } $('result').hidden = true; placeLocal(); toast(roleIntro()); }
   else {
     const tr = match.tm[myKey()];
     if (match.m === 'ctl' && tr && player && player.alive && (player.team !== tr[0] || player.role !== tr[1])) placeLocal();
     else syncRoles();
   }
+  if (match.m === 'br' && md.br) worldTargetR = clamp(num(md.br.rt, worldTargetR), 200, 4000);
   if (match.st === 'over' && !wasOver && !fresh) showResult();
   if (match.st === 'over' && fresh) showResult();
 }
@@ -2156,10 +2365,12 @@ function refAssign() {
       if (match.v === '1v1') { const pool = snakes.filter((sn) => sn.alive && !sn.it); if (pool.length) match.it.add(keyOf(pool[Math.floor(Math.random() * pool.length)])); }
     }
     if (match.m === 'tag' && match.runner === k && match.v !== '1v1') endMatch('H', 'The runner left the room.');
+    if (match.m === 'br') brCheck();
   }
   for (const k of humans) {
     if (match.tm[k]) continue;
     changed = true;
+    if (match.m === 'br') { match.tm[k] = [-1, 'W']; match.names[k] = (online.remotes.get(k) || {}).name || 'A friend'; continue; }
     if (match.m === 'ctl') {
       const counts = [0, 0]; for (const tr of Object.values(match.tm)) if (tr[0] >= 0) counts[tr[0]]++;
       const t = counts[0] <= counts[1] ? 0 : 1;
@@ -2236,6 +2447,11 @@ function step(dt, now) {
   if (player && player.alive && mode === 'play') {
     player.bot = botDriving;
     if (simAuto) { if (frame % 3 === 0) { if (!player.npc) player.npc = newNpcMind(); modeThink(player); } }
+    else if (match.m === 'br' && match.bot) {
+      // Bot Battle: your trained bot drives (a beginner bot if it isn't trained yet). You can't steer.
+      player.bot = true;
+      if (frame % 2 === 0) { if (botReady()) botThink(player); else { if (!player.npc) player.npc = newNpcMind(); npcThink(player); } }
+    }
     else
     if (botDriving) { if (botReady()) { if (frame % 2 === 0) botThink(player); } else setBot(false); }
     else {
@@ -2295,6 +2511,10 @@ function step(dt, now) {
         if (pick) killSnake(pick, null);
       }
     }
+  }
+  if (player && player.alive && mode === 'play' && player.boosting) run.boosted = true;
+  if (frame % 30 === 0 && player && player.alive && mode === 'play' && !botDriving && (match.m === 'classic' || match.m === 'br')) {
+    const L = Math.floor(player.mass * 10); chalMax('len', L); if (!run.boosted) chalMax('nob', L); chalMax('surv', run.time);
   }
   if (player && player.alive && mode === 'play' && !inModes()) {
     const sc = Math.floor(player.mass * 10);
@@ -2624,7 +2844,7 @@ async function joinRoom(code, create) {
     setRoomHash(null);
     return;
   } finally { online.busy = false; $('createBtn').disabled = $('joinBtn').disabled = false; }
-  online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0;
+  online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0; chal('friends');
   online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = [];
   online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear(); online.brains.clear();
   gameKind = 'online'; myDeaths = 0; match = { m: 'classic' };
@@ -2684,6 +2904,7 @@ function applyPeer(peer, pr, now) {
     const s = rs.snake; s.netD = d; rs.d = d;
     killSnake(s, null);
     if (online.isHost && match.m === 'ctl' && match.st === 'play') { const tr = match.tm[peer]; if (tr && tr[1] === 'L') leaderDown(tr[0]); }
+    if (online.isHost && match.m === 'br' && match.st === 'play') brOut(peer);
     const key = peer.slice(0, 8) + '.' + d;
     if (pr.kb === online.myPeer && online.myPeer && !online.seenKills.has(key)) { online.seenKills.add(key); creditKill(rs.name); }
     rs.snake = null;
@@ -2702,6 +2923,7 @@ function applyPeer(peer, pr, now) {
     if (s.lookCode !== pr.s || s.skinCode !== sk) { s.lookCode = pr.s; s.skinCode = sk; applyLook(s, unpackLook(pr.s), parseSkin(sk)); }
   }
   if (aliveNow && rs.snake) setNetPath(rs.snake, pr, now);
+  hearChat(rs, pr, now);
   if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; const f = Array.isArray(pr.fx) ? pr.fx : null; applyNetFx(rs.snake, f ? int(f[0]) : 0, f ? num(f[1]) : 0, f ? int(f[2]) : rs.snake.fxUse, num(pr.sl), now, !!f && f[3] === 1); }
   if (Array.isArray(pr.fz)) {
     const cur = new Set();
@@ -2812,6 +3034,7 @@ function sendPresence(now, force) {
   if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; pr.bd = bodyDeltas(p); const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
     pr.fx = p.fx ? [FX_CODE[p.fx] || 0, Math.round(p.fxEnd - now), p.fxUse || 0, p.hold ? 1 : 0] : null; pr.sl = p.slowEnd > now ? Math.round(p.slowEnd - now) : null; }
   pr.sk = skinStr();
+  pr.qc = myChat && now - myChat.t < 3000 ? [myChat.id, myChat.i, 1] : null;
   online.fzOut = online.fzOut.filter((e) => now - e.t < 1500); pr.fz = online.fzOut.length ? online.fzOut.map((e) => [e.id, e.x, e.y, e.it]) : null;
   if (online.isHost) {
     pr.w = [online.tier, online.filler ? 1 : 0, Math.round(npcIQ * 100)];
@@ -2863,6 +3086,7 @@ function resize() {
 }
 function updateCam(dt) {
   let tgt = player && player.alive ? player : null;
+  if (!tgt && spec.on) { if (!spec.target || !spec.target.alive) { const c = specCandidates(); spec.target = c[0] || null; updateSpecBar(); } tgt = spec.target; }
   if (!tgt && mode === 'menu') {
     if (!attractTarget || !attractTarget.alive || frame % 600 === 0) { attractTarget = null; for (const s of snakes) if (!attractTarget || s.mass > attractTarget.mass) attractTarget = s; }
     tgt = attractTarget;
@@ -2971,6 +3195,11 @@ function drawSnakeBody(c, s, b, t, now, z) {
   if (vis(segs[0])) { drawEyes(c, s, now); if (s.role === 'L' && match.m === 'ctl') drawLeaderCrown(c, s); else drawHat(c, s, now); if (s.bot) drawAntenna(c, s, now); }
   c.globalAlpha = 1;
 }
+function drawStar(c, x, y, rad, col) {
+  c.fillStyle = col; c.beginPath();
+  for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? rad * 0.45 : rad; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  c.closePath(); c.fill();
+}
 function drawEyes(c, s, now) {
   const h = s.segs[0], r = s.r, ca = Math.cos(s.ang), sa = Math.sin(s.ang), px = -sa, py = ca;
   const style = EYES[s.look.eye].id;
@@ -2991,6 +3220,7 @@ function drawEyes(c, s, now) {
     let ox = lx, oy = ly;
     if (style === 'googly') { ox = Math.cos(s.targetAng + Math.sin(now * 0.011 + side * 2 + s.id) * 0.9); oy = Math.sin(s.targetAng + Math.sin(now * 0.011 + side * 2 + s.id) * 0.9); }
     const po = style === 'googly' ? r * 0.18 : r * 0.13, pr = style === 'googly' ? r * 0.23 : r * 0.19;
+    if (style === 'starry') { drawStar(c, ex + ox * po * 0.6, ey + oy * po * 0.6, r * 0.27, '#ffb81f'); continue; }
     c.fillStyle = '#15102a'; c.beginPath(); c.arc(ex + ox * po, ey + oy * po, pr, 0, TAU); c.fill();
     if (style === 'sleepy') { c.fillStyle = s.color; c.beginPath(); c.arc(ex, ey, ew * 1.06, Math.PI, TAU); c.fill(); c.strokeStyle = s.outline; c.lineWidth = r * 0.07; c.beginPath(); c.moveTo(ex - ew, ey); c.lineTo(ex + ew, ey); c.stroke(); }
   }
@@ -3027,6 +3257,23 @@ function drawHat(c, s, now) {
   } else if (id === 'halo') {
     c.strokeStyle = '#ffe58a'; c.lineWidth = r * 0.16; c.shadowColor = '#ffe58a'; c.shadowBlur = r * 0.8;
     c.beginPath(); c.ellipse(bx, by - r * 0.75 + Math.sin(now * 0.004) * r * 0.08, r * 0.6, r * 0.2, 0, 0, TAU); c.stroke();
+  } else if (id === 'wizard') {
+    c.fillStyle = '#6a4cf0'; c.beginPath(); c.ellipse(bx, by + r * 0.05, r * 0.78, r * 0.2, 0, 0, TAU); c.fill();
+    c.fillStyle = '#8a6bff'; c.beginPath(); c.moveTo(bx - r * 0.48, by); c.lineTo(bx + r * 0.48, by);
+    c.quadraticCurveTo(bx + r * 0.25, by - r * 0.9, bx - r * 0.3, by - r * 1.65); c.quadraticCurveTo(bx - r * 0.2, by - r * 0.8, bx - r * 0.48, by); c.closePath(); c.fill();
+    drawStar(c, bx - r * 0.02, by - r * 0.52, r * 0.2, '#ffd447');
+  } else if (id === 'phones') {
+    c.strokeStyle = '#e9e4ff'; c.lineWidth = r * 0.17; c.lineCap = 'round';
+    c.beginPath(); c.arc(bx, by + r * 0.5, r * 0.78, Math.PI * 1.08, Math.PI * 1.92); c.stroke();
+    c.fillStyle = s.colorB;
+    for (const side of [-1, 1]) { c.beginPath(); c.ellipse(bx + side * r * 0.8, by + r * 0.42, r * 0.2, r * 0.3, 0, 0, TAU); c.fill(); }
+  } else if (id === 'bunny') {
+    for (const side of [-1, 1]) {
+      c.save(); c.translate(bx + side * r * 0.3, by - r * 0.45); c.rotate(side * 0.22);
+      c.fillStyle = '#f4effe'; c.beginPath(); c.ellipse(0, 0, r * 0.2, r * 0.62, 0, 0, TAU); c.fill();
+      c.fillStyle = '#ff9cc8'; c.beginPath(); c.ellipse(0, r * 0.05, r * 0.1, r * 0.45, 0, 0, TAU); c.fill();
+      c.restore();
+    }
   }
   c.restore();
 }
@@ -3089,6 +3336,7 @@ function render(now) {
     ctx.fillStyle = s === player ? 'rgba(244,239,254,0.95)' : s.kind === 'remote' ? 'rgba(244,239,254,0.85)' : 'rgba(244,239,254,0.55)';
     ctx.globalAlpha = s.ghost ? 0.4 : 1;
     ctx.fillText(s.kind === 'remote' && s.bot ? s.name + ' (bot)' : s.name, h.x, h.y - lift);
+    if (s.chat) { ctx.font = `700 ${15 / z}px Lexend, system-ui, sans-serif`; drawChat(s, h, h.y - lift - (s.it ? 16 / z : 0) - 14 / z, z, now); ctx.font = `600 ${13 / z}px Lexend, system-ui, sans-serif`; }
   }
   ctx.globalAlpha = 1;
   if (joy.active && mode === 'play') {
@@ -3137,34 +3385,96 @@ function drawPreview(cv, look, now, skin) {
 /* ================= HUD & screens ================= */
 const app = $('app');
 const screens = ['menu', 'locker', 'online', 'death', 'train', 'result'];
-function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', mode === 'play' && !name); }
+function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', (mode === 'play' || mode === 'spec') && !name); }
+/* ---------- quick chat: preset messages only, so it stays friendly ---------- */
+const QC = ['GG!', 'Nice one!', 'Help!', 'Watch this!', 'Oops!', '😂'];
+let qcSeq = 0, qcLast = -1e9, myChat = null;
+function buildChat() {
+  const pop = $('chatPop'); pop.textContent = '';
+  QC.forEach((t, i) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.title = `${t} (${i + 1})`; tapButton(b, () => sendChat(i)); pop.append(b); });
+}
+function toggleChat(force) {
+  const pop = $('chatPop'), open = force != null ? force : pop.hidden;
+  if (open && !(gameKind === 'online' && online.code)) return;
+  pop.hidden = !open; $('chatBtn').setAttribute('aria-expanded', String(open));
+}
+function closeChat() { toggleChat(false); }
+function sendChat(i) {
+  if (!(gameKind === 'online' && online.code) || !QC[i]) return;
+  const now = performance.now(); if (now - qcLast < 1200) return; qcLast = now;
+  myChat = { id: ++qcSeq, i, t: now };
+  if (player && player.alive) player.chat = { text: QC[i], until: now + 3500 }; else toast(`You: ${QC[i]}`);
+  SFX.chat(); closeChat(); sendPresence(now, true);
+}
+function hearChat(rs, pr, now) {
+  if (!Array.isArray(pr.qc)) return;
+  const id = int(pr.qc[0]), i = int(pr.qc[1]); if (!QC[i] || id === rs.qcId) return;
+  rs.qcId = id;
+  const s = rs.snake;
+  if (s && s.alive) s.chat = { text: QC[i], until: now + 3500 };
+  const onScreen = s && s.alive && Math.abs(s.x - cam.x) * cam.z < W / 2 && Math.abs(s.y - cam.y) * cam.z < H / 2;
+  if (!onScreen) toast(`${rs.name}: ${QC[i]}`);
+  SFX.chat();
+}
+function drawChat(s, h, top, z, now) {
+  const ch = s.chat; if (!ch || ch.until < now) return;
+  const a = Math.min(1, (ch.until - now) / 400), fs = 15 / z, padX = 9 / z, w = ctx.measureText(ch.text).width + padX * 2, hh = fs + 10 / z, x = h.x - w / 2, y = top - hh - 8 / z;
+  ctx.globalAlpha = a; ctx.fillStyle = '#f4effe'; ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, hh, hh / 2); else ctx.rect(x, y, w, hh);
+  ctx.moveTo(h.x - 6 / z, y + hh - 1 / z); ctx.lineTo(h.x, y + hh + 7 / z); ctx.lineTo(h.x + 6 / z, y + hh - 1 / z); ctx.fill();
+  ctx.fillStyle = '#17122c'; ctx.fillText(ch.text, h.x, y + hh - 5 / z); ctx.globalAlpha = 1;
+}
+/* ---------- watching other snakes after you crash ---------- */
+const spec = { on: false, target: null };
+function specCandidates() {
+  const list = snakes.filter((s) => s.alive && s !== player && !s.ghost && s.role !== 'M');
+  list.sort((a, b) => ((b.kind === 'remote') - (a.kind === 'remote')) || b.mass - a.mass);
+  return list;
+}
+function startSpectate() {
+  spec.on = true; const c = specCandidates(); if (!spec.target || !spec.target.alive) spec.target = c[0] || null;
+  if (mode === 'dead' || mode === 'play') mode = 'spec';
+  showScreen(null); app.classList.add('spec'); updateSpecBar(); updateModeBar();
+}
+function stopSpectate() { if (!spec.on) return; spec.on = false; spec.target = null; app.classList.remove('spec'); $('specBar').hidden = true; if (mode === 'spec') mode = 'play'; }
+function nextSpec() { const c = specCandidates(); spec.target = c.length ? c[(c.indexOf(spec.target) + 1) % c.length] : null; updateSpecBar(); }
+function updateSpecBar() {
+  $('specBar').hidden = !spec.on; if (!spec.on) return;
+  const t = spec.target, nm = t ? (t.name || 'a bot') + (t.kind === 'remote' && t.bot ? ' (bot)' : '') : 'Nobody left to watch';
+  if ($('specName').textContent !== nm) $('specName').textContent = nm;
+  const br = match.m === 'br', info = br ? (match.st === 'play' ? "You're out until the next round." : '') : t ? `Length ${fmt(t.mass * 10)}` : '';
+  if ($('specInfo').textContent !== info) $('specInfo').textContent = info;
+  $('specRespawn').hidden = br && gameKind === 'online'; $('specRespawn').textContent = br ? 'New round' : gameKind === 'online' ? 'Respawn' : 'Play again';
+}
 function showMenu() {
   if (mode !== 'menu') save();
+  stopSpectate(); closeChat();
   if (gameKind === 'solo') abilClassic = false;
   if (inModes() && gameKind === 'solo') { match = { m: 'classic' }; setupSoloWorld(); }
   mode = 'menu'; if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
   player = null; botDriving = false; updateBanner();
-  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); renderModeSel(); showScreen('menu');
+  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); renderModeSel(); updateDailyCard(); showScreen('menu');
 }
 function startGame(opts = {}) {
+  stopSpectate();
   mode = 'play'; showScreen(null);
   if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
   const pos = findSpawn(false);
   player = makeSnake({ kind: 'player', name: cleanName(profile.name), look: profile.look, skin: profile.skin, mass: START_MASS, pos, ang: Math.atan2(-pos[1], -pos[0]) });
   snakes.push(player); cam.x = player.x; cam.y = player.y;
-  run = { max: 0, time: 0 }; lastKiller = null; botDriving = false; botWatch = !!opts.watch; input.last = performance.now();
+  run = { max: 0, time: 0, boosted: false }; lastKiller = null; botDriving = false; botWatch = !!opts.watch; input.last = performance.now();
   if (opts.watch && botReady()) setBot(true, 'watch');
   updateBanner(); updateDock(); updateRoomChip(); boardTick = 0; SFX.spawn();
 }
 function onPlayerDeath(killer) {
-  if (inModes()) { if (match.m === 'ctl' && match.st === 'play') onModePlayerDeath(killer); return; }
+  if (inModes()) { if (match.m === 'ctl' && match.st === 'play') onModePlayerDeath(killer); else if (match.m === 'br') onBrPlayerDeath(killer); return; }
   const wasBot = botDriving; botDriving = false; updateBanner(); SFX.death(); setBoostSound(false);
   lastKiller = killer === 'edge' ? 'edge' : killer && killer.kind === 'remote' ? killer.peer : killer && (killer.kind === 'rnpc' || killer.kind === 'npc') ? 'n' + killer.npcId : null;
   profile.games++; save(false); checkUnlocks();
   const name = killer === 'edge' ? null : killer && killer.name;
   setTimeout(() => { try { showDeathScreen(); } catch (e) { reportGlitch('death screen', e); showScreen('death'); } }, 900);
   function showDeathScreen() {
-    if (mode !== 'play' || (player && player.alive)) return;
+    if (mode !== 'play' || (player && player.alive) || spec.on) return;
     mode = 'dead';
     $('deathWho').textContent = wasBot ? 'Your bot crashed' : 'You crashed';
     $('deathWho').className = wasBot ? 'eyebrow bot' : 'eyebrow';
@@ -3184,6 +3494,7 @@ function onPlayerDeath(killer) {
 }
 let botReason = '', simAuto = false;
 function setBot(on, reason) {
+  if (match.m === 'br' && match.bot) { if (!on) toast("It's a Bot Battle: your bot drives this round!"); return; }
   if (on && !botReady()) { toast('Train your bot first: play a bit, then press Train bot.'); return; }
   if (!player || !player.alive) return;
   const was = botDriving;
@@ -3194,12 +3505,13 @@ function setBot(on, reason) {
   updateBanner(); updateDock();
 }
 function updateBanner() {
-  $('botBanner').hidden = !botDriving;
+  $('botBanner').hidden = !botDriving; $('takeBackBtn').hidden = match.m === 'br' && !!match.bot;
   const chip = $('driverChip'); chip.textContent = botDriving ? 'Bot driving' : 'You'; chip.classList.toggle('is-bot', botDriving);
 }
 let boardTick = 0;
 function updateHud() {
   if (player && player.alive) $('lenVal').textContent = fmt(player.mass * 10);
+  else if (spec.on && spec.target && boardTick % 6 === 0) $('lenVal').textContent = fmt(spec.target.mass * 10);
   if (boardTick % 6 === 0) { updateModeBar(); updateAbilBtn(); }
   if (++boardTick % 12 !== 1) return;
   const iqp = Math.round(npcIQ * 100); $('iqVal').textContent = W <= 360 ? `Smarts ${iqp}%` : `Bot smarts ${iqp}%`; $('iqFill').style.width = iqp + '%';
@@ -3232,6 +3544,8 @@ function updateRoomChip() {
   // Only touch the page when something changed: this runs many times a second online.
   if (t.textContent !== txt) t.textContent = txt;
   if ($('exitBtn').textContent !== ex) $('exitBtn').textContent = ex;
+  const onl = gameKind === 'online' && !!online.code;
+  if ($('chatBtn').hidden !== !onl) { $('chatBtn').hidden = !onl; if (!onl) closeChat(); }
   const inv = gameKind === 'online' && !!online.code && online.kind === 'web';
   if ($('inviteBtn').hidden !== !inv) { $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv); }
 }
@@ -3334,6 +3648,7 @@ function lockProgress(L) {
   if (L.type === 'best') return `best ${fmt(profile.bestYou)}`;
   if (L.type === 'botBest') return `best ${fmt(profile.bestBot)}`;
   if (L.type === 'botLevel') return botReady() ? `now level ${botLevel().n}` : 'not trained yet';
+  if (L.type === 'stars') return `${Math.min(profile.stars || 0, L.v)}/${L.v} ⭐`;
   return '';
 }
 function buildLocker() {
@@ -3609,6 +3924,7 @@ const SFX = {
   spawn() { tone(300, 0.28, 'sine', 0.12, 660); },
   join() { tone(620, 0.12, 'sine', 0.09, 930); },
   click() { tone(880, 0.035, 'triangle', 0.05); },
+  chat() { tone(988, 0.08, 'sine', 0.07); tone(1319, 0.1, 'sine', 0.06, null, 0.07); },
   power(id, far) {
     const v = far ? 0.035 : 0.1;
     if (id === 'jump') { tone(300, 0.26, 'sine', v * 1.2, 900); tone(1200, 0.1, 'triangle', v * 0.5, null, 0.2); }
@@ -3832,6 +4148,8 @@ window.addEventListener('keydown', (e) => {
   else if (k === 'ArrowRight' || k === 'KeyD') { input.right = true; input.mode = 'keys'; }
   else if (k === 'KeyB') { if (mode === 'play' && !e.repeat) setBot(!botDriving, 'manual'); }
   else if (k === 'KeyE' || k === 'KeyQ') { if (mode === 'play' && !e.repeat) tryAbility(); }
+  else if (k === 'KeyT') { if ((mode === 'play' || mode === 'spec') && !e.repeat) toggleChat(); }
+  else if (/^Digit[1-6]$/.test(k) && gameKind === 'online' && online.code && (mode === 'play' || mode === 'spec')) { if (!e.repeat) sendChat(+k.slice(5) - 1); }
   else if (k === 'KeyM') { if (!e.repeat) toggleSound(); }
   else if (k === 'KeyN') { if (!e.repeat) toggleMusic(); }
   else return;
@@ -3870,6 +4188,11 @@ $('nameIn').addEventListener('input', (e) => { profile.name = e.target.value.sli
 $('lockerName').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
 $('lockerBtn').addEventListener('click', openLocker);
 $('lockerDone').addEventListener('click', showMenu);
+for (const b of document.querySelectorAll('[data-bots]')) b.addEventListener('click', () => setModeSel({ bots: +b.dataset.bots }));
+$('deathWatchBtn').addEventListener('click', () => startSpectate());
+tapButton($('specNext'), () => { nextSpec(); blurIfPlaying(); });
+tapButton($('specRespawn'), () => { stopSpectate(); if (match.m === 'br') { if (gameKind === 'solo') startMatch(cfgOf(match)); } else startGame({ watch: false }); });
+tapButton($('chatBtn'), () => { toggleChat(); blurIfPlaying(); });
 $('buildUndo').addEventListener('click', () => clearPieces(false));
 $('buildClear').addEventListener('click', () => clearPieces(true));
 $('buildRandom').addEventListener('click', () => { const n = 3 + Math.floor(Math.random() * 6); profile.skin = Array.from({ length: n }, () => Math.floor(Math.random() * PALETTE.length)); pieceSel = -1; profile.look.pat = CUSTOM_PAT; save(); buildLocker(); });
@@ -3970,7 +4293,7 @@ function loop(now) {
     if (frame % 10 === 0) { fitApp(); if (sizeOff()) onViewChange(); }
     updateCam(dt);
     render(now);
-    if (mode === 'play') { updateHud(); if (frame % 10 === 0) drawMini(); }
+    if (mode === 'play' || mode === 'spec') { updateHud(); if (frame % 10 === 0) drawMini(); if (spec.on && frame % 15 === 0) updateSpecBar(); }
     if (!$('menu').hidden) drawPreview($('menuPreview'), profile.look, now, profile.skin);
     if (!$('locker').hidden) {
       drawPreview($('lockerPreview'), profile.look, now, profile.skin);
@@ -3989,6 +4312,7 @@ function boot() {
   checkUnlocks();
   $('nameIn').value = profile.name;
   $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}`;
+  ensureDaily(); buildChat(); updateDailyCard();
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
@@ -4033,6 +4357,15 @@ function boot() {
       simAuto = false; res.avgLast = Math.round(res.avgLast / res.rounds); return res;
     },
     teamBrain: (t) => !!teamBrain(t),
+    br: () => ({ m: match.m, bot: !!match.bot, st: match.st, left: match.m === 'br' ? brLeft().length : 0, here: brAliveHere(), out: [...(match.out || [])], wins: match.wins, R: Math.round(worldR), Rt: Math.round(worldTargetR), R0: match.R0, win: match.win, why: match.why, place: match.myPlace, tm: match.tm, round: match.round }),
+    brAge: (sec) => { match.started -= sec * 1000; },
+    killBots: (n) => { let k = 0; for (const sn of [...snakes]) if (sn.kind === 'npc' && sn.role === 'B' && k < n) { killSnake(sn, null); k++; } return k; },
+    spec: () => ({ on: spec.on, target: spec.target ? spec.target.name : null, mode, bar: !$('specBar').hidden }),
+    daily: () => ({ day: profile.daily && profile.daily.day, list: profile.daily && profile.daily.list.map((c) => [c.id, c.p, c.n, c.done]), stars: profile.stars }),
+    chal: (id, n) => { chal(id, n || 1); return profile.stars; },
+    setStars: (n) => { profile.stars = n; checkUnlocks(); updateDailyCard(); return n; },
+    chatSent: () => myChat,
+    chatOn: () => snakes.filter((sn) => sn.chat && sn.chat.until > performance.now()).map((sn) => [sn.kind, sn.name, sn.chat.text]),
     abil: () => (player ? { on: abilOn(), ab: player.ab, charge: Math.round(player.charge || 0), fx: player.fx, phase: !!player.phase, slow: player.slowEnd > curNow, stats: abilStats, btn: !$('abilBtn').hidden, bits: $('abBits').textContent } : { on: abilOn(), stats: abilStats }),
     charge: () => { if (player && player.ab) player.charge = ABIL[player.ab].cost; return player && player.charge; },
     chargeAll: () => { for (const sn of snakes) if (sn.ab) sn.charge = ABIL[sn.ab].cost; },
