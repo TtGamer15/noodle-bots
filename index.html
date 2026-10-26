@@ -783,7 +783,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.5.2';
+const GAME_VERSION = '2.5.3';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -808,7 +808,8 @@ const HATS = [
   { id: 'phones', name: 'Headphones', lock: { type: 'stars', v: 8, text: 'Get 8 ⭐' } },
   { id: 'bunny', name: 'Bunny ears', lock: { type: 'stars', v: 15, text: 'Get 15 ⭐' } },
 ];
-const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [10000, 'Arena Shark'], [20000, 'Mega Noodle'], [40000, 'Legend'], [80000, 'Your Twin'], [130000, 'Mythic Noodle'], [200000, 'Galaxy Brain'], [300000, 'Noodle Royalty'], [450000, 'Ultimate Twin']];
+const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [9000, 'Arena Shark'], [15000, 'Mega Noodle'], [23000, 'Legend'], [33000, 'Your Twin'], [45000, 'Mythic Noodle'], [60000, 'Galaxy Brain'], [80000, 'Noodle Royalty'], [105000, 'Ultimate Twin']];
+// About 1,200 moves get recorded per minute of steering, so each level takes a little longer than the last (about 1 to 20 minutes of play).
 
 // Arena bot genes: greed, caution, wander, boost, hunter, food spread, turn cost, look-ahead
 const GENES = [[0.3, 2.5], [0.3, 3], [0, 0.6], [0, 0.2], [0, 1], [0, 0.8], [0, 0.2], [0.6, 1.4]];
@@ -3832,7 +3833,8 @@ function updateDock() {
     sub.textContent = sampCount >= MIN_TRAIN ? `${fmt(sampCount)} moves · ready to train` : `${fmt(sampCount)} / ${MIN_TRAIN} moves recorded`;
     meter.style.width = Math.min(100, sampCount / MIN_TRAIN * 100) + '%'; $('dockPend').style.width = '0%';
   } else {
-    const lv = botLevel(), [done, pend] = levelBars(lv); top.textContent = `Level ${lv.n} ${lv.name}`;
+    const lv = botLevel(), [done, pend] = levelBars(lv);
+    top.textContent = `Level ${lv.n} ${lv.name}` + (!lv.next ? ' · top level' : readyToLevel(lv) ? ' · ready to level up!' : ` · ${Math.floor(done + pend)}%`);
     sub.textContent = readyToLevel(lv) ? `Train it to reach level ${lv.n + 1}!` : `${fmt(newSince)} new move${newSince === 1 ? '' : 's'} to learn`;
     meter.style.width = done + '%'; $('dockPend').style.width = pend + '%';
   }
