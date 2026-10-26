@@ -415,8 +415,9 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .coach-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .coach-step{font:700 12px var(--f-num);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
 .coach-text{font-size:15px;line-height:1.4;font-weight:500}
-.coach .row{justify-content:flex-end}
-.coach .row .btn{flex:0 0 auto}
+.coach-foot{display:flex;align-items:center;gap:10px;min-height:0}
+.coach-foot .meter{flex:1 1 auto}
+.coach-foot .btn{flex:0 0 auto}
 .coach .meter > div{background:var(--accent)}
 .statgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
 .statgrid div{display:grid;gap:3px;padding:10px;border-radius:12px;background:rgba(244,239,254,.06);min-width:0}
@@ -433,6 +434,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .setopts{display:grid;gap:6px}
 .setopts .opt{width:100%}
 #app.swap .dock{flex-direction:row-reverse}
+/* phones held upright: the snake sits in the middle, so the lesson card goes up top, under the score */
+@media (max-width:640px) and (orientation:portrait){.coach{align-self:start;justify-self:stretch;width:auto;padding:8px 10px;gap:4px;border-radius:14px}.coach-text{font-size:13px;line-height:1.3}.coach-step{font-size:11px}.coach .linkbtn{font-size:12px}.coach-foot .btn{padding:5px 14px;min-height:0}#app.tut #botBanner{display:none}}
 @media (max-height:520px) and (orientation:landscape){.coach{grid-row:2/4;align-self:start;justify-self:start;width:min(300px,38vw);padding:8px 10px;gap:5px}.coach-text{font-size:13px;line-height:1.3}.coach-step{font-size:11px}}
 .rivals{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .rival{display:inline-flex;align-items:center;gap:6px;padding:5px 6px 5px 10px;border-radius:999px;border:1px solid var(--line);font-size:13px;background:rgba(244,239,254,.06)}
@@ -475,7 +478,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="banner" id="botBanner" hidden><span class="pulse" aria-hidden="true"></span><span id="bannerText">Your bot is driving</span><button class="btn small" id="takeBackBtn" type="button">Take back <kbd>B</kbd></button></div>
       <div id="toastBox" aria-live="polite"></div>
     </div>
-    <div class="coach" id="coach" hidden><div class="coach-head"><span class="coach-step" id="coachStep">Step 1 of 6</span><button class="linkbtn" id="coachSkip" type="button">Skip tutorial</button></div><p class="coach-text" id="coachText"></p><div class="meter small"><div id="coachMeter"></div></div><div class="row"><button class="btn primary small" id="coachNext" type="button" hidden>Next</button></div></div>
+    <div class="coach" id="coach" hidden><div class="coach-head"><span class="coach-step" id="coachStep">Step 1 of 6</span><button class="linkbtn" id="coachSkip" type="button">Skip tutorial</button></div><p class="coach-text" id="coachText"></p><div class="coach-foot"><div class="meter small"><div id="coachMeter"></div></div><button class="btn primary small" id="coachNext" type="button" hidden>Next</button></div></div>
     <div class="bottom">
       <div class="dock">
         <button class="btn boost" id="boostBtn" type="button">Boost</button>
@@ -783,7 +786,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.5.3';
+const GAME_VERSION = '2.5.4';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -3648,12 +3651,12 @@ function rivalThink(sn) { if (!sn.rivP) sn.rivP = new Float32Array(NB).fill(1 / 
 const tut = { on: false, step: 0, t0: 0, turn: 0, lastAng: null, eats: 0, boostT: 0 };
 const TUT = [
   { text: () => (coarse() ? 'Drag your finger anywhere on the screen to steer. Try a few big turns!' : 'Move your mouse to steer. Your snake follows it. Try a few big turns!'), p: () => tut.turn / 5 },
-  { text: () => 'Eat 15 snacks: steer into the glowing dots. Each one makes you longer.', p: () => tut.eats / 15 },
-  { text: () => (coarse() ? 'Hold the Boost button to zoom! Boosting costs a little length, so use it wisely.' : 'Hold the mouse button (or Space) to boost! Boosting costs a little length, so use it wisely.'), p: () => tut.boostT / 1.5 },
-  { text: () => "The big rule: if your face touches another snake, you crash. Get other snakes to bump into YOU instead! (You can't crash during this lesson.)", p: () => (performance.now() - tut.t0) / 9000, next: true },
+  { text: () => 'Eat 15 snacks: steer into the glowing dots to grow longer.', p: () => tut.eats / 15 },
+  { text: () => (coarse() ? 'Hold the Boost button to zoom! Boosting costs a little length.' : 'Hold the mouse button (or Space) to boost! Boosting costs a little length, so use it wisely.'), p: () => tut.boostT / 1.5 },
+  { text: () => "The big rule: if your face hits another snake, you crash. Make other snakes bump into YOU! (No crashing during this lesson.)", p: () => (performance.now() - tut.t0) / 9000, next: true },
   { text: () => `Your bot learns by watching you steer. Keep playing so it can study your moves: ${fmt(Math.min(sampCount, MIN_TRAIN))} of ${MIN_TRAIN}.`, p: () => sampCount / MIN_TRAIN, skip: () => botReady() || !!trainJob },
   { text: () => 'Tap Train bot. A tiny brain studies how you play, right on your device.', p: () => (trainJob || botReady() ? 1 : 0), skip: () => botReady() },
-  { text: () => (botReady() ? 'Now tap Use bot (or press B) and watch your bot drive like you! Tap Take back anytime.' : 'Your bot is studying… when it finishes, tap Use bot to watch it drive like you.'), p: () => (botDriving ? 1 : 0) },
+  { text: () => (botReady() ? (coarse() ? 'Now tap Use bot and watch your bot drive like you! Tap Take back anytime.' : 'Now press B (or Bot takes over) and watch your bot drive like you!') : 'Your bot is studying… when it finishes, tap Use bot to watch it drive like you.'), p: () => (botDriving ? 1 : 0) },
   { text: () => "You did it! Try Shrinking Arena, Bot Battle, Tag and more from the menu. Have fun!", p: () => 1, next: true, last: true },
 ];
 function startTutorial() {
@@ -3663,7 +3666,7 @@ function startTutorial() {
   updateCoach();
 }
 function endTutorial(done) {
-  tut.on = false; $('coach').hidden = true;
+  tut.on = false; $('coach').hidden = true; app.classList.remove('tut');
   if (done && !profile.tutDone) { profile.tutDone = true; profile.stars = (profile.stars || 0) + 1; toast('Tutorial complete! +1 ⭐'); SFX.trainDone(); save(false); checkAch(); }
 }
 function tutTick() {
@@ -3680,7 +3683,7 @@ function tutTick() {
   if (frame % 10 === 0) updateCoach();
 }
 function updateCoach() {
-  const c = $('coach'); c.hidden = !tut.on; if (!tut.on) return;
+  const c = $('coach'); c.hidden = !tut.on; app.classList.toggle('tut', tut.on); if (!tut.on) return;
   const S = TUT[tut.step], p = clamp(S.p(), 0, 1);
   $('coachStep').textContent = S.last ? 'All done!' : `Step ${tut.step + 1} of ${TUT.length - 1}`;
   const tx = S.text(); if ($('coachText').textContent !== tx) $('coachText').textContent = tx;
