@@ -712,7 +712,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.2';
+const GAME_VERSION = '2.3';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -4167,19 +4167,25 @@ for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) bb.addEve
 
 // Phones and tablets can drop a normal tap while another finger is steering, so these
 // in-game buttons also react when a finger lifts off them.
+// A tap can make a different button appear under your finger (tapping "New round" brings back the dock with
+// the bot button in the same spot), and iPhones then send an extra "click" to that new button. So after any
+// finger tap, ignore clicks for a moment, and tell the phone not to send that extra click at all.
+let lastTapAny = -1e9;
+const recentTap = () => performance.now() - lastTapAny < 700;
 function tapButton(el, fn) {
   let lastTouch = -1e9;
-  el.addEventListener('pointerup', (e) => { if (!isTouchLike(e) || el.disabled) return; lastTouch = performance.now(); fn(); });
+  el.addEventListener('pointerup', (e) => { if (!isTouchLike(e) || el.disabled) return; lastTouch = lastTapAny = performance.now(); fn(); });
   el.addEventListener('pointerdown', (e) => { if (isTouchLike(e)) e.preventDefault(); });
-  el.addEventListener('click', () => { if (performance.now() - lastTouch < 800) return; fn(); });
+  el.addEventListener('touchend', (e) => { if (e.cancelable) e.preventDefault(); });
+  el.addEventListener('click', () => { if (performance.now() - lastTouch < 800 || recentTap()) return; fn(); });
 }
 tapButton($('botBtn'), () => { setBot(!botDriving, 'manual'); blurIfPlaying(); });
 tapButton($('takeBackBtn'), () => { setBot(false); blurIfPlaying(); });
 // The power button fires the moment a finger or mouse goes down, even while another finger steers.
 (() => {
   const el = $('abilBtn'); let lastP = -1e9;
-  el.addEventListener('pointerdown', (e) => { if (e.button > 0) return; e.preventDefault(); lastP = performance.now(); humanInput(); tryAbility(); });
-  el.addEventListener('click', () => { if (performance.now() - lastP < 800) return; tryAbility(); blurIfPlaying(); });
+  el.addEventListener('pointerdown', (e) => { if (e.button > 0) return; e.preventDefault(); lastP = performance.now(); if (isTouchLike(e)) lastTapAny = lastP; humanInput(); tryAbility(); });
+  el.addEventListener('click', () => { if (performance.now() - lastP < 800 || recentTap()) return; tryAbility(); blurIfPlaying(); });
 })();
 tapButton($('trainBtn'), () => { if (startTraining()) toast('Training started. Keep playing while your bot studies.'); blurIfPlaying(); });
 $('dockAuto').addEventListener('change', (e) => { profile.auto = e.target.checked; save(); blurIfPlaying(); });
