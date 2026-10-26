@@ -141,6 +141,9 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .meter{height:8px;border-radius:999px;background:rgba(244,239,254,.1);overflow:hidden}
 .meter.small{height:6px}
 .meter > div{height:100%;width:0;background:var(--bot);border-radius:inherit;transition:width .3s}
+.btn.nudge{border-color:var(--bot);box-shadow:0 0 0 3px color-mix(in srgb,var(--bot) 30%,transparent);color:var(--ink)}
+.meter.two{display:flex}.meter.two > div{flex:none}
+.meter > .pend{border-radius:0 999px 999px 0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bot) 55%,transparent) 0 4px,color-mix(in srgb,var(--bot) 25%,transparent) 4px 8px)}
 
 /* ---------- screens ---------- */
 .screen{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:radial-gradient(ellipse at center,rgba(23,18,44,.3),rgba(12,9,26,.84))}
@@ -479,7 +482,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <button class="btn abil" id="abilBtn" type="button" hidden><svg class="ab-ico" id="abIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg><span class="ab-txt"><b id="abName">Jump</b><small id="abBits">0 bits</small></span><kbd>E</kbd></button>
         <div class="teach">
           <p class="teach-top" id="dockTop">Bot: not trained yet</p>
-          <div class="meter small"><div id="dockMeter"></div></div>
+          <div class="meter small two"><div id="dockMeter"></div><div class="pend" id="dockPend"></div></div>
           <p class="teach-sub" id="dockSub">0 / 300 moves recorded</p>
         </div>
         <button class="btn" id="trainBtn" type="button">Train bot</button>
@@ -552,7 +555,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
           <span class="botface"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg></span>
           <div><p class="lbl">Your bot</p><p class="botname" id="bcName">Not trained yet</p></div>
         </div>
-        <div class="meter"><div id="bcMeter"></div></div>
+        <div class="meter two"><div id="bcMeter"></div><div class="pend" id="bcPend"></div></div>
         <p class="bc-line" id="bcLine">Play a game and it starts watching how you steer.</p>
         <dl class="bc-stats">
           <div><dt>Moves learned</dt><dd id="bcMoves">0</dd></div>
@@ -780,7 +783,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.5.1';
+const GAME_VERSION = '2.5.2';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -3812,22 +3815,29 @@ function updateRoomChip() {
   const inv = gameKind === 'online' && !!online.code && online.kind === 'web';
   if ($('inviteBtn').hidden !== !inv) { $('inviteBtn').hidden = !inv; $('roomChip').classList.toggle('has-invite', inv); }
 }
+// Solid part: moves your bot has studied (that's what sets its level). Striped part: new moves waiting to be studied.
+function levelBars(lv) {
+  if (!lv.next) return [100, 0];
+  const span = lv.next - lv.from, done = clamp((profile.practice - lv.from) / span, 0, 1), all = clamp((profile.practice + newSince - lv.from) / span, 0, 1);
+  return [done * 100, (all - done) * 100];
+}
+const readyToLevel = (lv) => !!lv.next && profile.practice + newSince >= lv.next;
 function updateDock() {
   const top = $('dockTop'), sub = $('dockSub'), meter = $('dockMeter');
   if (trainJob) {
     const pct = Math.min(99, Math.floor(trainJob.done / trainJob.total * 100));
-    top.textContent = 'Training your bot…'; sub.textContent = `${pct}% · keep playing`; meter.style.width = pct + '%';
+    top.textContent = 'Training your bot…'; sub.textContent = `${pct}% · keep playing`; meter.style.width = pct + '%'; $('dockPend').style.width = '0%';
   } else if (!botReady()) {
     top.textContent = 'Bot: not trained yet';
     sub.textContent = sampCount >= MIN_TRAIN ? `${fmt(sampCount)} moves · ready to train` : `${fmt(sampCount)} / ${MIN_TRAIN} moves recorded`;
-    meter.style.width = Math.min(100, sampCount / MIN_TRAIN * 100) + '%';
+    meter.style.width = Math.min(100, sampCount / MIN_TRAIN * 100) + '%'; $('dockPend').style.width = '0%';
   } else {
-    const lv = botLevel(); top.textContent = `Level ${lv.n} ${lv.name}`;
-    sub.textContent = `${fmt(newSince)} new move${newSince === 1 ? '' : 's'} to learn`;
-    const have = profile.practice + newSince;
-    meter.style.width = (lv.next ? clamp((have - lv.from) / (lv.next - lv.from), 0, 1) * 100 : 100) + '%';
+    const lv = botLevel(), [done, pend] = levelBars(lv); top.textContent = `Level ${lv.n} ${lv.name}`;
+    sub.textContent = readyToLevel(lv) ? `Train it to reach level ${lv.n + 1}!` : `${fmt(newSince)} new move${newSince === 1 ? '' : 's'} to learn`;
+    meter.style.width = done + '%'; $('dockPend').style.width = pend + '%';
   }
   const tb = $('trainBtn'); tb.disabled = !!trainJob || sampCount < MIN_TRAIN; tb.textContent = trainJob ? 'Training…' : 'Train bot';
+  tb.classList.toggle('nudge', !tb.disabled && botReady() && readyToLevel(botLevel()));
   const bb = $('botBtn'); bb.disabled = !botReady() || !player || !player.alive; bb.classList.toggle('driving', botDriving);
   $('botBtnLabel').textContent = botDriving ? 'Take back' : W < 640 || H < 500 ? 'Use bot' : 'Bot takes over';
   $('dockAuto').checked = !!profile.auto;
@@ -3835,10 +3845,11 @@ function updateDock() {
 function updateBotCard() {
   const lv = botLevel();
   $('bcName').textContent = botReady() ? `Level ${lv.n} · ${lv.name}` : 'Not trained yet';
-  const have = profile.practice + newSince;
-  $('bcMeter').style.width = (botReady() ? (lv.next ? clamp((have - lv.from) / (lv.next - lv.from), 0, 1) * 100 : 100) : Math.min(100, sampCount / MIN_TRAIN * 100)) + '%';
+  const have = profile.practice + newSince, bars = botReady() ? levelBars(lv) : [Math.min(100, sampCount / MIN_TRAIN * 100), 0];
+  $('bcMeter').style.width = bars[0] + '%'; $('bcPend').style.width = bars[1] + '%';
   $('bcLine').textContent = trainJob ? 'Training right now…'
     : !botReady() ? (sampCount >= MIN_TRAIN ? `It has ${fmt(sampCount)} of your moves to study. Train it to wake it up.` : `Play a game and it starts watching how you steer (${fmt(sampCount)} of ${MIN_TRAIN} moves so far).`)
+    : readyToLevel(lv) ? `Ready for level ${lv.n + 1}! Train it so it studies your ${fmt(newSince)} new moves (the striped part of the bar).`
     : lv.next ? `${fmt(Math.max(0, lv.next - have))} more moves to reach level ${lv.n + 1}.${newSince ? ` ${fmt(newSince)} new moves are waiting to be studied.` : ''}` : 'Top level. It has learned a huge amount from you.';
   $('bcMoves').textContent = fmt(profile.practice);
   $('bcAcc').textContent = profile.acc == null ? '–' : Math.round(profile.acc * 100) + '%';
@@ -4655,6 +4666,8 @@ function boot() {
     rivalSnakes: () => snakes.filter((sn) => sn.rival).map((sn) => [sn.name, sn.alive]),
     setOf: () => ({ set: profile.set, dpr: +DPR.toFixed(2), swap: app.classList.contains('swap') }),
     levels: () => LEVELS.length,
+    setPractice: (p, ns) => { profile.practice = p; newSince = ns; profile.sessions = Math.max(1, profile.sessions); updateDock(); updateBotCard(); return botLevel(); },
+    bars: () => ({ dock: [$('dockMeter').style.width, $('dockPend').style.width, $('dockSub').textContent], card: [$('bcMeter').style.width, $('bcPend').style.width, $('bcLine').textContent, $('bcName').textContent] }),
     toFood: () => { if (!player) return false; let best = null, bd = 1e18; for (let i = 0; i < activeSlots; i++) { const f = foodAt(i); if (!f || f.eaten) continue; const d = (f.x - player.x) ** 2 + (f.y - player.y) ** 2; if (d < bd && d > 900) { bd = d; best = f; } } if (!best) return false; const a = player.ang; player.x = best.x - Math.cos(a) * 4; player.y = best.y - Math.sin(a) * 4; for (const p of player.segs) { p.x = player.x; p.y = player.y; } return true; },
     inputMode: () => input.mode,
     setProf: (k, v) => { profile[k] = v; checkAch(); return profile.ach; },
