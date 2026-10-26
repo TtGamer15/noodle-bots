@@ -121,7 +121,13 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .soundrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .savebox{display:grid;gap:10px;padding:14px;border-radius:16px;border:1px solid var(--line)}
 .savemsg{font-size:13px;color:var(--muted);min-height:1.2em}
-.version{font:500 12px var(--f-num);color:var(--muted);text-align:center;letter-spacing:.08em;opacity:.8}
+.version{font:500 12px var(--f-num);color:var(--muted);text-align:center;letter-spacing:.08em;opacity:.8;appearance:none;background:none;border:0;padding:6px;margin:0 auto;display:block;cursor:pointer}
+.version:hover,.version:focus-visible{opacity:1;color:var(--ink);text-decoration:underline}
+.news{display:grid;gap:14px}
+.news h3{margin:0 0 6px;font:700 13px var(--f-num);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.news ul{margin:0;padding-left:20px;display:grid;gap:6px;line-height:1.4}
+.news .old h3{color:var(--muted)}
+.news .old{opacity:.85}
 .card.wide{max-width:980px}
 .btn,.opt,.swatch,.chipbtn,.switch{touch-action:manipulation}
 .iqline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -533,7 +539,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <div class="optrow" id="optTag" hidden><button type="button" class="opt" data-tag="1v1">1v1<small>Pass It on</small></button><button type="button" class="opt" data-tag="run">Run<small>You vs 3 hunters</small></button><button type="button" class="opt" data-tag="hunt">Hunt<small>You + 2 bots vs 1</small></button></div>
         <div class="optrow" id="optBots" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-bots="1">1</button><button type="button" class="opt" data-bots="3">3</button><button type="button" class="opt" data-bots="6">6</button><button type="button" class="opt" data-bots="9">9</button></div>
         <div class="optrow" id="optDiff" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-diff="easy">Easy</button><button type="button" class="opt" data-diff="normal">Normal</button><button type="button" class="opt" data-diff="hard">Hard</button></div>
-        <div class="group" id="optRivals" hidden><p class="lbl">Friends' bots</p><div class="rivals" id="rivalList"></div><input type="file" id="rivalIn" class="vh" accept=".zip,application/zip"><label class="btn small" for="rivalIn">Add a friend's bot</label><p class="modeinfo" id="rivalInfo">Ask a friend to tap Download save on their menu and send you the file. Their trained bot joins your Bot Battles.</p></div>
+        <div class="group" id="optRivals" hidden><p class="lbl">Friends' bots</p><div class="rivals" id="rivalList"></div><input type="file" id="rivalIn" class="vh" accept=".zip,application/zip"><label class="btn small" for="rivalIn">Add a friend's bot</label><p class="modeinfo" id="rivalInfo">Ask a friend to tap Download save on their menu and send you the file. Their trained bot joins your Bot Battles, online too when you create the room.</p></div>
       </div>
       <div class="play-row">
         <button class="btn primary big" id="soloBtn" type="button">Play solo</button>
@@ -600,7 +606,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       </div>
       </div>
       </div>
-      <p class="version" id="versionLine">Noodle Bots</p>
+      <button class="version" id="versionLine" type="button">Noodle Bots</button>
     </div>
   </section>
 
@@ -747,6 +753,14 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
     </div>
   </section>
 
+  <!-- What's new -->
+  <section id="news" class="screen" hidden>
+    <div class="card">
+      <div class="card-head"><h2 id="newsTitle">What's new</h2><button class="btn primary small" id="newsDone" type="button">Got it</button></div>
+      <div class="news" id="newsList"></div>
+    </div>
+  </section>
+
   <!-- Settings -->
   <section id="settings" class="screen" hidden>
     <div class="card">
@@ -786,7 +800,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.5.4';
+const GAME_VERSION = '2.6';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -844,9 +858,9 @@ function fadeFor(c1, c2) {
   fadeCache.set(k, a); return a;
 }
 const RAINBOW = Array.from({ length: 36 }, (_, i) => `hsl(${i * 10},90%,63%)`);
-function cleanName(v) {
+function cleanName(v, max = 14) {
   if (typeof v !== 'string') return 'Player';
-  const s = v.replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '').trim().slice(0, 14);
+  const s = v.replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '').trim().slice(0, max);
   return s || 'Player';
 }
 function packLook(l) { return l.c1 + 10 * l.c2 + 100 * l.pat + 1000 * l.eye + 10000 * l.hat; }
@@ -867,7 +881,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, ach: null, set: { steer: 'auto', swap: false, smooth: false },
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', ach: null, set: { steer: 'auto', swap: false, smooth: false },
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
@@ -894,6 +908,7 @@ function applyProfileData(p) {
   if (typeof p.npcGen === 'number' && isFinite(p.npcGen)) profile.npcGen = clamp(Math.floor(p.npcGen), 0, 1e9);
   if (typeof p.stars === 'number' && isFinite(p.stars)) profile.stars = clamp(Math.floor(p.stars), 0, 1e6);
   if (typeof p.tutDone === 'boolean') profile.tutDone = p.tutDone;
+  if (typeof p.seenVer === 'string' && /^[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
   if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true };
   if (p.st && typeof p.st === 'object') {
@@ -1943,7 +1958,7 @@ function startMatch(cfg) {
     queue: [], overAt: 0, runner: '', myRespawnAt: 0, itTime: 0, made: 0, wasIt: false, started: now, ab: !!cfg.ab };
   if (gameKind === 'online' && m === 'tag' && match.v !== '1v1') match.v = 'evo';
   const humans = gameKind === 'solo' ? ['me'] : orderedHumans(old.tm);
-  const riv = m === 'br' && match.bot && gameKind === 'solo' ? rivals.filter((r) => rivalBrain(r)) : [];
+  const riv = m === 'br' && match.bot && (gameKind === 'solo' || online.isHost) ? rivals.filter((r) => rivalBrain(r)) : [];
   match.rivals = riv.length;
   if (m === 'br') { if (humans.length + match.sz + riv.length < 2) match.sz = 2 - humans.length - riv.length; match.R0 = clamp(1100 + 110 * (humans.length + match.sz + riv.length), 1400, 2600); match.riv = riv; }
   const R = arenaFor(match); match.bases = [[-R * 0.6, 0], [R * 0.6, 0]];
@@ -1967,11 +1982,12 @@ function setupCtl(humans) {
   countMinis();
 }
 function setupBr(humans) {
-  const riv = match.riv || []; match.riv = null;
+  const riv = match.riv || []; match.riv = null; match.rv = [];
   match.slotN = humans.length + match.sz + riv.length; match.slotOff = Math.random() * TAU;
   riv.forEach((r, j) => {
     const sn = spawnModeBot({ role: 'B', pos: brSpot(humans.length + match.sz + j), look: unpackLook(r.look), name: `${r.name}'s bot` });
-    sn.rival = r.brain; sn.bot = true; if (r.sk) applyLook(sn, sn.look, parseSkin(r.sk));
+    sn.rival = r.brain; sn.bot = true; if (r.sk) { applyLook(sn, sn.look, parseSkin(r.sk)); sn.rivSk = r.sk; }
+    match.rv.push([sn.npcId, r.sk || null]);
   });
   humans.forEach((k, i) => { match.tm[k] = [-1, 'P', i]; match.names[k] = k === myKey() ? cleanName(profile.name) : (online.remotes.get(k) || {}).name || 'A friend'; });
   for (let j = 0; j < match.sz; j++) spawnModeBot({ role: 'B', pos: brSpot(humans.length + j) });
@@ -2432,7 +2448,7 @@ function packMatch(now) {
     win: match.win, why: match.why, tm: match.tm, it: [...match.it], mc: match.mc, rn: match.runner || null, hs: match.huntSpot ? match.huntSpot.map(Math.round) : null,
     nb: match.nb && now < match.nb.until ? [match.nb.from, match.nb.to, Math.round(match.nb.until - now)] : null,
     ov: match.st === 'over' ? Math.round(now - match.overAt) : 0, el: Math.round((now - (match.started || now)) / 1000), ab: match.ab ? 1 : 0,
-    br: match.m === 'br' ? { bot: match.bot ? 1 : 0, r0: Math.round(match.R0), rt: Math.round(worldTargetR), so: Math.round((match.slotOff || 0) * 1000) / 1000, sn: match.slotN || 1, out: [...match.out].slice(0, 30), wins: match.wins, nm: match.names } : null };
+    br: match.m === 'br' ? { bot: match.bot ? 1 : 0, r0: Math.round(match.R0), rt: Math.round(worldTargetR), so: Math.round((match.slotOff || 0) * 1000) / 1000, sn: match.slotN || 1, out: [...match.out].slice(0, 30), wins: match.wins, nm: match.names, rv: match.rv && match.rv.length ? match.rv : null } : null };
 }
 function applyMatchFromHost(md) {
   if (!md || typeof md !== 'object') return;
@@ -2465,8 +2481,10 @@ function applyMatchFromHost(md) {
     const b = md.br; match.bot = b.bot === 1; match.R0 = clamp(num(b.r0, 2000), 600, 4000); match.slotOff = num(b.so); match.slotN = clamp(int(b.sn, 1), 1, 40);
     match.out = new Set(Array.isArray(b.out) ? b.out.filter((x) => typeof x === 'string' && x.length <= 32).slice(0, 40) : []);
     const wins = {}; if (b.wins && typeof b.wins === 'object') for (const k of Object.keys(b.wins).slice(0, 40)) if (k.length <= 32) wins[k] = clamp(int(b.wins[k]), 0, 999);
-    const nm = {}; if (b.nm && typeof b.nm === 'object') for (const k of Object.keys(b.nm).slice(0, 40)) if (k.length <= 32 && typeof b.nm[k] === 'string') nm[k] = cleanName(b.nm[k]);
+    const nm = {}; if (b.nm && typeof b.nm === 'object') for (const k of Object.keys(b.nm).slice(0, 40)) if (k.length <= 32 && typeof b.nm[k] === 'string') nm[k] = cleanName(b.nm[k], 20);
     match.wins = wins; match.names = nm;
+    match.rvMap = new Map(Array.isArray(b.rv) ? b.rv.slice(0, 8).filter((e) => Array.isArray(e)).map((e) => [int(e[0]), typeof e[1] === 'string' ? parseSkin(e[1]) : null]) : []);
+    match.rivals = match.rvMap.size;
   }
   const R = arenaFor(match); match.bases = [[-R * 0.6, 0], [R * 0.6, 0]];
   if (match.st === 'over') match.overAt = now - clamp(num(md.ov), 0, 10000);
@@ -3129,11 +3147,13 @@ function applyHost(pr) {
     if (!s || !s.alive) {
       const ni = clamp(Math.floor(code / 100000), 0, NPC_NAMES.length - 1);
       s = makeSnake({ kind: 'rnpc', name: NPC_NAMES[ni], nameIdx: ni, look: unpackLook(code % 100000), mass: m, pos: [x, y], ang: a, npcId: id });
+      if (match.m === 'br' && match.rvMap && match.rvMap.has(id)) { s.bot = true; const sk = match.rvMap.get(id); if (sk && sk.length) applyLook(s, s.look, sk); }
       s.errX = 0; s.errY = 0; s.grace = 0; setNet(s, x, y, a, m, b, now, num(e[9]) / 100, num(e[10], 100) / 100); s.errX = 0; s.errY = 0;
       for (const p of s.segs) { p.x = s.x; p.y = s.y; }
       online.rnpcs.set(id, s); snakes.push(s);
     } else setNet(s, x, y, a, m, b, now, num(e[9]) / 100, num(e[10], 100) / 100);
     s.team = e[7] === 0 || e[7] === 1 ? e[7] : -1; s.role = CODE_ROLE[int(e[8])] || ''; s.it = match.m === 'tag' && match.it.has('b' + id);
+    if (match.m === 'br' && match.names && match.names['b' + id] && s.name !== match.names['b' + id]) s.name = match.names['b' + id];
     if (e.length >= 15) applyNetFx(s, int(e[11]), num(e[12]), int(e[13]), num(e[14]), now, e[15] === 1); else if (s.fx || s.slowEnd) applyNetFx(s, 0, 0, s.fxUse, 0, now);
     if (s.role === 'M' && s.lookCode !== code) { s.lookCode = code; applyLook(s, unpackLook(code % 100000)); }
   }
@@ -3527,7 +3547,7 @@ function drawPreview(cv, look, now, skin) {
 
 /* ================= HUD & screens ================= */
 const app = $('app');
-const screens = ['menu', 'locker', 'online', 'death', 'train', 'result', 'pause', 'stats', 'settings'];
+const screens = ['menu', 'locker', 'online', 'death', 'train', 'result', 'pause', 'stats', 'settings', 'news'];
 function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', (mode === 'play' || mode === 'spec') && !name); }
 /* ---------- quick chat: preset messages only, so it stays friendly ---------- */
 const QC = ['GG!', 'Nice one!', 'Help!', 'Watch this!', 'Oops!', '😂'];
@@ -3566,6 +3586,33 @@ function drawChat(s, h, top, z, now) {
   if (ctx.roundRect) ctx.roundRect(x, y, w, hh, hh / 2); else ctx.rect(x, y, w, hh);
   ctx.moveTo(h.x - 6 / z, y + hh - 1 / z); ctx.lineTo(h.x, y + hh + 7 / z); ctx.lineTo(h.x + 6 / z, y + hh - 1 / z); ctx.fill();
   ctx.fillStyle = '#17122c'; ctx.fillText(ch.text, h.x, y + hh - 5 / z); ctx.globalAlpha = 1;
+}
+/* ---------- what's new: shows once after each update ---------- */
+const NEWS = [
+  { v: '2.6', items: ["Friends' bots can join online Bot Battles now. Whoever creates the room brings their friends' bots.", "This What's new page shows up after every update. Tap the version number at the bottom of the menu to see it again."] },
+  { v: '2.5', items: ['How to play: a step-by-step first game.', 'Pause button in solo (or press P).', 'Stats & trophies page with 19 trophies.', 'Settings: steering style, swap the button sides, and smooth mode for older tablets.', '4 more bot levels, and levels come faster. The bot bar shows a percentage.', "Battle a friend's bot: load their save in Bot Battle.", 'Fixes: loading a save plays one sound, and the tutorial card no longer covers your snake on phones.'] },
+];
+const verNum = (v) => String(v || '0').split('.').map((n) => parseInt(n, 10) || 0).reduce((a, n, i) => a + n * [1e6, 1e3, 1][i], 0);
+function openNews(onlyNew) {
+  const seen = verNum(profile.seenVer), list = $('newsList'); list.textContent = '';
+  let shown = NEWS.filter((n) => !onlyNew || verNum(n.v) > seen); if (!shown.length) shown = NEWS.slice(0, 1);
+  if (!onlyNew) shown = NEWS;
+  shown.forEach((n, i) => {
+    const d = document.createElement('div'); if (i > 0) d.className = 'old';
+    const h = document.createElement('h3'); h.textContent = i === 0 && n.v === NEWS[0].v ? `New in version ${n.v}` : `Version ${n.v}`;
+    const ul = document.createElement('ul'); for (const t of n.items) { const li = document.createElement('li'); li.textContent = t; ul.append(li); }
+    d.append(h, ul); list.append(d);
+  });
+  $('newsTitle').textContent = "What's new";
+  profile.seenVer = GAME_VERSION; save(false);
+  showScreen('news');
+}
+// After an update, players who've played before see what changed. Brand-new players skip it.
+function maybeShowNews() {
+  if (profile.seenVer === GAME_VERSION) return;
+  const veteran = profile.games > 0 || profile.sessions > 0 || profile.practice > 0;
+  if (!veteran || (window.NB_DEBUG && !window.NB_NEWS) || /^#(?:room=)?[A-Za-z]{4}$/.test(location.hash || '')) { profile.seenVer = GAME_VERSION; save(false); return; }
+  openNews(true);
 }
 /* ---------- settings ---------- */
 function applySettings() { app.classList.toggle('swap', !!profile.set.swap); }
@@ -3627,7 +3674,7 @@ async function importRival(file) {
     const p = d.profile || {}, prac = clamp(int(p.practice), 0, 1e9); let lvl = 2; for (let i = 1; i < LEVELS.length; i++) if (prac >= LEVELS[i][0]) lvl = i + 1;
     const r = { name: cleanName(p.name), look: int(p.look), sk: (Array.isArray(p.skin) ? p.skin.filter((k) => Number.isInteger(k) && k >= 0 && k < PALETTE.length).slice(0, SKIN_MAX).join('') : typeof p.skin === 'string' && parseSkin(p.skin) ? p.skin.slice(0, SKIN_MAX) : '') || null, w: bytesToB64(bytes), lvl, brain: test };
     rivals = rivals.filter((x) => x.name !== r.name); rivals.unshift(r); rivals = rivals.slice(0, 4); saveRivals(); renderRivals();
-    info.textContent = `${r.name}'s bot joined! It will fight in your solo Bot Battles.`; SFX.unlock();
+    info.textContent = `${r.name}'s bot joined! It fights in your Bot Battles, and in online ones when you create the room.`; SFX.unlock();
   } catch (e) { info.textContent = "That file isn't a Noodle Bots save. Ask your friend for the .zip from Download save."; }
 }
 // A bot brain (yours or a friend's) steering any snake.
@@ -4480,6 +4527,8 @@ $('lockerName').addEventListener('input', (e) => { profile.name = e.target.value
 $('lockerBtn').addEventListener('click', openLocker);
 $('lockerDone').addEventListener('click', showMenu);
 $('tutBtn').addEventListener('click', startTutorial);
+$('versionLine').addEventListener('click', () => openNews(false));
+$('newsDone').addEventListener('click', showMenu);
 $('statsBtn').addEventListener('click', openStats);
 $('statsDone').addEventListener('click', showMenu);
 $('setBtn').addEventListener('click', openSettings);
@@ -4616,12 +4665,12 @@ function boot() {
   cam.x = 0; cam.y = 0;
   checkUnlocks();
   $('nameIn').value = profile.name;
-  $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}`;
+  $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION} · What's new`;
   ensureDaily(); buildChat(); updateDailyCard(); loadRivals(); applySettings(); updateTutBtn(); checkAch(true);
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
-  showScreen('menu');
+  showScreen('menu'); maybeShowNews();
   initOnline();
   if (online.kind === 'web') {
     const joinFromHash = () => {
@@ -4731,7 +4780,7 @@ function boot() {
       const o = snakes.find((sn) => sn.kind === 'npc' && !sn.wallTest); if (!o || !player) return null;
       o.x = player.x + dist; o.y = player.y; for (const p of o.segs) { p.x = o.x; p.y = o.y; } o.grace = 3; return o.name;
     },
-    remotes: () => snakes.filter((sn) => sn.kind === 'remote' || sn.kind === 'rnpc').map((sn) => [sn.kind, sn.name, sn.fx || '', !!sn.phase, sn.slowEnd > curNow ? 1 : 0, sn.skin ? sn.skin.join('') : '']),
+    remotes: () => snakes.filter((sn) => sn.kind === 'remote' || sn.kind === 'rnpc').map((sn) => [sn.kind, sn.name, sn.fx || '', !!sn.phase, sn.slowEnd > curNow ? 1 : 0, sn.skin ? sn.skin.join('') : '', !!sn.bot]),
     me: () => (player ? { x: Math.round(player.x), y: Math.round(player.y), ang: +player.ang.toFixed(2), alive: player.alive, fx: player.fx, slow: player.slowEnd > curNow, skin: player.skin ? player.skin.join('') : '' } : null),
     tagNow: () => { const a = snakes.find((sn) => sn.it && sn.alive), b = snakes.find((sn) => !sn.it && sn.alive); if (!a || !b) return false; match.started = 0; const mv = b.kind === 'remote' ? a : b, to = mv === a ? b : a; mv.x = to.x + 2; mv.y = to.y; for (const p of mv.segs) { p.x = mv.x; p.y = mv.y; } return true; },
   };
