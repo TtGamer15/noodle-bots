@@ -156,6 +156,21 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 /* bright backgrounds: the numbers that sit right on the arena turn dark */
 #app.light #hud .stats > .lbl,#app.light #hud .stats > .sub{color:#3b3166}
 #app.light #hud .stats > .big{color:#1c1438;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+/* old-school Snake */
+.card.retro{gap:12px;width:min(460px,100%)}
+.retro-top{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+.retro-top b{font-family:var(--f-num);font-size:20px;color:var(--ink);margin-left:6px;font-variant-numeric:tabular-nums}
+.retro-wrap{position:relative;width:100%;aspect-ratio:1;touch-action:none;border-radius:16px;overflow:hidden}
+#retroCv{display:block;width:100%;height:100%}
+.retro-over{position:absolute;inset:0;display:grid;place-content:center;gap:14px;text-align:center;padding:20px;background:rgba(12,8,28,.66);backdrop-filter:blur(2px)}
+.retro-over[hidden]{display:none}
+.retro-over p{margin:0;font-size:16px;line-height:1.4;max-width:300px}
+.retro-over .btn{justify-self:center;min-width:140px}
+.dpad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center}
+.dpad .btn{font-size:18px;padding:0}
+.dpad [data-d=up]{grid-column:2;grid-row:1}.dpad [data-d=left]{grid-column:1;grid-row:2}.dpad [data-d=down]{grid-column:2;grid-row:2}.dpad [data-d=right]{grid-column:3;grid-row:2}
+@media (pointer:fine){.dpad{display:none}}
+@media (max-height:500px) and (orientation:landscape){.card.retro{width:min(330px,100%)}.dpad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,40px)}}
 .btn.nudge{border-color:var(--bot);box-shadow:0 0 0 3px color-mix(in srgb,var(--bot) 30%,transparent);color:var(--ink)}
 .meter.two{display:flex}.meter.two > div{flex:none}
 .meter > .pend{border-radius:0 999px 999px 0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bot) 55%,transparent) 0 4px,color-mix(in srgb,var(--bot) 25%,transparent) 4px 8px)}
@@ -799,6 +814,18 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
     </div>
   </section>
 
+  <!-- Old-school Snake (easter egg) -->
+  <section id="retro" class="screen" hidden>
+    <div class="card retro">
+      <div class="card-head"><h2>Old-school Snake</h2><button class="btn small" id="retroBack" type="button">Back</button></div>
+      <div class="retro-top"><span>Score <b id="rScore">0</b></span><span>Best <b id="rBest">0</b></span></div>
+      <div class="retro-wrap" id="retroWrap"><canvas id="retroCv" aria-label="Old-school Snake board"></canvas>
+        <div class="retro-over" id="retroOver"><p id="retroMsg">Eat snacks to grow. Don't hit the walls or your own tail!</p><button class="btn primary" id="retroGo" type="button">Play</button></div></div>
+      <div class="dpad" id="dpad"><button class="btn" data-d="up" type="button" aria-label="Up">▲</button><button class="btn" data-d="left" type="button" aria-label="Left">◀</button><button class="btn" data-d="down" type="button" aria-label="Down">▼</button><button class="btn" data-d="right" type="button" aria-label="Right">▶</button></div>
+      <p class="tip retro-tip">Swipe on the board, tap the arrows, or use the arrow keys (WASD works too).</p>
+    </div>
+  </section>
+
   <!-- Settings -->
   <section id="settings" class="screen" hidden>
     <div class="card">
@@ -813,6 +840,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="group"><p class="lbl">Buttons</p><label class="switch" for="swapChk"><input type="checkbox" id="swapChk"><span class="track"></span><span>Swap the button sides (Boost on the right)</span></label></div>
       <div class="group"><p class="lbl">Graphics</p><label class="switch" for="smoothChk"><input type="checkbox" id="smoothChk"><span class="track"></span><span>Smooth mode: less detail so it runs faster on older tablets</span></label></div>
       <div class="group"><p class="lbl">Sound on iPhone</p><label class="switch" for="silentChk"><input type="checkbox" id="silentChk"><span class="track"></span><span>Play sound even when my iPhone is on silent</span></label><p class="bc-line">Off: game sounds are built in, nothing shows on the Dynamic Island, but the silent switch mutes them. On: sound plays on silent too, but iPhone shows music controls on the Dynamic Island.</p></div>
+      <div class="group"><p class="lbl">Secret</p><button class="btn" id="retroBtn" type="button">🐍 Old-school Snake</button><p class="bc-line">The classic grid game, made out of Noodle Bots.</p></div>
     </div>
   </section>
 </div>
@@ -839,7 +867,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.9.6';
+const GAME_VERSION = '3.0';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -921,7 +949,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false },
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false },
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
@@ -948,6 +976,7 @@ function applyProfileData(p) {
   if (typeof p.npcGen === 'number' && isFinite(p.npcGen)) profile.npcGen = clamp(Math.floor(p.npcGen), 0, 1e9);
   if (typeof p.stars === 'number' && isFinite(p.stars)) profile.stars = clamp(Math.floor(p.stars), 0, 1e6);
   if (typeof p.tutDone === 'boolean') profile.tutDone = p.tutDone;
+  if (typeof p.retroBest === 'number' && isFinite(p.retroBest)) profile.retroBest = clamp(Math.floor(p.retroBest), 0, 9999);
   if (['auto', 'calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
   if (typeof p.seenVer === 'string' && /^[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
@@ -3631,7 +3660,7 @@ function drawPreview(cv, look, now, skin) {
 
 /* ================= HUD & screens ================= */
 const app = $('app');
-const screens = ['menu', 'locker', 'online', 'death', 'train', 'result', 'pause', 'stats', 'settings', 'news'];
+const screens = ['menu', 'locker', 'online', 'death', 'train', 'result', 'pause', 'stats', 'settings', 'news', 'retro'];
 let screenAt = 0, lastDownAt = 0;
 addEventListener('pointerdown', () => { lastDownAt = performance.now(); }, true);
 // A finger that was already down (steering) when a screen popped up shouldn't press its buttons.
@@ -3677,6 +3706,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '3.0', items: ['Secret: Settings has a new 🐍 Old-school Snake button. It is the classic grid Snake game, played with your own Noodle Bots snake, snacks and background.'] },
   { v: '2.9.6', items: ['Fixed: the iPhone top bar could still pick up a bright background color when the game started. Now it stays purple.'] },
   { v: '2.9.5', items: ["iPhone home-screen app: the solid bar behind the time and battery is back, and it's always the same dark purple as the buttons, whatever background you pick. (Re-add the app to your home screen to get it.)"] },
   { v: '2.9.4', items: ['Fixed the Take back button on phones: its words were the same color as the button and spilled out of it.'] },
@@ -3709,6 +3739,98 @@ function maybeShowNews() {
   const veteran = profile.games > 0 || profile.sessions > 0 || profile.practice > 0;
   if (!veteran || (window.NB_DEBUG && !window.NB_NEWS) || /^#(?:room=)?[A-Za-z]{4}$/.test(location.hash || '')) { profile.seenVer = GAME_VERSION; save(false); return; }
   openNews(true);
+}
+/* ---------- Old-school Snake: a grid snake drawn with the real Noodle Bots look ---------- */
+const RETRO = { N: 17, on: false, alive: false, cells: [], prev: [], dir: [1, 0], queue: [], food: null, bonus: null, score: 0, acc: 0, step: 150, grow: 0, eaten: 0, last: 0, raf: 0, dead: 0 };
+function retroOpen() {
+  showScreen('retro'); $('rBest').textContent = fmt(profile.retroBest || 0); $('rScore').textContent = '0';
+  retroReset(); RETRO.alive = false; retroOver("Eat snacks to grow. Don't hit the walls or your own tail!", 'Play');
+  RETRO.on = true; RETRO.last = performance.now(); cancelAnimationFrame(RETRO.raf); RETRO.raf = requestAnimationFrame(retroFrame);
+}
+function retroClose() { RETRO.on = false; RETRO.alive = false; cancelAnimationFrame(RETRO.raf); openSettings(); }
+function retroReset() {
+  const m = RETRO.N >> 1; RETRO.cells = [[m - 2, m], [m - 3, m], [m - 4, m]]; RETRO.prev = RETRO.cells.map((c) => c.slice());
+  RETRO.dir = [1, 0]; RETRO.queue = []; RETRO.score = 0; RETRO.grow = 0; RETRO.eaten = 0; RETRO.acc = 0; RETRO.step = 150; RETRO.bonus = null; RETRO.dead = 0;
+  RETRO.food = retroSpot(); $('rScore').textContent = '0';
+}
+function retroOver(msg, btn) { $('retroMsg').textContent = msg; $('retroGo').textContent = btn; $('retroOver').hidden = false; }
+function retroStart() { audioUnlock(); retroReset(); RETRO.alive = true; $('retroOver').hidden = true; RETRO.last = performance.now(); }
+function retroSpot() {
+  const taken = new Set(RETRO.cells.map((c) => c[0] + ',' + c[1])); if (RETRO.food) taken.add(RETRO.food.x + ',' + RETRO.food.y);
+  for (let k = 0; k < 400; k++) { const x = Math.floor(Math.random() * RETRO.N), y = Math.floor(Math.random() * RETRO.N); if (!taken.has(x + ',' + y)) return { x, y, c: Math.floor(Math.random() * PALETTE.length) }; }
+  return null;
+}
+function retroTurn(name) {
+  const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[name]; if (!d) return;
+  if (!RETRO.alive) { if (!$('retroOver').hidden && performance.now() - RETRO.dead > 600) retroStart(); else return; }
+  const lastD = RETRO.queue.length ? RETRO.queue[RETRO.queue.length - 1] : RETRO.dir;
+  if (d[0] === -lastD[0] && d[1] === -lastD[1]) return;     // no turning straight back into yourself
+  if (d[0] === lastD[0] && d[1] === lastD[1]) return;
+  if (RETRO.queue.length < 2) RETRO.queue.push(d);
+}
+function retroTick() {
+  if (RETRO.queue.length) RETRO.dir = RETRO.queue.shift();
+  const head = RETRO.cells[0], nx = head[0] + RETRO.dir[0], ny = head[1] + RETRO.dir[1];
+  RETRO.prev = RETRO.cells.map((c) => c.slice());
+  const willGrow = RETRO.grow > 0, body = willGrow ? RETRO.cells : RETRO.cells.slice(0, -1);
+  if (nx < 0 || ny < 0 || nx >= RETRO.N || ny >= RETRO.N || body.some((c) => c[0] === nx && c[1] === ny)) { retroCrash(); return; }
+  RETRO.cells.unshift([nx, ny]); if (willGrow) RETRO.grow--; else RETRO.cells.pop();
+  const f = RETRO.food;
+  if (f && f.x === nx && f.y === ny) {
+    RETRO.score++; RETRO.grow += 1; RETRO.eaten++; SFX.eat(1); RETRO.food = retroSpot();
+    RETRO.step = Math.max(72, 150 - RETRO.score * 3);
+    if (RETRO.eaten % 5 === 0) { const b = retroSpot(); if (b) RETRO.bonus = { x: b.x, y: b.y, until: performance.now() + 6000 }; }
+  }
+  const b = RETRO.bonus;
+  if (b && b.x === nx && b.y === ny) { RETRO.score += 3; RETRO.grow += 3; RETRO.bonus = null; SFX.eat(2); SFX.ready(); }
+  $('rScore').textContent = fmt(RETRO.score);
+}
+function retroCrash() {
+  RETRO.alive = false; RETRO.dead = performance.now(); SFX.death();
+  const best = profile.retroBest || 0, isBest = RETRO.score > best;
+  if (isBest) { profile.retroBest = RETRO.score; save(false); $('rBest').textContent = fmt(RETRO.score); }
+  setTimeout(() => { if (RETRO.on && !RETRO.alive) { retroOver(isBest && RETRO.score > 0 ? `New best: ${RETRO.score}! 🎉` : `You scored ${RETRO.score}.`, 'Play again'); if (isBest && RETRO.score > 0) SFX.unlock(); } }, 650);
+}
+function retroFrame(now) {
+  if (!RETRO.on) return;
+  RETRO.raf = requestAnimationFrame(retroFrame);
+  if ($('retro').hidden) { RETRO.on = false; return; }
+  const dt = Math.min(250, now - RETRO.last); RETRO.last = now;
+  if (RETRO.alive) { RETRO.acc += dt; while (RETRO.acc >= RETRO.step && RETRO.alive) { RETRO.acc -= RETRO.step; retroTick(); } }
+  if (RETRO.bonus && now > RETRO.bonus.until) RETRO.bonus = null;
+  retroDraw(now);
+}
+function retroDraw(now) {
+  const cv = $('retroCv'), r = cv.getBoundingClientRect(); if (r.width < 10) return;
+  const w = r.width, dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(w * dpr)) { cv.width = cv.height = Math.round(w * dpr); }
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const N = RETRO.N, cell = w / N, th = THEMES[themeCur];
+  if (!cv._pats) cv._pats = {}; if (!cv._pats[themeCur]) cv._pats[themeCur] = c.createPattern(tileFor(th), 'repeat');
+  c.fillStyle = th.floor; c.fillRect(0, 0, w, w); c.fillStyle = cv._pats[themeCur]; c.fillRect(0, 0, w, w);
+  c.strokeStyle = th.light ? 'rgba(40,30,80,0.08)' : 'rgba(255,255,255,0.05)'; c.lineWidth = 1; c.beginPath();
+  for (let i = 1; i < N; i++) { c.moveTo(i * cell, 0); c.lineTo(i * cell, w); c.moveTo(0, i * cell); c.lineTo(w, i * cell); } c.stroke();
+  c.strokeStyle = th.edge; c.globalAlpha = 0.7; c.lineWidth = 4; c.strokeRect(2, 2, w - 4, w - 4); c.globalAlpha = 1;
+  const ctr = (x, y) => [(x + 0.5) * cell, (y + 0.5) * cell];
+  // snacks: the same glowing dots as the arena, plus a gold star bonus
+  const sprites = th.light ? foodSpritesLight : foodSprites, pulse = 1 + 0.1 * Math.sin(now * 0.006);
+  if (RETRO.food) { const [fx, fy] = ctr(RETRO.food.x, RETRO.food.y), rr = cell * 0.95 * pulse; c.drawImage(sprites[RETRO.food.c], fx - rr, fy - rr, rr * 2, rr * 2); }
+  if (RETRO.bonus) { const [bx, by] = ctr(RETRO.bonus.x, RETRO.bonus.y), left = (RETRO.bonus.until - now) / 6000; c.globalAlpha = left < 0.3 ? 0.5 + 0.5 * Math.sin(now * 0.03) : 1; drawStar(c, bx, by, cell * 0.42 * pulse, '#ffd447'); c.globalAlpha = 1; }
+  // the snake: a real Noodle Bots snake bent along the grid path, sliding smoothly between squares
+  const a = RETRO.alive ? Math.min(1, RETRO.acc / RETRO.step) : 1, pts = [];
+  for (let i = 0; i < RETRO.cells.length; i++) {
+    const cur = RETRO.cells[i], pv = RETRO.prev[i] || cur; pts.push(ctr(pv[0] + (cur[0] - pv[0]) * a, pv[1] + (cur[1] - pv[1]) * a));
+  }
+  const sn = previewSnake(profile.look, '', w, profile.skin); sn.r = cell * 0.46;
+  const sp = sn.r * 0.45; let k = 0, ax = pts[0][0], ay = pts[0][1]; sn.segs.push({ x: ax, y: ay });
+  for (let i = 1; i < pts.length; i++) {
+    const bx = pts[i][0], by = pts[i][1]; let d = Math.hypot(bx - ax, by - ay);
+    while (d >= sp) { const t = sp / d; ax += (bx - ax) * t; ay += (by - ay) * t; sn.segs.push({ x: ax, y: ay }); d -= sp; k++; }
+  }
+  if (sn.segs.length < 2) sn.segs.push({ x: pts[0][0] - RETRO.dir[0] * sp, y: pts[0][1] - RETRO.dir[1] * sp });
+  sn.ang = sn.targetAng = Math.atan2(RETRO.dir[1], RETRO.dir[0]);
+  if (!RETRO.alive && RETRO.dead) c.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin((now - RETRO.dead) * 0.012));
+  drawSnake(c, sn, { x0: -1e5, x1: 1e5, y0: -1e5, y1: 1e5 }, Math.floor(now / 50) % 36, now, 1); c.globalAlpha = 1;
 }
 /* ---------- settings ---------- */
 function applySettings() { app.classList.toggle('swap', !!profile.set.swap); }
@@ -4737,6 +4859,11 @@ window.addEventListener('blur', () => { input.mBoost = input.kBoost = input.tBoo
 window.addEventListener('keydown', (e) => {
   const tag = e.target && e.target.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
   const k = e.code;
+  if (!$('retro').hidden) {
+    const map = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
+    if (map[k]) { e.preventDefault(); retroTurn(map[k]); } else if ((k === 'Space' || k === 'Enter') && !RETRO.alive && !e.repeat) { e.preventDefault(); if (performance.now() - RETRO.dead > 600) retroStart(); } else if (k === 'Escape') retroClose();
+    return;
+  }
   if (paused) { if ((k === 'KeyP' || k === 'Escape' || k === 'Space') && !e.repeat) { e.preventDefault(); resumeGame(); } return; }
   if ((k === 'KeyP' || k === 'Escape') && !e.repeat && gameKind === 'solo' && (mode === 'play' || mode === 'spec')) { pauseGame(); return; }
   if (k === 'Space' || k === 'ArrowUp' || k === 'KeyW') { input.kBoost = true; if (mode === 'play') e.preventDefault(); }
@@ -4799,6 +4926,19 @@ $('lockerName').addEventListener('input', (e) => { profile.name = e.target.value
 $('lockerBtn').addEventListener('click', openLocker);
 $('lockerDone').addEventListener('click', showMenu);
 $('tutBtn').addEventListener('click', startTutorial);
+$('retroBtn').addEventListener('click', retroOpen);
+$('retroBack').addEventListener('click', retroClose);
+tapButton($('retroGo'), () => { if (performance.now() - RETRO.dead > 600) retroStart(); });
+for (const b of document.querySelectorAll('#dpad [data-d]')) tapButton(b, () => retroTurn(b.dataset.d));
+(() => {   // swipe on the board
+  const wrap = $('retroWrap'); let sx = 0, sy = 0, live = false;
+  wrap.addEventListener('pointerdown', (e) => { sx = e.clientX; sy = e.clientY; live = true; });
+  wrap.addEventListener('pointermove', (e) => {
+    if (!live) return; const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.max(Math.abs(dx), Math.abs(dy)) < 22) return;
+    retroTurn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up')); sx = e.clientX; sy = e.clientY;
+  });
+  const up = () => { live = false; }; wrap.addEventListener('pointerup', up); wrap.addEventListener('pointercancel', up);
+})();
 $('versionLine').addEventListener('click', () => openNews(false));
 $('newsDone').addEventListener('click', showMenu);
 $('statsBtn').addEventListener('click', openStats);
@@ -5002,6 +5142,8 @@ function boot() {
     rivalSnakes: () => snakes.filter((sn) => sn.rival).map((sn) => [sn.name, sn.alive]),
     setOf: () => ({ set: profile.set, dpr: +DPR.toFixed(2), swap: app.classList.contains('swap') }),
     levels: () => LEVELS.length,
+    retro: () => ({ alive: RETRO.alive, len: RETRO.cells.length, score: RETRO.score, head: RETRO.cells[0], dir: RETRO.dir, food: RETRO.food, best: profile.retroBest, over: !$('retroOver').hidden }),
+    retroFood: (dx, dy) => { const h = RETRO.cells[0]; RETRO.food = { x: h[0] + dx, y: h[1] + dy, c: 2 }; },
     fakeRammer: (seg, shield) => {
       if (!player) return null; const sg = player.segs[Math.min(seg || 8, player.segs.length - 1)], prev = player.segs[Math.min(seg || 8, player.segs.length - 1) - 1];
       const bodyA = Math.atan2(sg.y - prev.y, sg.x - prev.x), a = bodyA + Math.PI / 2, now = performance.now();
