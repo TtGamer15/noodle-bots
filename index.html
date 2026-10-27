@@ -459,6 +459,18 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .piece:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
 .piece-empty{font-size:13px;color:var(--muted);padding:0 4px}
 .builder .swatch{width:30px;height:30px}
+/* ---------- phones held upright, v2.8: fewer things fighting for the top, bigger thumb buttons at the bottom ---------- */
+@media (max-width:640px) and (orientation:portrait){
+  .iqline{display:none}
+  #roomText:empty{display:none}
+  .roomchip:has(#roomText:empty){padding-left:3px}
+  .banner{padding:5px 12px;font-size:12px;gap:8px;max-width:calc(100vw - 32px);box-shadow:0 0 0 3px color-mix(in srgb,var(--bot) 12%,transparent)}
+  .banner #takeBackBtn{display:none}
+  #bannerText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dock .btn{min-height:50px}
+  .dock .boost{flex:1.5 1 0;min-height:54px;font-size:16px}
+  #trainBtn:disabled{display:none}
+}
 </style>
 <style>html{height:100%;height:100dvh}</style>
 </head>
@@ -806,7 +818,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.7.1';
+const GAME_VERSION = '2.8';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -3604,6 +3616,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '2.8', items: ['Tidier screen on phones held upright: fewer things crowd the top, the bot banner is one short line, and Boost is a big thumb-sized button.', 'Train bot only shows up when your bot has new moves ready to learn.'] },
   { v: '2.7', items: ['Music styles! Pick Relaxing, Intense, Fun, Sad or Neutral under the sound switches on the menu.', 'Exit and Leave ask "Sure?" first, so a thumb that slides onto them while steering won\'t end your game.', 'Buttons that pop up when you crash ignore a tap that started before they appeared.', 'iPhone: no more stray bars at the top or bottom, and the screen settles back after typing.'] },
   { v: '2.6', items: ["Friends' bots can join online Bot Battles now. Whoever creates the room brings their friends' bots.", "This What's new page shows up after every update. Tap the version number at the bottom of the menu to see it again."] },
   { v: '2.5', items: ['How to play: a step-by-step first game.', 'Pause button in solo (or press P).', 'Stats & trophies page with 19 trophies.', 'Settings: steering style, swap the button sides, and smooth mode for older tablets.', '4 more bot levels, and levels come faster. The bot bar shows a percentage.', "Battle a friend's bot: load their save in Bot Battle.", 'Fixes: loading a save plays one sound, and the tutorial card no longer covers your snake on phones.'] },
@@ -3833,7 +3846,8 @@ function setBot(on, reason) {
   botDriving = on; player.bot = on; botP.fill(1 / NB); botViz = null; botReason = on ? (reason || 'manual') : '';
   if (was !== on) { if (on) SFX.botOn(); else SFX.botOff(); }
   if (!on) { input.last = performance.now(); botWatch = false; }
-  $('bannerText').textContent = reason === 'auto' ? 'You went quiet, so your bot took over. Touch or move to take back' : reason === 'watch' ? 'Watching your bot play' : 'Your bot is driving';
+  const upright = W <= 640 && H > W;
+  $('bannerText').textContent = reason === 'auto' ? (upright ? 'You went quiet, so your bot took over' : 'You went quiet, so your bot took over. Touch or move to take back') : reason === 'watch' ? 'Watching your bot play' : 'Your bot is driving';
   updateBanner(); updateDock();
 }
 function updateBanner() {
@@ -3870,9 +3884,9 @@ function updateRoomChip() {
   const t = $('roomText'); let txt, ex;
   if (gameKind === 'online' && online.code) {
     const n = online.players;
-    txt = W <= 360 ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${inModes() ? modeName(match) : TIERS[online.tier].name + (abilClassic ? ' · Abilities' : '')}${online.room && !online.connected ? ' · reconnecting' : ''}`;
+    txt = W <= 360 || (W <= 640 && H > W) ? `${online.code} · ${n}` : `Room ${online.code} · ${n} player${n === 1 ? '' : 's'} · ${inModes() ? modeName(match) : TIERS[online.tier].name + (abilClassic ? ' · Abilities' : '')}${online.room && !online.connected ? ' · reconnecting' : ''}`;
     ex = 'Leave';
-  } else { txt = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : abilClassic ? 'Solo · Abilities' : 'Solo'; ex = 'Exit'; }
+  } else { txt = W <= 360 || (W <= 640 && H > W) ? '' : botWatch ? 'Solo · watching your bot' : abilClassic ? 'Solo · Abilities' : 'Solo'; ex = 'Exit'; }
   // Only touch the page when something changed: this runs many times a second online.
   if (t.textContent !== txt) t.textContent = txt;
   if (performance.now() - exitArmed > 2500 && $('exitBtn').textContent !== ex) $('exitBtn').textContent = ex;
