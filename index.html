@@ -46,8 +46,8 @@ html,body{height:100%;overscroll-behavior:none}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 #topcap{display:none}
-@media (display-mode: standalone){#topcap{display:block;position:fixed;left:0;right:0;top:0;height:4px;background:#17122c;z-index:9999}}
-#app{position:fixed;left:0;top:var(--app-top,0px);right:0;height:var(--app-h,100%);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+@media (display-mode: standalone){#topcap{display:block;position:fixed;left:0;right:0;top:0;height:2px;background:#17122c;z-index:9999}}
+#app{background:#17122c;position:fixed;left:0;top:var(--app-top,0px);right:0;height:var(--app-h,100%);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #app input,#app textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
 h1,h2,p{margin:0}
@@ -839,7 +839,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.9.5';
+const GAME_VERSION = '2.9.6';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -3677,6 +3677,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '2.9.6', items: ['Fixed: the iPhone top bar could still pick up a bright background color when the game started. Now it stays purple.'] },
   { v: '2.9.5', items: ["iPhone home-screen app: the solid bar behind the time and battery is back, and it's always the same dark purple as the buttons, whatever background you pick. (Re-add the app to your home screen to get it.)"] },
   { v: '2.9.4', items: ['Fixed the Take back button on phones: its words were the same color as the button and spilled out of it.'] },
   { v: '2.9.3', items: ['Music and sounds are built into the game now, so iPhone no longer shows music controls on the Dynamic Island. (Settings has a switch if you want sound to play when your phone is on silent.)'] },
@@ -4285,7 +4286,7 @@ function paintPage() {
     document.documentElement.style.backgroundColor = BAR_COLOR; document.body.style.backgroundColor = BAR_COLOR;
     let m = document.querySelector('meta[name="theme-color"]'); if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.append(m); }
     if (m.content !== BAR_COLOR) m.content = BAR_COLOR;
-    if (app) { app.style.backgroundColor = THEMES[themeCur].floor; app.classList.toggle('light', !!THEMES[themeCur].light); }
+    if (app) { app.style.backgroundColor = BAR_COLOR; app.classList.toggle('light', !!THEMES[themeCur].light); }
   } catch (e) { /* ignore */ }
 }
 function updateTheme(dt) {
