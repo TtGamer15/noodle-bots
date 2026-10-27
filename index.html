@@ -45,6 +45,7 @@ html,body{height:100%;overscroll-behavior:none}
 @media (display-mode: standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+#topcap{position:fixed;left:0;right:0;top:0;height:6px;background:var(--cap,#17122c);z-index:9999}
 #app{position:fixed;left:0;top:var(--app-top,0px);right:0;height:var(--app-h,100%);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #app input,#app textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
@@ -493,6 +494,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 <div id="app">
   <canvas id="game" aria-label="Noodle Bots arena"></canvas>
 
+  <div id="topcap" aria-hidden="true"></div>
   <div id="hud">
     <div class="stats">
       <p class="lbl">Length</p>
@@ -834,7 +836,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.9';
+const GAME_VERSION = '2.9.1';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -3672,6 +3674,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '2.9.1', items: ["iPhone: the bar at the very top (time, battery) now changes color with the arena background."] },
   { v: '2.9', items: ['6 bright new backgrounds: Sunny Meadow, Beach Day, Cotton Candy, Sky Blue, Snow Day and Lemonade.', 'Abilities works with Shrinking Arena now: pick Abilities, then Shrinking Arena under Play.', 'Music lives in Customize snake now, right under Arena background.', 'New Auto music: it switches to a different style every 45 seconds, like the Auto background.', 'Every hat takes your hat color now, including the Wizard hat, Crown jewel, Halo, Horns, Flower and Bunny ears.', 'Hats have a thin outline, so a hat the same color as your snake still shows up.', 'Online: when you take someone out, they go down on your screen right away instead of a moment later.', 'Online: bots stay solid through short connection hiccups instead of turning see-through. A snake with 👻 over its name is using the Ghost power.', 'Typing a room code or name on a phone: the box stays in view above the keyboard, with no black gap.', 'The leaderboard never bumps into the top buttons, even with bigger text or zoom.'] },
   { v: '2.8', items: ['Tidier screen on phones held upright: the pause, sound, music and Exit buttons get their own row across the top, so the leaderboard never covers them.', 'The bot banner is one short line, and Boost is a big thumb-sized button.', 'Train bot only shows up when your bot has new moves ready to learn.'] },
   { v: '2.7', items: ['Music styles! Pick Relaxing, Intense, Fun, Sad or Neutral under the sound switches on the menu.', 'Exit and Leave ask "Sure?" first, so a thumb that slides onto them while steering won\'t end your game.', 'Buttons that pop up when you crash ignore a tap that started before they appeared.', 'iPhone: no more stray bars at the top or bottom, and the screen settles back after typing.'] },
@@ -4271,7 +4274,8 @@ function setTheme(i) { i = clamp(int(i), 0, THEMES.length - 1); if (i === themeC
 function paintPage() {
   const col = THEMES[themeCur].floor;
   try {
-    document.documentElement.style.backgroundColor = col; document.body.style.backgroundColor = col;
+    document.documentElement.style.backgroundColor = col; document.body.style.backgroundColor = col; document.documentElement.style.setProperty('--cap', col);
+    if (app) app.style.backgroundColor = col;
     let m = document.querySelector('meta[name="theme-color"]'); if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.append(m); }
     if (m.content !== col) m.content = col;
     if (typeof app !== 'undefined') app.classList.toggle('light', !!THEMES[themeCur].light);
