@@ -66,7 +66,7 @@ h1,h2,p{margin:0}
 .roomchip{position:relative;z-index:6;pointer-events:auto;margin-top:6px;display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12px;color:var(--muted);max-width:100%}
 .roomchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .chipbtn{appearance:none;border:1px solid var(--line);background:rgba(244,239,254,.08);color:var(--ink);font:600 12px var(--f-body);padding:4px 10px;border-radius:999px;cursor:pointer}
-.chipbtn:hover{background:rgba(244,239,254,.16)}
+@media (hover:hover){.chipbtn:hover{background:rgba(244,239,254,.16)}}
 .board{grid-column:2;grid-row:1;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;width:200px;backdrop-filter:blur(6px)}
 .board ol{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px;font-size:13px}
 .board li{display:grid;grid-template-columns:1.6em minmax(0,1fr) auto;gap:6px;align-items:center}
@@ -92,15 +92,15 @@ h1,h2,p{margin:0}
 
 /* ---------- controls ---------- */
 .btn{appearance:none;font:600 14px/1 var(--f-body);color:var(--ink);background:rgba(244,239,254,.08);border:1px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,background .15s,opacity .15s;white-space:nowrap}
-.btn:hover:not(:disabled){background:rgba(244,239,254,.15)}
+@media (hover:hover){.btn:hover:not(:disabled){background:rgba(244,239,254,.15)}}
 .btn:active:not(:disabled){transform:translateY(1px)}
 .btn:disabled{opacity:.42;cursor:not-allowed}
 .btn:focus-visible,.chipbtn:focus-visible,.swatch:focus-visible,.opt:focus-visible,.input:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
-.btn.primary:hover:not(:disabled){background:color-mix(in srgb,var(--accent) 86%,white)}
+@media (hover:hover){.btn.primary:hover:not(:disabled){background:color-mix(in srgb,var(--accent) 86%,white)}}
 .btn.bot{background:var(--bot);color:var(--bot-ink);border-color:transparent}
-.btn.bot:hover:not(:disabled){background:color-mix(in srgb,var(--bot) 86%,white)}
-.btn.bot.driving{background:transparent;color:var(--bot);border-color:var(--bot)}
+@media (hover:hover){.btn.bot:hover:not(:disabled){background:color-mix(in srgb,var(--bot) 86%,white)}}
+.btn.bot.driving,.btn.bot.driving:hover:not(:disabled){background:color-mix(in srgb,var(--bot) 12%,transparent);color:var(--bot);border-color:var(--bot)}
 .btn.danger{background:var(--danger);color:var(--danger-ink);border-color:transparent}
 .btn.big{font-size:17px;padding:15px 18px;border-radius:14px;width:100%;white-space:normal;line-height:1.2;text-align:center}
 .btn.small{font-size:13px;padding:8px 12px;border-radius:10px}
@@ -482,11 +482,12 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   .board{margin-top:calc(var(--chip-h,36px) + 6px);position:relative;z-index:1}
   .stats > .sub{flex-wrap:wrap;row-gap:4px;max-width:calc(100% - 172px)}
   /* the button row has the whole width now, so online it stays on one line (with the music button) */
+  #botBtn{white-space:normal;line-height:1.1;text-align:center;padding-inline:8px;gap:6px}
   .roomchip.has-invite{flex-wrap:nowrap;border-radius:999px}
   .roomchip.has-invite #roomText{flex-basis:auto;padding-left:5px}
   .roomchip.has-invite #musicBtn:not([hidden]){display:inline-grid}
 }
-@media (max-width:360px) and (orientation:portrait){.stats > .sub{max-width:calc(100% - 146px)}}
+@media (max-width:360px) and (orientation:portrait){.stats > .sub{max-width:calc(100% - 146px)}#botBtn svg{display:none}}
 </style>
 <style>html{height:100%;height:100dvh}</style>
 </head>
@@ -836,7 +837,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.9.3';
+const GAME_VERSION = '2.9.4';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -3674,6 +3675,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '2.9.4', items: ['Fixed the Take back button on phones: its words were the same color as the button and spilled out of it.'] },
   { v: '2.9.3', items: ['Music and sounds are built into the game now, so iPhone no longer shows music controls on the Dynamic Island. (Settings has a switch if you want sound to play when your phone is on silent.)'] },
   { v: '2.9.2', items: ["iPhone home-screen app: the game goes all the way to the top, behind the time and battery, and the buttons sit just below the iPhone's dark fade. (Re-add the app to your home screen to get it.)"] },
   { v: '2.9', items: ['6 bright new backgrounds: Sunny Meadow, Beach Day, Cotton Candy, Sky Blue, Snow Day and Lemonade.', 'Abilities works with Shrinking Arena now: pick Abilities, then Shrinking Arena under Play.', 'Music lives in Customize snake now, right under Arena background.', 'New Auto music: it switches to a different style every 45 seconds, like the Auto background.', 'Every hat takes your hat color now, including the Wizard hat, Crown jewel, Halo, Horns, Flower and Bunny ears.', 'Hats have a thin outline, so a hat the same color as your snake still shows up.', 'Online: when you take someone out, they go down on your screen right away instead of a moment later.', 'Online: bots stay solid through short connection hiccups instead of turning see-through. A snake with 👻 over its name is using the Ghost power.', 'Typing a room code or name on a phone: the box stays in view above the keyboard, with no black gap.', 'The leaderboard never bumps into the top buttons, even with bigger text or zoom.'] },
