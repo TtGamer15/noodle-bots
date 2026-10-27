@@ -62,7 +62,7 @@ h1,h2,p{margin:0}
 .sub{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px;color:var(--muted)}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(244,239,254,.1);color:var(--ink)}
 .chip.is-bot{background:var(--bot);color:var(--bot-ink)}
-.roomchip{pointer-events:auto;margin-top:6px;display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12px;color:var(--muted);max-width:100%}
+.roomchip{position:relative;z-index:6;pointer-events:auto;margin-top:6px;display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12px;color:var(--muted);max-width:100%}
 .roomchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .chipbtn{appearance:none;border:1px solid var(--line);background:rgba(244,239,254,.08);color:var(--ink);font:600 12px var(--f-body);padding:4px 10px;border-radius:999px;cursor:pointer}
 .chipbtn:hover{background:rgba(244,239,254,.16)}
@@ -148,6 +148,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .meter{height:8px;border-radius:999px;background:rgba(244,239,254,.1);overflow:hidden}
 .meter.small{height:6px}
 .meter > div{height:100%;width:0;background:var(--bot);border-radius:inherit;transition:width .3s}
+/* Exit, Leave and Sure? all take the same room, so asking never pushes the button under the leaderboard */
+#exitBtn{min-width:4.1em;justify-content:center;text-align:center}
 .chipbtn.confirm,#exitBtn.confirm{background:var(--danger,#ff5d73);color:#fff;border-color:transparent}
 .btn.nudge{border-color:var(--bot);box-shadow:0 0 0 3px color-mix(in srgb,var(--bot) 30%,transparent);color:var(--ink)}
 .meter.two{display:flex}.meter.two > div{flex:none}
@@ -804,7 +806,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.7';
+const GAME_VERSION = '2.7.1';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -4651,11 +4653,11 @@ tapButton($('takeBackBtn'), () => { setBot(false); blurIfPlaying(); });
 })();
 tapButton($('trainBtn'), () => { if (startTraining()) toast('Training started. Keep playing while your bot studies.'); blurIfPlaying(); });
 $('dockAuto').addEventListener('change', (e) => { profile.auto = e.target.checked; save(); blurIfPlaying(); });
-let exitArmed = 0;
+let exitArmed = -1e9;
 function exitTap() {
   const b = $('exitBtn'), now = performance.now();
   if (now - exitArmed > 2500) { exitArmed = now; b.classList.add('confirm'); b.textContent = 'Sure?'; setTimeout(() => { if (performance.now() - exitArmed >= 2500) { b.classList.remove('confirm'); updateRoomChip(); } }, 2600); return; }
-  exitArmed = 0; b.classList.remove('confirm');
+  exitArmed = -1e9; b.classList.remove('confirm');
   if (gameKind === 'online') leaveRoom(false); else showMenu();
 }
 tapButton($('exitBtn'), exitTap);
