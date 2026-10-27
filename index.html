@@ -186,6 +186,11 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   .retro-tip{display:none}
   .dpad{grid-template-columns:repeat(3,minmax(0,64px));grid-template-rows:repeat(2,58px);margin-bottom:4px}
 }
+/* Trailer mode: just the snakes */
+#app.clean #hud .stats > :not(.roomchip):not(.chatpop),#app.clean .board,#app.clean #minimap,#app.clean #botBanner,#app.clean #toastBox,#app.clean .teach{visibility:hidden}
+#app.clean .roomchip,#app.clean .dock{opacity:.16;transition:opacity .2s}
+#app.clean .roomchip:active,#app.clean .roomchip:focus-within,#app.clean .dock:active{opacity:.9}
+@media (pointer:fine){#app.clean .dock{visibility:hidden}}
 .btn.nudge{border-color:var(--bot);box-shadow:0 0 0 3px color-mix(in srgb,var(--bot) 30%,transparent);color:var(--ink)}
 .meter.two{display:flex}.meter.two > div{flex:none}
 .meter > .pend{border-radius:0 999px 999px 0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bot) 55%,transparent) 0 4px,color-mix(in srgb,var(--bot) 25%,transparent) 4px 8px)}
@@ -857,6 +862,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="group"><p class="lbl">Buttons</p><label class="switch" for="swapChk"><input type="checkbox" id="swapChk"><span class="track"></span><span>Swap the button sides (Boost on the right)</span></label></div>
       <div class="group"><p class="lbl">Graphics</p><label class="switch" for="smoothChk"><input type="checkbox" id="smoothChk"><span class="track"></span><span>Smooth mode: less detail so it runs faster on older tablets</span></label></div>
       <div class="group"><p class="lbl">Sound on iPhone</p><label class="switch" for="silentChk"><input type="checkbox" id="silentChk"><span class="track"></span><span>Play sound even when my iPhone is on silent</span></label><p class="bc-line">Off: game sounds are built in, nothing shows on the Dynamic Island, but the silent switch mutes them. On: sound plays on silent too, but iPhone shows music controls on the Dynamic Island.</p></div>
+      <div class="group"><p class="lbl">Recording videos</p><label class="switch" for="cleanChk"><input type="checkbox" id="cleanChk"><span class="track"></span><span>Trailer mode: hide the scores, leaderboard and map while you play</span></label><p class="bc-line">The pause/Exit buttons and the Boost bar fade out but still work. Turn it off here when you're done.</p></div>
       <div class="group"><p class="lbl">Secret</p><button class="btn" id="retroBtn" type="button">🐍 Old-school Snake</button><p class="bc-line">The classic grid game, made out of Noodle Bots.</p></div>
     </div>
   </section>
@@ -884,7 +890,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '3.0.1';
+const GAME_VERSION = '3.1';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -966,7 +972,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false, retroRight: false },
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false, retroRight: false, clean: false },
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
@@ -997,7 +1003,7 @@ function applyProfileData(p) {
   if (['auto', 'calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
   if (typeof p.seenVer === 'string' && /^[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
-  if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true, retroRight: p.set.retroRight === true };
+  if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true, retroRight: p.set.retroRight === true, clean: p.set.clean === true };
   if (p.st && typeof p.st === 'object') {
     const n = (v) => clamp(int(v), 0, 1e9), w = p.st.wins && typeof p.st.wins === 'object' ? p.st.wins : {};
     profile.st = { snacks: n(p.st.snacks), longest: n(p.st.longest), wins: { tag: n(w.tag), ctl: n(w.ctl), br: n(w.br), bb: n(w.bb) }, powers: n(p.st.powers), online: n(p.st.online), rivalWins: n(p.st.rivalWins) };
@@ -1759,6 +1765,7 @@ function killSnake(s, killer) {
   else if (s.kind === 'npc' || s.kind === 'rnpc') key = gameKind === 'online' ? 'n' + s.npcId : null;
   else if (s.kind === 'remote') key = s.peer.slice(0, 8) + '.' + s.netD;
   dropBody(s, key);
+  if (mode === 'play' || mode === 'spec') { const dx = s.x - cam.x, dy = s.y - cam.y; if (dx * dx + dy * dy < 1600 * 1600) fxRings.push({ x: s.x, y: s.y, t: performance.now(), R: s.r * 5 + 70, col: s.color || '#ffffff' }); }
   if (s !== player && !s.predDead && player && player.alive && mode === 'play' && Math.hypot(s.x - player.x, s.y - player.y) < 900) SFX.pop();
   const i = snakes.indexOf(s); if (i >= 0) snakes.splice(i, 1);
   if (s.kind === 'player') onPlayerDeath(killer);
@@ -2415,8 +2422,8 @@ function modeThink(sn) {
 }
 /* ---------- drawing ---------- */
 function drawLeaderCrown(c, sn) {
-  const h = sn.segs[0], r = sn.r, bx = h.x, by = h.y - r * 0.55;
-  c.save(); c.lineJoin = 'round'; c.fillStyle = '#ffd447'; c.strokeStyle = '#a8740f'; c.lineWidth = r * 0.08; c.beginPath();
+  const r = sn.r, bx = 0, by = -r * 0.12;
+  c.save(); headFrame(c, sn); c.lineJoin = 'round'; c.fillStyle = '#ffd447'; c.strokeStyle = '#a8740f'; c.lineWidth = r * 0.08; c.beginPath();
   c.moveTo(bx - r * 0.6, by); c.lineTo(bx - r * 0.6, by - r * 0.7); c.lineTo(bx - r * 0.3, by - r * 0.35); c.lineTo(bx, by - r * 0.9); c.lineTo(bx + r * 0.3, by - r * 0.35); c.lineTo(bx + r * 0.6, by - r * 0.7); c.lineTo(bx + r * 0.6, by); c.closePath(); c.fill(); c.stroke();
   c.fillStyle = sn.team >= 0 ? TEAMS[sn.team].color : '#ff5d7d'; c.beginPath(); c.arc(bx, by - r * 0.22, r * 0.13, 0, TAU); c.fill();
   c.restore();
@@ -3522,18 +3529,21 @@ function drawEyes(c, s, now) {
     c.restore();
   }
 }
+// Turn the drawing so it sits on the head: 'up' points toward the tail, so anything worn leans back the way the snake is moving.
+function headFrame(c, s) { const h = s.segs[0]; c.translate(h.x, h.y); c.rotate(s.ang - Math.PI / 2); }
 function drawHat(c, s, now) {
   const id = HATS[s.look.hat].id; if (id === 'none') return;
-  const h = s.segs[0], r = s.r, bx = h.x, by = h.y - r * 0.55;
-  c.save(); c.lineJoin = 'round'; const edge = 'rgba(18,12,40,0.6)', ew = Math.max(1.2, r * 0.08);
+  const r = s.r, bx = 0, by = -r * 0.12;
+  c.save(); headFrame(c, s); c.lineJoin = 'round'; const edge = 'rgba(18,12,40,0.6)', ew = Math.max(1.2, r * 0.08);
   if (id === 'party') {
     c.fillStyle = s.colorB; c.beginPath(); c.moveTo(bx - r * 0.5, by); c.lineTo(bx + r * 0.5, by); c.lineTo(bx + r * 0.08, by - r * 1.5); c.closePath(); c.fill(); c.strokeStyle = edge; c.lineWidth = ew; c.stroke();
     c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = r * 0.1; c.beginPath(); c.moveTo(bx - r * 0.32, by - r * 0.5); c.lineTo(bx + r * 0.38, by - r * 0.45); c.moveTo(bx - r * 0.14, by - r * 1.0); c.lineTo(bx + r * 0.24, by - r * 0.97); c.stroke();
     c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx + r * 0.08, by - r * 1.55, r * 0.18, 0, TAU); c.fill();
   } else if (id === 'cap') {
-    c.fillStyle = s.colorB; c.beginPath(); c.arc(bx, by + r * 0.1, r * 0.62, Math.PI, TAU); c.closePath(); c.fill(); c.strokeStyle = edge; c.lineWidth = ew; c.stroke();
-    c.fillStyle = shade(PALETTE[s.look.c2], 0.7); c.beginPath(); c.ellipse(bx + r * 0.6, by + r * 0.1, r * 0.5, r * 0.14, 0, 0, TAU); c.fill();
-    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx, by - r * 0.52, r * 0.1, 0, TAU); c.fill();
+    c.fillStyle = shade(s.colorB, 0.72); c.beginPath(); c.ellipse(bx, by + r * 0.42, r * 0.5, r * 0.3, 0, 0, Math.PI); c.closePath(); c.fill(); c.strokeStyle = edge; c.lineWidth = ew; c.stroke();
+    c.fillStyle = s.colorB; c.beginPath(); c.arc(bx, by - r * 0.08, r * 0.6, 0, TAU); c.fill(); c.stroke();
+    c.strokeStyle = 'rgba(18,12,40,0.25)'; c.lineWidth = ew * 0.7; c.beginPath(); c.moveTo(bx, by - r * 0.66); c.lineTo(bx, by + r * 0.5); c.stroke();
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(bx, by - r * 0.08, r * 0.1, 0, TAU); c.fill();
   } else if (id === 'flower') {
     const fx = bx + r * 0.45, fy = by - r * 0.15;
     c.fillStyle = tint(s.colorB, 0.45);
@@ -3548,7 +3558,7 @@ function drawHat(c, s, now) {
     for (const side of [-1, 1]) { c.beginPath(); c.moveTo(bx + side * r * 0.2, by + r * 0.1); c.quadraticCurveTo(bx + side * r * 0.95, by - r * 0.1, bx + side * r * 0.75, by - r * 0.95); c.quadraticCurveTo(bx + side * r * 0.55, by - r * 0.3, bx + side * r * 0.5, by + r * 0.15); c.closePath(); c.fill(); c.stroke(); }
   } else if (id === 'halo') {
     const hc = tint(s.colorB, 0.45); c.strokeStyle = hc; c.lineWidth = r * 0.16; c.shadowColor = hc; c.shadowBlur = r * 0.8;
-    c.beginPath(); c.ellipse(bx, by - r * 0.75 + Math.sin(now * 0.004) * r * 0.08, r * 0.6, r * 0.2, 0, 0, TAU); c.stroke();
+    c.lineWidth = r * 0.13; c.beginPath(); c.arc(0, 0, r * (0.86 + Math.sin(now * 0.004) * 0.04), 0, TAU); c.stroke();
   } else if (id === 'wizard') {
     c.fillStyle = shade(s.colorB, 0.75); c.beginPath(); c.ellipse(bx, by + r * 0.05, r * 0.78, r * 0.2, 0, 0, TAU); c.fill(); c.strokeStyle = edge; c.lineWidth = ew; c.stroke();
     c.fillStyle = s.colorB; c.beginPath(); c.moveTo(bx - r * 0.48, by); c.lineTo(bx + r * 0.48, by);
@@ -3571,12 +3581,14 @@ function drawHat(c, s, now) {
   c.restore();
 }
 function drawAntenna(c, s, now) {
-  const h = s.segs[0], r = s.r, hasHat = HATS[s.look.hat].id !== 'none';
-  const x0 = h.x - r * (hasHat ? 0.62 : 0.2), y0 = h.y - r * 0.7, x1 = x0 - r * 0.25, y1 = y0 - r * 1.0;
+  const r = s.r, hasHat = HATS[s.look.hat].id !== 'none';
+  c.save(); headFrame(c, s);
+  const x0 = r * (hasHat ? 0.62 : 0.2), y0 = -r * 0.5, x1 = x0 + r * 0.25, y1 = y0 - r * 1.0;
   c.strokeStyle = C.bot; c.lineWidth = Math.max(2, r * 0.1); c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
   c.globalAlpha = (s.ghost ? 0.3 : 1) * (0.55 + 0.45 * Math.sin(now * 0.01));
   c.fillStyle = C.bot; c.beginPath(); c.arc(x1, y1, r * 0.24, 0, TAU); c.fill();
   c.globalAlpha = s.ghost ? 0.3 : 1;
+  c.restore();
 }
 function render(now) {
   const z = cam.z, t = Math.floor(now / 50) % 36;
@@ -3723,6 +3735,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '3.1', items: ['Hats ride on the head now: they turn with your snake and lean back the way it moves (the Cap and Halo are drawn from above).', 'Trailer mode in Settings: hides the scores, leaderboard and map so you can record clean videos.', 'Snakes burst in their own color when they crash.'] },
   { v: '3.0.1', items: ['Old-school Snake works sideways: arrows on the left, a big board on the right, and a ⇄ Switch sides button to flip them.'] },
   { v: '3.0', items: ['Secret: Settings has a new 🐍 Old-school Snake button. It is the classic grid Snake game, played with your own Noodle Bots snake, snacks and background.'] },
   { v: '2.9.6', items: ['Fixed: the iPhone top bar could still pick up a bright background color when the game started. Now it stays purple.'] },
@@ -3851,10 +3864,10 @@ function retroDraw(now) {
   drawSnake(c, sn, { x0: -1e5, x1: 1e5, y0: -1e5, y1: 1e5 }, Math.floor(now / 50) % 36, now, 1); c.globalAlpha = 1;
 }
 /* ---------- settings ---------- */
-function applySettings() { app.classList.toggle('swap', !!profile.set.swap); }
+function applySettings() { app.classList.toggle('swap', !!profile.set.swap); app.classList.toggle('clean', !!profile.set.clean); }
 function openSettings() {
   for (const b of document.querySelectorAll('[data-steer]')) b.setAttribute('aria-pressed', String(b.dataset.steer === profile.set.steer));
-  $('swapChk').checked = !!profile.set.swap; $('smoothChk').checked = !!profile.set.smooth; $('silentChk').checked = !!profile.set.silentOk;
+  $('swapChk').checked = !!profile.set.swap; $('smoothChk').checked = !!profile.set.smooth; $('silentChk').checked = !!profile.set.silentOk; $('cleanChk').checked = !!profile.set.clean;
   showScreen('settings');
 }
 /* ---------- pause (solo only) ---------- */
@@ -4967,6 +4980,7 @@ $('setDone').addEventListener('click', showMenu);
 for (const b of document.querySelectorAll('[data-steer]')) b.addEventListener('click', () => { profile.set.steer = b.dataset.steer; save(false); openSettings(); });
 $('swapChk').addEventListener('change', (e) => { profile.set.swap = e.target.checked; save(false); applySettings(); });
 $('smoothChk').addEventListener('change', (e) => { profile.set.smooth = e.target.checked; save(false); resize(); });
+$('cleanChk').addEventListener('change', (e) => { profile.set.clean = e.target.checked; save(false); applySettings(); });
 $('silentChk').addEventListener('change', (e) => { profile.set.silentOk = e.target.checked; save(false); applyAudioSession(true); });
 $('rivalIn').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) importRival(f); e.target.value = ''; });
 tapButton($('pauseBtn'), () => { pauseGame(); });
@@ -5161,6 +5175,14 @@ function boot() {
     rivalSnakes: () => snakes.filter((sn) => sn.rival).map((sn) => [sn.name, sn.alive]),
     setOf: () => ({ set: profile.set, dpr: +DPR.toFixed(2), swap: app.classList.contains('swap') }),
     levels: () => LEVELS.length,
+    drawHats: (c) => {
+      const dirs = [0, -Math.PI / 2, Math.PI, Math.PI / 2];
+      for (let hat = 1; hat <= 10; hat++) dirs.forEach((a, j) => {
+        const cx = 120 + j * 230, cy = 60 + (hat - 1) * 104, sn = previewSnake({ c1: 0, c2: 1, pat: 1, eye: 0, hat: hat === 10 ? 0 : hat }, '', 200, []); sn.r = 22; sn.bot = hat === 10;
+        for (let i = 0; i < 18; i++) sn.segs.push({ x: cx - Math.cos(a) * i * 10 + Math.sin(i * 0.4) * 6 * Math.sin(a), y: cy - Math.sin(a) * i * 10 + Math.sin(i * 0.4) * 6 * Math.cos(a) });
+        sn.ang = sn.targetAng = a; drawSnake(c, sn, { x0: -1e5, x1: 1e5, y0: -1e5, y1: 1e5 }, 0, 0, 1);
+      });
+    },
     retro: () => ({ alive: RETRO.alive, len: RETRO.cells.length, score: RETRO.score, head: RETRO.cells[0], dir: RETRO.dir, food: RETRO.food, best: profile.retroBest, over: !$('retroOver').hidden }),
     retroFood: (dx, dy) => { const h = RETRO.cells[0]; RETRO.food = { x: h[0] + dx, y: h[1] + dy, c: 2 }; },
     fakeRammer: (seg, shield) => {
