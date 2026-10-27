@@ -809,6 +809,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       </div>
       <div class="group"><p class="lbl">Buttons</p><label class="switch" for="swapChk"><input type="checkbox" id="swapChk"><span class="track"></span><span>Swap the button sides (Boost on the right)</span></label></div>
       <div class="group"><p class="lbl">Graphics</p><label class="switch" for="smoothChk"><input type="checkbox" id="smoothChk"><span class="track"></span><span>Smooth mode: less detail so it runs faster on older tablets</span></label></div>
+      <div class="group"><p class="lbl">Sound on iPhone</p><label class="switch" for="silentChk"><input type="checkbox" id="silentChk"><span class="track"></span><span>Play sound even when my iPhone is on silent</span></label><p class="bc-line">Off: game sounds are built in, nothing shows on the Dynamic Island, but the silent switch mutes them. On: sound plays on silent too, but iPhone shows music controls on the Dynamic Island.</p></div>
     </div>
   </section>
 </div>
@@ -835,7 +836,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.9.2';
+const GAME_VERSION = '2.9.3';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -917,7 +918,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', ach: null, set: { steer: 'auto', swap: false, smooth: false },
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false },
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
@@ -947,7 +948,7 @@ function applyProfileData(p) {
   if (['auto', 'calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
   if (typeof p.seenVer === 'string' && /^[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
-  if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true };
+  if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true };
   if (p.st && typeof p.st === 'object') {
     const n = (v) => clamp(int(v), 0, 1e9), w = p.st.wins && typeof p.st.wins === 'object' ? p.st.wins : {};
     profile.st = { snacks: n(p.st.snacks), longest: n(p.st.longest), wins: { tag: n(w.tag), ctl: n(w.ctl), br: n(w.br), bb: n(w.bb) }, powers: n(p.st.powers), online: n(p.st.online), rivalWins: n(p.st.rivalWins) };
@@ -3673,6 +3674,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '2.9.3', items: ['Music and sounds are built into the game now, so iPhone no longer shows music controls on the Dynamic Island. (Settings has a switch if you want sound to play when your phone is on silent.)'] },
   { v: '2.9.2', items: ["iPhone home-screen app: the game goes all the way to the top, behind the time and battery, and the buttons sit just below the iPhone's dark fade. (Re-add the app to your home screen to get it.)"] },
   { v: '2.9', items: ['6 bright new backgrounds: Sunny Meadow, Beach Day, Cotton Candy, Sky Blue, Snow Day and Lemonade.', 'Abilities works with Shrinking Arena now: pick Abilities, then Shrinking Arena under Play.', 'Music lives in Customize snake now, right under Arena background.', 'New Auto music: it switches to a different style every 45 seconds, like the Auto background.', 'Every hat takes your hat color now, including the Wizard hat, Crown jewel, Halo, Horns, Flower and Bunny ears.', 'Hats have a thin outline, so a hat the same color as your snake still shows up.', 'Online: when you take someone out, they go down on your screen right away instead of a moment later.', 'Online: bots stay solid through short connection hiccups instead of turning see-through. A snake with 👻 over its name is using the Ghost power.', 'Typing a room code or name on a phone: the box stays in view above the keyboard, with no black gap.', 'The leaderboard never bumps into the top buttons, even with bigger text or zoom.'] },
   { v: '2.8', items: ['Tidier screen on phones held upright: the pause, sound, music and Exit buttons get their own row across the top, so the leaderboard never covers them.', 'The bot banner is one short line, and Boost is a big thumb-sized button.', 'Train bot only shows up when your bot has new moves ready to learn.'] },
@@ -3706,7 +3708,7 @@ function maybeShowNews() {
 function applySettings() { app.classList.toggle('swap', !!profile.set.swap); }
 function openSettings() {
   for (const b of document.querySelectorAll('[data-steer]')) b.setAttribute('aria-pressed', String(b.dataset.steer === profile.set.steer));
-  $('swapChk').checked = !!profile.set.swap; $('smoothChk').checked = !!profile.set.smooth;
+  $('swapChk').checked = !!profile.set.swap; $('smoothChk').checked = !!profile.set.smooth; $('silentChk').checked = !!profile.set.silentOk;
   showScreen('settings');
 }
 /* ---------- pause (solo only) ---------- */
@@ -4322,14 +4324,21 @@ function audioInit() {
   } catch (e) { sfx.ctx = null; }
 }
 // iPhones only start audio from a tap, and the silent switch mutes web audio unless the page asks to play like media.
+function applyAudioSession(restart) {
+  const want = profile.set && profile.set.silentOk ? 'playback' : 'ambient';
+  try { if (navigator.audioSession && navigator.audioSession.type !== want) navigator.audioSession.type = want; else return; } catch (e) { return; }
+  // switching takes effect when the sound restarts
+  const c = sfx.ctx; if (restart && c && c.state === 'running') { try { c.suspend().then(() => c.resume()).catch(() => {}); } catch (e) { /* ignore */ } }
+  if (!profile.set.silentOk && sfx.tag) { try { sfx.tag.pause(); sfx.tag.removeAttribute('src'); sfx.tag = null; } catch (e) { /* ignore */ } }
+}
 function audioUnlock() {
   audioInit(); const c = sfx.ctx; if (!c) return;
-  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* ignore */ }
+  applyAudioSession(false);
   if (c.state !== 'running') { try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ } }
   if (!sfx.unlocked) {
     sfx.unlocked = true;
     try { const b = c.createBuffer(1, 1, 22050), s0 = c.createBufferSource(); s0.buffer = b; s0.connect(c.destination); s0.start(0); } catch (e) { /* ignore */ }
-    if (!navigator.audioSession) {
+    if (!navigator.audioSession && profile.set.silentOk) {
       try { sfx.tag = new Audio(silentWavURI()); sfx.tag.loop = true; sfx.tag.setAttribute('playsinline', ''); const p = sfx.tag.play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ }
     }
   }
@@ -4792,6 +4801,7 @@ $('setDone').addEventListener('click', showMenu);
 for (const b of document.querySelectorAll('[data-steer]')) b.addEventListener('click', () => { profile.set.steer = b.dataset.steer; save(false); openSettings(); });
 $('swapChk').addEventListener('change', (e) => { profile.set.swap = e.target.checked; save(false); applySettings(); });
 $('smoothChk').addEventListener('change', (e) => { profile.set.smooth = e.target.checked; save(false); resize(); });
+$('silentChk').addEventListener('change', (e) => { profile.set.silentOk = e.target.checked; save(false); applyAudioSession(true); });
 $('rivalIn').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) importRival(f); e.target.value = ''; });
 tapButton($('pauseBtn'), () => { pauseGame(); });
 $('resumeBtn').addEventListener('click', popGuard(resumeGame));
