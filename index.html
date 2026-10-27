@@ -158,6 +158,10 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 #app.light #hud .stats > .big{color:#1c1438;text-shadow:0 1px 0 rgba(255,255,255,.5)}
 /* old-school Snake */
 .card.retro{gap:12px;width:min(460px,100%)}
+/* upright: one column (title, score, board, arrows); the side panel is just a grouping */
+.retro-side{display:contents}
+.card.retro .card-head{order:1}.retro-top{order:2}.retro-wrap{order:3}.dpad{order:4}.retro-tip{order:5}
+.retro-btns{display:inline-flex;gap:6px}#retroSwap{display:none}
 .retro-top{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
 .retro-top b{font-family:var(--f-num);font-size:20px;color:var(--ink);margin-left:6px;font-variant-numeric:tabular-nums}
 .retro-wrap{position:relative;width:100%;aspect-ratio:1;touch-action:none;border-radius:16px;overflow:hidden}
@@ -170,7 +174,18 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .dpad .btn{font-size:18px;padding:0}
 .dpad [data-d=up]{grid-column:2;grid-row:1}.dpad [data-d=left]{grid-column:1;grid-row:2}.dpad [data-d=down]{grid-column:2;grid-row:2}.dpad [data-d=right]{grid-column:3;grid-row:2}
 @media (pointer:fine){.dpad{display:none}}
-@media (max-height:500px) and (orientation:landscape){.card.retro{width:min(330px,100%)}.dpad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,40px)}}
+/* sideways phone: arrows on one side, the board as big as the screen allows on the other, and a Switch sides button */
+@media (max-height:500px) and (orientation:landscape){
+  #retro.screen{padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));justify-content:center}
+  .card.retro{width:auto;max-width:none;margin:auto;height:calc(var(--app-h,100dvh) - 16px);display:flex;flex-direction:row;align-items:stretch;gap:16px;padding:12px 14px}
+  .card.retro.swap{flex-direction:row-reverse}
+  .retro-side{display:flex;flex-direction:column;justify-content:space-between;gap:8px;width:clamp(190px,30vw,250px);min-width:0}
+  .retro-side .card-head{flex-wrap:wrap;gap:6px}.retro-side h2{font-size:17px}
+  #retroSwap{display:inline-flex}
+  .retro-wrap{height:100%;width:auto;flex:none}
+  .retro-tip{display:none}
+  .dpad{grid-template-columns:repeat(3,minmax(0,64px));grid-template-rows:repeat(2,58px);margin-bottom:4px}
+}
 .btn.nudge{border-color:var(--bot);box-shadow:0 0 0 3px color-mix(in srgb,var(--bot) 30%,transparent);color:var(--ink)}
 .meter.two{display:flex}.meter.two > div{flex:none}
 .meter > .pend{border-radius:0 999px 999px 0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bot) 55%,transparent) 0 4px,color-mix(in srgb,var(--bot) 25%,transparent) 4px 8px)}
@@ -816,13 +831,15 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 
   <!-- Old-school Snake (easter egg) -->
   <section id="retro" class="screen" hidden>
-    <div class="card retro">
-      <div class="card-head"><h2>Old-school Snake</h2><button class="btn small" id="retroBack" type="button">Back</button></div>
-      <div class="retro-top"><span>Score <b id="rScore">0</b></span><span>Best <b id="rBest">0</b></span></div>
+    <div class="card retro" id="retroCard">
+      <div class="retro-side">
+        <div class="card-head"><h2>Old-school Snake</h2><span class="retro-btns"><button class="btn small" id="retroSwap" type="button" title="Switch sides">⇄ Switch sides</button><button class="btn small" id="retroBack" type="button">Back</button></span></div>
+        <div class="retro-top"><span>Score <b id="rScore">0</b></span><span>Best <b id="rBest">0</b></span></div>
+        <div class="dpad" id="dpad"><button class="btn" data-d="up" type="button" aria-label="Up">▲</button><button class="btn" data-d="left" type="button" aria-label="Left">◀</button><button class="btn" data-d="down" type="button" aria-label="Down">▼</button><button class="btn" data-d="right" type="button" aria-label="Right">▶</button></div>
+        <p class="tip retro-tip">Swipe on the board, tap the arrows, or use the arrow keys (WASD works too).</p>
+      </div>
       <div class="retro-wrap" id="retroWrap"><canvas id="retroCv" aria-label="Old-school Snake board"></canvas>
         <div class="retro-over" id="retroOver"><p id="retroMsg">Eat snacks to grow. Don't hit the walls or your own tail!</p><button class="btn primary" id="retroGo" type="button">Play</button></div></div>
-      <div class="dpad" id="dpad"><button class="btn" data-d="up" type="button" aria-label="Up">▲</button><button class="btn" data-d="left" type="button" aria-label="Left">◀</button><button class="btn" data-d="down" type="button" aria-label="Down">▼</button><button class="btn" data-d="right" type="button" aria-label="Right">▶</button></div>
-      <p class="tip retro-tip">Swipe on the board, tap the arrows, or use the arrow keys (WASD works too).</p>
     </div>
   </section>
 
@@ -867,7 +884,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '3.0';
+const GAME_VERSION = '3.0.1';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -949,7 +966,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false },
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false, retroRight: false },
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
@@ -980,7 +997,7 @@ function applyProfileData(p) {
   if (['auto', 'calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
   if (typeof p.seenVer === 'string' && /^[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
-  if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true };
+  if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true, retroRight: p.set.retroRight === true };
   if (p.st && typeof p.st === 'object') {
     const n = (v) => clamp(int(v), 0, 1e9), w = p.st.wins && typeof p.st.wins === 'object' ? p.st.wins : {};
     profile.st = { snacks: n(p.st.snacks), longest: n(p.st.longest), wins: { tag: n(w.tag), ctl: n(w.ctl), br: n(w.br), bb: n(w.bb) }, powers: n(p.st.powers), online: n(p.st.online), rivalWins: n(p.st.rivalWins) };
@@ -3706,6 +3723,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '3.0.1', items: ['Old-school Snake works sideways: arrows on the left, a big board on the right, and a ⇄ Switch sides button to flip them.'] },
   { v: '3.0', items: ['Secret: Settings has a new 🐍 Old-school Snake button. It is the classic grid Snake game, played with your own Noodle Bots snake, snacks and background.'] },
   { v: '2.9.6', items: ['Fixed: the iPhone top bar could still pick up a bright background color when the game started. Now it stays purple.'] },
   { v: '2.9.5', items: ["iPhone home-screen app: the solid bar behind the time and battery is back, and it's always the same dark purple as the buttons, whatever background you pick. (Re-add the app to your home screen to get it.)"] },
@@ -3743,7 +3761,7 @@ function maybeShowNews() {
 /* ---------- Old-school Snake: a grid snake drawn with the real Noodle Bots look ---------- */
 const RETRO = { N: 17, on: false, alive: false, cells: [], prev: [], dir: [1, 0], queue: [], food: null, bonus: null, score: 0, acc: 0, step: 150, grow: 0, eaten: 0, last: 0, raf: 0, dead: 0 };
 function retroOpen() {
-  showScreen('retro'); $('rBest').textContent = fmt(profile.retroBest || 0); $('rScore').textContent = '0';
+  showScreen('retro'); $('retroCard').classList.toggle('swap', !!profile.set.retroRight); $('rBest').textContent = fmt(profile.retroBest || 0); $('rScore').textContent = '0';
   retroReset(); RETRO.alive = false; retroOver("Eat snacks to grow. Don't hit the walls or your own tail!", 'Play');
   RETRO.on = true; RETRO.last = performance.now(); cancelAnimationFrame(RETRO.raf); RETRO.raf = requestAnimationFrame(retroFrame);
 }
@@ -4928,6 +4946,7 @@ $('lockerDone').addEventListener('click', showMenu);
 $('tutBtn').addEventListener('click', startTutorial);
 $('retroBtn').addEventListener('click', retroOpen);
 $('retroBack').addEventListener('click', retroClose);
+tapButton($('retroSwap'), () => { profile.set.retroRight = !profile.set.retroRight; $('retroCard').classList.toggle('swap', profile.set.retroRight); save(false); });
 tapButton($('retroGo'), () => { if (performance.now() - RETRO.dead > 600) retroStart(); });
 for (const b of document.querySelectorAll('#dpad [data-d]')) tapButton(b, () => retroTurn(b.dataset.d));
 (() => {   // swipe on the board
