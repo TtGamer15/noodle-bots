@@ -470,7 +470,15 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   .dock .btn{min-height:50px}
   .dock .boost{flex:1.5 1 0;min-height:54px;font-size:16px}
   #trainBtn:disabled{display:none}
+  /* the buttons get their own row across the top (Exit far right), and the leaderboard sits below it, so they can never overlap */
+  .stats{grid-column:1/-1}
+  .roomchip{order:-2;justify-self:stretch;margin:0 0 6px;box-sizing:border-box}
+  .roomchip #exitBtn{margin-left:auto}
+  .chatpop{order:-1;position:relative;z-index:7;margin:0 0 6px}
+  .board{margin-top:42px;position:relative;z-index:1}
+  .stats > .sub{flex-wrap:wrap;row-gap:4px;max-width:calc(100% - 172px)}
 }
+@media (max-width:360px) and (orientation:portrait){.stats > .sub{max-width:calc(100% - 146px)}}
 </style>
 <style>html{height:100%;height:100dvh}</style>
 </head>
@@ -818,7 +826,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.8';
+const GAME_VERSION = '2.8.1';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -3616,7 +3624,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
-  { v: '2.8', items: ['Tidier screen on phones held upright: fewer things crowd the top, the bot banner is one short line, and Boost is a big thumb-sized button.', 'Train bot only shows up when your bot has new moves ready to learn.'] },
+  { v: '2.8', items: ['Tidier screen on phones held upright: the pause, sound, music and Exit buttons get their own row across the top, so the leaderboard never covers them.', 'The bot banner is one short line, and Boost is a big thumb-sized button.', 'Train bot only shows up when your bot has new moves ready to learn.'] },
   { v: '2.7', items: ['Music styles! Pick Relaxing, Intense, Fun, Sad or Neutral under the sound switches on the menu.', 'Exit and Leave ask "Sure?" first, so a thumb that slides onto them while steering won\'t end your game.', 'Buttons that pop up when you crash ignore a tap that started before they appeared.', 'iPhone: no more stray bars at the top or bottom, and the screen settles back after typing.'] },
   { v: '2.6', items: ["Friends' bots can join online Bot Battles now. Whoever creates the room brings their friends' bots.", "This What's new page shows up after every update. Tap the version number at the bottom of the menu to see it again."] },
   { v: '2.5', items: ['How to play: a step-by-step first game.', 'Pause button in solo (or press P).', 'Stats & trophies page with 19 trophies.', 'Settings: steering style, swap the button sides, and smooth mode for older tablets.', '4 more bot levels, and levels come faster. The bot bar shows a percentage.', "Battle a friend's bot: load their save in Bot Battle.", 'Fixes: loading a save plays one sound, and the tutorial card no longer covers your snake on phones.'] },
@@ -4670,6 +4678,7 @@ $('dockAuto').addEventListener('change', (e) => { profile.auto = e.target.checke
 let exitArmed = -1e9;
 function exitTap() {
   const b = $('exitBtn'), now = performance.now();
+  if (now - exitArmed < 350) return;   // one tap can arrive twice (touch + click); a real second tap takes longer
   if (now - exitArmed > 2500) { exitArmed = now; b.classList.add('confirm'); b.textContent = 'Sure?'; setTimeout(() => { if (performance.now() - exitArmed >= 2500) { b.classList.remove('confirm'); updateRoomChip(); } }, 2600); return; }
   exitArmed = -1e9; b.classList.remove('confirm');
   if (gameKind === 'online') leaveRoom(false); else showMenu();
