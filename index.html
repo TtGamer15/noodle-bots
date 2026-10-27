@@ -890,7 +890,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '3.1';
+const GAME_VERSION = '1.0.0';   // the first full release; everything before it is a Pre-Release
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -1001,7 +1001,7 @@ function applyProfileData(p) {
   if (typeof p.tutDone === 'boolean') profile.tutDone = p.tutDone;
   if (typeof p.retroBest === 'number' && isFinite(p.retroBest)) profile.retroBest = clamp(Math.floor(p.retroBest), 0, 9999);
   if (['auto', 'calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
-  if (typeof p.seenVer === 'string' && /^[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
+  if (typeof p.seenVer === 'string' && /^R?[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
   if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true, retroRight: p.set.retroRight === true, clean: p.set.clean === true };
   if (p.st && typeof p.st === 'object') {
@@ -3735,40 +3735,46 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
-  { v: '3.1', items: ['Hats ride on the head now: they turn with your snake and lean back the way it moves (the Cap and Halo are drawn from above).', 'Trailer mode in Settings: hides the scores, leaderboard and map so you can record clean videos.', 'Snakes burst in their own color when they crash.'] },
-  { v: '3.0.1', items: ['Old-school Snake works sideways: arrows on the left, a big board on the right, and a ⇄ Switch sides button to flip them.'] },
-  { v: '3.0', items: ['Secret: Settings has a new 🐍 Old-school Snake button. It is the classic grid Snake game, played with your own Noodle Bots snake, snacks and background.'] },
-  { v: '2.9.6', items: ['Fixed: the iPhone top bar could still pick up a bright background color when the game started. Now it stays purple.'] },
-  { v: '2.9.5', items: ["iPhone home-screen app: the solid bar behind the time and battery is back, and it's always the same dark purple as the buttons, whatever background you pick. (Re-add the app to your home screen to get it.)"] },
-  { v: '2.9.4', items: ['Fixed the Take back button on phones: its words were the same color as the button and spilled out of it.'] },
-  { v: '2.9.3', items: ['Music and sounds are built into the game now, so iPhone no longer shows music controls on the Dynamic Island. (Settings has a switch if you want sound to play when your phone is on silent.)'] },
-  { v: '2.9.2', items: ["iPhone home-screen app: the game goes all the way to the top, behind the time and battery, and the buttons sit just below the iPhone's dark fade. (Re-add the app to your home screen to get it.)"] },
-  { v: '2.9', items: ['6 bright new backgrounds: Sunny Meadow, Beach Day, Cotton Candy, Sky Blue, Snow Day and Lemonade.', 'Abilities works with Shrinking Arena now: pick Abilities, then Shrinking Arena under Play.', 'Music lives in Customize snake now, right under Arena background.', 'New Auto music: it switches to a different style every 45 seconds, like the Auto background.', 'Every hat takes your hat color now, including the Wizard hat, Crown jewel, Halo, Horns, Flower and Bunny ears.', 'Hats have a thin outline, so a hat the same color as your snake still shows up.', 'Online: when you take someone out, they go down on your screen right away instead of a moment later.', 'Online: bots stay solid through short connection hiccups instead of turning see-through. A snake with 👻 over its name is using the Ghost power.', 'Typing a room code or name on a phone: the box stays in view above the keyboard, with no black gap.', 'The leaderboard never bumps into the top buttons, even with bigger text or zoom.'] },
-  { v: '2.8', items: ['Tidier screen on phones held upright: the pause, sound, music and Exit buttons get their own row across the top, so the leaderboard never covers them.', 'The bot banner is one short line, and Boost is a big thumb-sized button.', 'Train bot only shows up when your bot has new moves ready to learn.'] },
-  { v: '2.7', items: ['Music styles! Pick Relaxing, Intense, Fun, Sad or Neutral under the sound switches on the menu.', 'Exit and Leave ask "Sure?" first, so a thumb that slides onto them while steering won\'t end your game.', 'Buttons that pop up when you crash ignore a tap that started before they appeared.', 'iPhone: no more stray bars at the top or bottom, and the screen settles back after typing.'] },
-  { v: '2.6', items: ["Friends' bots can join online Bot Battles now. Whoever creates the room brings their friends' bots.", "This What's new page shows up after every update. Tap the version number at the bottom of the menu to see it again."] },
-  { v: '2.5', items: ['How to play: a step-by-step first game.', 'Pause button in solo (or press P).', 'Stats & trophies page with 19 trophies.', 'Settings: steering style, swap the button sides, and smooth mode for older tablets.', '4 more bot levels, and levels come faster. The bot bar shows a percentage.', "Battle a friend's bot: load their save in Bot Battle.", 'Fixes: loading a save plays one sound, and the tutorial card no longer covers your snake on phones.'] },
+  { v: '1.0.0', items: ['Noodle Bots is officially out! Version 1.0.0 is the first full release.', 'All the updates before this one are now called Pre-Releases, from Pre-Release 2.5.0 to Pre-Release 3.1.0. You can still read them all below.'] },
+  { v: '3.1.0', pre: true, items: ['Hats ride on the head now: they turn with your snake and lean back the way it moves (the Cap and Halo are drawn from above).', 'Trailer mode in Settings: hides the scores, leaderboard and map so you can record clean videos.', 'Snakes burst in their own color when they crash.'] },
+  { v: '3.0.1', pre: true, items: ['Old-school Snake works sideways: arrows on the left, a big board on the right, and a ⇄ Switch sides button to flip them.'] },
+  { v: '3.0.0', pre: true, items: ['Secret: Settings has a new 🐍 Old-school Snake button. It is the classic grid Snake game, played with your own Noodle Bots snake, snacks and background.'] },
+  { v: '2.9.6', pre: true, items: ['Fixed: the iPhone top bar could still pick up a bright background color when the game started. Now it stays purple.'] },
+  { v: '2.9.5', pre: true, items: ["iPhone home-screen app: the solid bar behind the time and battery is back, and it's always the same dark purple as the buttons, whatever background you pick. (Re-add the app to your home screen to get it.)"] },
+  { v: '2.9.4', pre: true, items: ['Fixed the Take back button on phones: its words were the same color as the button and spilled out of it.'] },
+  { v: '2.9.3', pre: true, items: ['Music and sounds are built into the game now, so iPhone no longer shows music controls on the Dynamic Island. (Settings has a switch if you want sound to play when your phone is on silent.)'] },
+  { v: '2.9.2', pre: true, items: ["iPhone home-screen app: the game goes all the way to the top, behind the time and battery, and the buttons sit just below the iPhone's dark fade. (Re-add the app to your home screen to get it.)"] },
+  { v: '2.9.0', pre: true, items: ['6 bright new backgrounds: Sunny Meadow, Beach Day, Cotton Candy, Sky Blue, Snow Day and Lemonade.', 'Abilities works with Shrinking Arena now: pick Abilities, then Shrinking Arena under Play.', 'Music lives in Customize snake now, right under Arena background.', 'New Auto music: it switches to a different style every 45 seconds, like the Auto background.', 'Every hat takes your hat color now, including the Wizard hat, Crown jewel, Halo, Horns, Flower and Bunny ears.', 'Hats have a thin outline, so a hat the same color as your snake still shows up.', 'Online: when you take someone out, they go down on your screen right away instead of a moment later.', 'Online: bots stay solid through short connection hiccups instead of turning see-through. A snake with 👻 over its name is using the Ghost power.', 'Typing a room code or name on a phone: the box stays in view above the keyboard, with no black gap.', 'The leaderboard never bumps into the top buttons, even with bigger text or zoom.'] },
+  { v: '2.8.0', pre: true, items: ['Tidier screen on phones held upright: the pause, sound, music and Exit buttons get their own row across the top, so the leaderboard never covers them.', 'The bot banner is one short line, and Boost is a big thumb-sized button.', 'Train bot only shows up when your bot has new moves ready to learn.'] },
+  { v: '2.7.0', pre: true, items: ['Music styles! Pick Relaxing, Intense, Fun, Sad or Neutral under the sound switches on the menu.', 'Exit and Leave ask "Sure?" first, so a thumb that slides onto them while steering won\'t end your game.', 'Buttons that pop up when you crash ignore a tap that started before they appeared.', 'iPhone: no more stray bars at the top or bottom, and the screen settles back after typing.'] },
+  { v: '2.6.0', pre: true, items: ["Friends' bots can join online Bot Battles now. Whoever creates the room brings their friends' bots.", "This What's new page shows up after every update. Tap the version number at the bottom of the menu to see it again."] },
+  { v: '2.5.0', pre: true, items: ['How to play: a step-by-step first game.', 'Pause button in solo (or press P).', 'Stats & trophies page with 19 trophies.', 'Settings: steering style, swap the button sides, and smooth mode for older tablets.', '4 more bot levels, and levels come faster. The bot bar shows a percentage.', "Battle a friend's bot: load their save in Bot Battle.", 'Fixes: loading a save plays one sound, and the tutorial card no longer covers your snake on phones.'] },
 ];
-const verNum = (v) => String(v || '0').split('.').map((n) => parseInt(n, 10) || 0).reduce((a, n, i) => a + n * [1e6, 1e3, 1][i], 0);
+const ver3 = (v) => { const p = String(v || '').split('.').map((n) => parseInt(n, 10) || 0); while (p.length < 3) p.push(0); return p.slice(0, 3).join('.'); };
+const newsKey = (n) => (n.pre ? ver3(n.v) : 'R' + n.v);            // old saves remember Pre-Releases as plain numbers like "3.1"
+const seenKey = (v) => (/^R/.test(v || '') ? v : ver3(v));
+const CUR_KEY = 'R' + GAME_VERSION;
+const newsLabel = (n) => (n.pre ? `Pre-Release ${n.v}` : `Version ${n.v}`);
 function openNews(onlyNew) {
-  const seen = verNum(profile.seenVer), list = $('newsList'); list.textContent = '';
-  let shown = NEWS.filter((n) => !onlyNew || verNum(n.v) > seen); if (!shown.length) shown = NEWS.slice(0, 1);
+  const list = $('newsList'); list.textContent = '';
+  const at = NEWS.findIndex((n) => newsKey(n) === seenKey(profile.seenVer));   // NEWS is newest first
+  let shown = at > 0 ? NEWS.slice(0, at) : NEWS.slice(0, 1);
   if (!onlyNew) shown = NEWS;
   shown.forEach((n, i) => {
     const d = document.createElement('div'); if (i > 0) d.className = 'old';
-    const h = document.createElement('h3'); h.textContent = i === 0 && n.v === NEWS[0].v ? `New in version ${n.v}` : `Version ${n.v}`;
+    const h = document.createElement('h3'); h.textContent = i === 0 && n === NEWS[0] ? `New in ${newsLabel(n).replace('Version', 'version')}` : newsLabel(n);
     const ul = document.createElement('ul'); for (const t of n.items) { const li = document.createElement('li'); li.textContent = t; ul.append(li); }
     d.append(h, ul); list.append(d);
   });
   $('newsTitle').textContent = "What's new";
-  profile.seenVer = GAME_VERSION; save(false);
+  profile.seenVer = CUR_KEY; save(false);
   showScreen('news');
 }
 // After an update, players who've played before see what changed. Brand-new players skip it.
 function maybeShowNews() {
-  if (profile.seenVer === GAME_VERSION) return;
+  if (profile.seenVer === CUR_KEY) return;
   const veteran = profile.games > 0 || profile.sessions > 0 || profile.practice > 0;
-  if (!veteran || (window.NB_DEBUG && !window.NB_NEWS) || /^#(?:room=)?[A-Za-z]{4}$/.test(location.hash || '')) { profile.seenVer = GAME_VERSION; save(false); return; }
+  if (!veteran || (window.NB_DEBUG && !window.NB_NEWS) || /^#(?:room=)?[A-Za-z]{4}$/.test(location.hash || '')) { profile.seenVer = CUR_KEY; save(false); return; }
   openNews(true);
 }
 /* ---------- Old-school Snake: a grid snake drawn with the real Noodle Bots look ---------- */
