@@ -10,7 +10,6 @@
 <meta name="application-name" content="Noodle Bots">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#17122c">
 <style>html{background:#17122c}</style>
 <title>Noodle Bots</title>
@@ -41,7 +40,9 @@
   --f-num:"Chakra Petch",ui-monospace,"SF Mono",Menlo,monospace;
   color-scheme:dark;
 }
-html,body{height:100%}
+html,body{height:100%;overscroll-behavior:none}
+/* iOS 26 home-screen apps can get a viewport one status bar too short; a page at least screen-tall gets the full one */
+@media (display-mode: standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 #app{position:fixed;left:0;top:0;right:0;height:var(--app-h,100%);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -147,6 +148,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .meter{height:8px;border-radius:999px;background:rgba(244,239,254,.1);overflow:hidden}
 .meter.small{height:6px}
 .meter > div{height:100%;width:0;background:var(--bot);border-radius:inherit;transition:width .3s}
+.chipbtn.confirm,#exitBtn.confirm{background:var(--danger,#ff5d73);color:#fff;border-color:transparent}
 .btn.nudge{border-color:var(--bot);box-shadow:0 0 0 3px color-mix(in srgb,var(--bot) 30%,transparent);color:var(--ink)}
 .meter.two{display:flex}.meter.two > div{flex:none}
 .meter > .pend{border-radius:0 999px 999px 0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bot) 55%,transparent) 0 4px,color-mix(in srgb,var(--bot) 25%,transparent) 4px 8px)}
@@ -340,6 +342,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .modeinfo{font-size:13px;line-height:1.45;color:var(--muted)}
 .optrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .optrow > .lbl{margin-right:2px}
+.musicrow{margin-top:10px}.musicrow .opt{padding:6px 10px}
 .modeline{font-size:13px;line-height:1.45;color:var(--muted)}
 .modeline b{color:var(--ink);font-weight:600}
 .modebar{pointer-events:none;display:grid;justify-items:center;gap:4px;padding:8px 14px;border-radius:16px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(6px);max-width:100%;box-sizing:border-box}
@@ -517,7 +520,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <canvas id="menuPreview" class="preview" aria-label="Your snake"></canvas>
         <div class="me-info">
           <label class="lbl" for="nameIn">Your name</label>
-          <input id="nameIn" class="input" maxlength="14" autocomplete="off" placeholder="Player">
+          <input id="nameIn" class="input" type="text" name="nb-nick" maxlength="14" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Player">
           <button class="btn small" id="lockerBtn" type="button">Customize snake</button>
         </div>
       </div>
@@ -588,10 +591,11 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="soundrow">
         <div class="toggles">
           <label class="switch" for="soundChk"><input type="checkbox" id="soundChk"><span class="track"></span><span>Sound effects <span class="lbl">(M)</span></span></label>
-          <label class="switch" for="musicChk"><input type="checkbox" id="musicChk"><span class="track"></span><span>Calm music <span class="lbl">(N)</span></span></label>
+          <label class="switch" for="musicChk"><input type="checkbox" id="musicChk"><span class="track"></span><span>Music <span class="lbl">(N)</span></span></label>
         </div>
         <input type="range" id="volIn" class="range" min="0" max="100" step="5" aria-label="Volume">
       </div>
+      <div class="optrow musicrow" id="musicRow" role="group" aria-label="Music style"><span class="lbl">Music</span><button type="button" class="opt" data-mstyle="calm">Relaxing</button><button type="button" class="opt" data-mstyle="intense">Intense</button><button type="button" class="opt" data-mstyle="fun">Fun</button><button type="button" class="opt" data-mstyle="sad">Sad</button><button type="button" class="opt" data-mstyle="neutral">Neutral</button></div>
       <div class="savebox">
         <div class="group">
           <p class="lbl">Save file</p>
@@ -617,7 +621,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="menu-grid">
       <div class="col">
       <canvas id="lockerPreview" class="preview big" aria-label="Snake preview"></canvas>
-      <div class="group"><label class="lbl" for="lockerName">Name</label><input id="lockerName" class="input" maxlength="14" autocomplete="off" placeholder="Player"></div>
+      <div class="group"><label class="lbl" for="lockerName">Name</label><input id="lockerName" class="input" type="text" name="nb-nick2" maxlength="14" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Player"></div>
       <div class="group" id="c1Group"><p class="lbl">Main color</p><div class="swatches" id="c1Row"></div></div>
       <div class="group"><p class="lbl" id="c2Lbl">Second color</p><div class="swatches" id="c2Row"></div></div>
       <div class="group"><p class="lbl">Saved looks</p><div class="slots" id="slotRow"></div></div>
@@ -655,7 +659,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         </div>
         <div class="group">
           <label class="lbl" for="codeIn">Join with a code</label>
-          <div class="joinrow"><input id="codeIn" class="input code" maxlength="4" autocomplete="off" placeholder="ABCD" autocapitalize="characters"><button class="btn" id="joinBtn" type="button">Join</button></div>
+          <div class="joinrow"><input id="codeIn" class="input code" type="text" name="nb-room" maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="ABCD" autocapitalize="characters"><button class="btn" id="joinBtn" type="button">Join</button></div>
         </div>
         <div class="group" id="roomListGroup"><p class="lbl">Rooms open now</p><ul class="roomlist" id="roomList"></ul></div>
       </div>
@@ -800,7 +804,7 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '2.6';
+const GAME_VERSION = '2.7';
 const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -881,7 +885,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', ach: null, set: { steer: 'auto', swap: false, smooth: false },
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', ach: null, set: { steer: 'auto', swap: false, smooth: false },
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
@@ -908,6 +912,7 @@ function applyProfileData(p) {
   if (typeof p.npcGen === 'number' && isFinite(p.npcGen)) profile.npcGen = clamp(Math.floor(p.npcGen), 0, 1e9);
   if (typeof p.stars === 'number' && isFinite(p.stars)) profile.stars = clamp(Math.floor(p.stars), 0, 1e6);
   if (typeof p.tutDone === 'boolean') profile.tutDone = p.tutDone;
+  if (['calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
   if (typeof p.seenVer === 'string' && /^[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
   if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true };
@@ -3225,6 +3230,10 @@ const cam = { x: 0, y: 0, z: 1 };
 let attractTarget = null;
 // Keep the game exactly as tall as the area the browser lets it draw in, so nothing ends up hidden off the bottom.
 // (An iPhone bug sometimes covers the bottom of home-screen apps with a bar the page can't draw under.)
+const typing = () => { const a = document.activeElement; return !!a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && /^(text|search|)$/.test(a.type || ''))); };
+function settleAfterTyping() {
+  for (const ms of [60, 350, 800]) setTimeout(() => { if (typing()) return; if (window.scrollY || window.scrollX) window.scrollTo(0, 0); onViewChange(); }, ms);
+}
 function fitApp() {
   const h = window.innerHeight || document.documentElement.clientHeight || 0;
   if (h > 0) { const v = Math.round(h) + 'px'; if (document.documentElement.style.getPropertyValue('--app-h') !== v) document.documentElement.style.setProperty('--app-h', v); }
@@ -3548,7 +3557,11 @@ function drawPreview(cv, look, now, skin) {
 /* ================= HUD & screens ================= */
 const app = $('app');
 const screens = ['menu', 'locker', 'online', 'death', 'train', 'result', 'pause', 'stats', 'settings', 'news'];
-function showScreen(name) { for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', (mode === 'play' || mode === 'spec') && !name); }
+let screenAt = 0, lastDownAt = 0;
+addEventListener('pointerdown', () => { lastDownAt = performance.now(); }, true);
+// A finger that was already down (steering) when a screen popped up shouldn't press its buttons.
+const popGuard = (fn) => (e) => { if (e && e.detail === 0) { fn(e); return; } const now = performance.now(); if (now - screenAt < 350 || lastDownAt < screenAt) return; fn(e); };
+function showScreen(name) { if (name && $(name).hidden) screenAt = performance.now(); for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', (mode === 'play' || mode === 'spec') && !name); }
 /* ---------- quick chat: preset messages only, so it stays friendly ---------- */
 const QC = ['GG!', 'Nice one!', 'Help!', 'Watch this!', 'Oops!', '😂'];
 let qcSeq = 0, qcLast = -1e9, myChat = null;
@@ -3589,6 +3602,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '2.7', items: ['Music styles! Pick Relaxing, Intense, Fun, Sad or Neutral under the sound switches on the menu.', 'Exit and Leave ask "Sure?" first, so a thumb that slides onto them while steering won\'t end your game.', 'Buttons that pop up when you crash ignore a tap that started before they appeared.', 'iPhone: no more stray bars at the top or bottom, and the screen settles back after typing.'] },
   { v: '2.6', items: ["Friends' bots can join online Bot Battles now. Whoever creates the room brings their friends' bots.", "This What's new page shows up after every update. Tap the version number at the bottom of the menu to see it again."] },
   { v: '2.5', items: ['How to play: a step-by-step first game.', 'Pause button in solo (or press P).', 'Stats & trophies page with 19 trophies.', 'Settings: steering style, swap the button sides, and smooth mode for older tablets.', '4 more bot levels, and levels come faster. The bot bar shows a percentage.', "Battle a friend's bot: load their save in Bot Battle.", 'Fixes: loading a save plays one sound, and the tutorial card no longer covers your snake on phones.'] },
 ];
@@ -3762,7 +3776,7 @@ function updateSpecBar() {
 }
 function updateTutBtn() { const b = $('tutBtn'); b.textContent = ''; b.append('How to play'); if (!profile.tutDone && profile.games < 3) { const n = document.createElement('span'); n.className = 'newbie'; n.textContent = 'New? Start here'; b.append(' ', n); b.classList.add('primary'); } else b.classList.remove('primary'); }
 function showMenu() {
-  paused = false; if (tut.on) endTutorial(false);
+  heartbeat(false); paused = false; if (tut.on) endTutorial(false);
   if (mode !== 'menu') save();
   stopSpectate(); closeChat();
   if (gameKind === 'solo') abilClassic = false;
@@ -3859,7 +3873,7 @@ function updateRoomChip() {
   } else { txt = W <= 360 ? '' : botWatch ? 'Solo · watching your bot' : abilClassic ? 'Solo · Abilities' : 'Solo'; ex = 'Exit'; }
   // Only touch the page when something changed: this runs many times a second online.
   if (t.textContent !== txt) t.textContent = txt;
-  if ($('exitBtn').textContent !== ex) $('exitBtn').textContent = ex;
+  if (performance.now() - exitArmed > 2500 && $('exitBtn').textContent !== ex) $('exitBtn').textContent = ex;
   const onl = gameKind === 'online' && !!online.code;
   if ($('pauseBtn').hidden !== onl) $('pauseBtn').hidden = onl;
   if ($('chatBtn').hidden !== !onl) { $('chatBtn').hidden = !onl; if (!onl) closeChat(); }
@@ -4153,7 +4167,16 @@ function mixHex(a, b, t) {
   const A = hexRgb(a), B = hexRgb(b);
   return `rgb(${Math.round(A[0] + (B[0] - A[0]) * t)},${Math.round(A[1] + (B[1] - A[1]) * t)},${Math.round(A[2] + (B[2] - A[2]) * t)})`;
 }
-function setTheme(i) { i = clamp(int(i), 0, THEMES.length - 1); if (i === themeCur) return; themePrev = themeCur; themeCur = i; themeFade = 0; }
+function setTheme(i) { i = clamp(int(i), 0, THEMES.length - 1); if (i === themeCur) return; themePrev = themeCur; themeCur = i; themeFade = 0; paintPage(); }
+// The page behind the game (and the phone's status bar, which takes the page colour) matches the arena floor, so no odd-coloured strip shows.
+function paintPage() {
+  const col = THEMES[themeCur].floor;
+  try {
+    document.documentElement.style.backgroundColor = col; document.body.style.backgroundColor = col;
+    let m = document.querySelector('meta[name="theme-color"]'); if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.append(m); }
+    if (m.content !== col) m.content = col;
+  } catch (e) { /* ignore */ }
+}
 function updateTheme(dt) {
   if (themeFade < 1) themeFade = Math.min(1, themeFade + dt / 2.5);
   if (profile.theme < 0) { themeClock += dt; if (themeClock > 45) { themeClock = 0; setTheme((themeCur + 1) % THEMES.length); } }
@@ -4170,7 +4193,7 @@ function drawThemeLayer(th, a, b, now) {
 
 /* ================= sound effects & music (made with Web Audio, no sound files) ================= */
 const sfx = { ctx: null, master: null, fx: null, noise: null, boostGain: null, boostOn: false, lastEat: 0, combo: 0, unlocked: false, tag: null };
-const music = { gain: null, bus: null, timer: 0, next: 0, chord: 0 };
+const music = { gain: null, bus: null, dry: null, wet: null, side: null, dl: null, fb: null, lp: null, timer: 0, next: 0, chord: 0, bar: 0 };
 function silentWavURI() {
   const n = 4000, buf = new Uint8Array(44 + n), dv = new DataView(buf.buffer), w = (o, t) => { for (let i = 0; i < t.length; i++) buf[o + i] = t.charCodeAt(i); };
   w(0, 'RIFF'); dv.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
@@ -4221,7 +4244,7 @@ function toneInner(freq, dur, type, vol, slideTo, delay) {
   const t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
   o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t); if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g); g.connect(sfx.fx); o.start(t); o.stop(t + dur + 0.03);
+  o.connect(g); g.connect(sfx.fx); o.onended = () => { try { o.disconnect(); g.disconnect(); } catch (e) { /* ignore */ } }; o.start(t); o.stop(t + dur + 0.03);
 }
 function noiseHit(dur, freq, vol, delay) {
   try { noiseInner(dur, freq, vol, delay); } catch (e) { /* audio hiccup */ }
@@ -4231,7 +4254,7 @@ function noiseInner(dur, freq, vol, delay) {
   const t = c.currentTime + (delay || 0), s0 = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
   s0.buffer = sfx.noise; f.type = 'lowpass'; f.frequency.setValueAtTime(freq, t); f.frequency.exponentialRampToValueAtTime(Math.max(60, freq * 0.2), t + dur);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s0.connect(f); f.connect(g); g.connect(sfx.fx); s0.start(t, Math.random() * 0.5); s0.stop(t + dur + 0.03);
+  s0.connect(f); f.connect(g); g.connect(sfx.fx); s0.onended = () => { try { s0.disconnect(); f.disconnect(); g.disconnect(); } catch (e) { /* ignore */ } }; s0.start(t, Math.random() * 0.5); s0.stop(t + dur + 0.03);
 }
 const SFX = {
   eat(v) {
@@ -4280,18 +4303,120 @@ const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
 function musicInit() {
   const c = sfx.ctx;
   music.gain = c.createGain(); music.gain.gain.value = profile.music ? 0.5 : 0; music.gain.connect(sfx.master);
-  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200; lp.connect(music.gain);
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200; lp.connect(music.gain); music.lp = lp;
   const dl = c.createDelay(2); dl.delayTime.value = 0.48; const fb = c.createGain(); fb.gain.value = 0.42;
   const dlp = c.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 1400;
-  dl.connect(dlp); dlp.connect(fb); fb.connect(dl); dlp.connect(lp);
+  dl.connect(dlp); dlp.connect(fb); fb.connect(dl); dlp.connect(lp); music.dl = dl; music.fb = fb;
   music.bus = c.createGain(); music.bus.connect(lp); music.bus.connect(dl);
+  music.dry = c.createGain(); music.dry.connect(music.gain);   // drums skip the echo and the soft filter
+  newMusicSide(); styleFx(0);
 }
+// Each style plays into its own pair of volume knobs, so switching fades the old one out cleanly.
+function newMusicSide() {
+  const c = sfx.ctx, now = c.currentTime;
+  if (music.side) { const old = music.side; for (const g of old) { g.gain.setTargetAtTime(0, now, 0.12); } setTimeout(() => { for (const g of old) try { g.disconnect(); } catch (e) { /* ignore */ } }, 3000); }
+  const wet = c.createGain(), dry = c.createGain(), v = (MSTYLES[profile.mstyle] || MSTYLES.calm).vol; wet.gain.value = dry.gain.value = v; wet.connect(music.bus); dry.connect(music.dry);
+  music.side = [wet, dry]; music.wet = wet;
+}
+function styleFx(tc) {
+  const st = MSTYLES[profile.mstyle] || MSTYLES.calm, now = sfx.ctx.currentTime;
+  music.dl.delayTime.setTargetAtTime(st.echo[0], now, tc || 0.01); music.fb.gain.setTargetAtTime(st.echo[1], now, tc || 0.01); music.lp.frequency.setTargetAtTime(st.lp, now, tc || 0.01);
+}
+const done = (src, ...nodes) => { src.onended = () => { try { src.disconnect(); for (const n of nodes) n.disconnect(); } catch (e) { /* ignore */ } }; };
 function voice(freq, t, attack, hold, release, vol, type, detune) {
   const c = sfx.ctx, o = c.createOscillator(), g = c.createGain();
   o.type = type; o.frequency.value = freq; if (detune) o.detune.value = detune;
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack);
   g.gain.setValueAtTime(vol, t + attack + hold); g.gain.exponentialRampToValueAtTime(0.0001, t + attack + hold + release);
-  o.connect(g); g.connect(music.bus); o.start(t); o.stop(t + attack + hold + release + 0.05);
+  o.connect(g); g.connect(music.wet); done(o, g); o.start(t); o.stop(t + attack + hold + release + 0.05);
+}
+// little drum kit made from the same noise as the sound effects
+function kick(t, vol) {
+  const c = sfx.ctx, o = c.createOscillator(), g = c.createGain();
+  o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+  o.connect(g); g.connect(music.side[1]); done(o, g); o.start(t); o.stop(t + 0.3);
+}
+function hiss(t, dur, type, freq, vol) {
+  if (!sfx.noise) return;
+  const c = sfx.ctx, s0 = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s0.buffer = sfx.noise; f.type = type; f.frequency.value = freq; if (type === 'bandpass') f.Q.value = 0.8;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s0.connect(f); f.connect(g); g.connect(music.side[1]); done(s0, f, g); s0.start(t, Math.random() * 0.5); s0.stop(t + dur + 0.02);
+}
+const hat = (t, vol) => hiss(t, 0.045, 'highpass', 7000, vol);
+const snare = (t, vol) => { hiss(t, 0.16, 'bandpass', 1900, vol); kickTone(t, 190, vol * 0.4); };
+function kickTone(t, f, vol) {
+  const c = sfx.ctx, o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = f;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+  o.connect(g); g.connect(music.side[1]); done(o, g); o.start(t); o.stop(t + 0.1);
+}
+const mpick = (a) => a[Math.floor(Math.random() * a.length)];
+// chords as [bass note, chord notes] in MIDI numbers
+const P_INT = [[45, [57, 60, 64]], [41, [57, 60, 65]], [43, [55, 59, 62]], [40, [55, 59, 64]]];
+const P_FUN = [[36, [60, 64, 67]], [43, [59, 62, 67]], [45, [57, 60, 64]], [41, [57, 60, 65]]];
+const P_SAD = [[45, [57, 60, 64]], [41, [53, 57, 60]], [36, [55, 60, 64]], [40, [55, 59, 64]]];
+const P_NEU = [[38, [57, 60, 62, 65]], [43, [55, 59, 62, 64]], [40, [55, 59, 62, 64]], [45, [55, 57, 60, 64]]];
+function intenseBar(t, n) {
+  const bar = MSTYLES.intense.bar, [bass, ch] = P_INT[n % 4], s = bar / 16, fill = n % 4 === 3;
+  for (let k = 0; k < 16; k++) {
+    const tk = t + k * s;
+    if (k % 4 === 0 || (fill && k === 14)) kick(tk, 0.5);
+    if (k === 4 || k === 12) snare(tk, 0.22);
+    if (k % 2 === 1) hat(tk, k % 4 === 3 ? 0.07 : 0.045);
+    if (k % 2 === 0) voice(mtof(bass + (k % 8 === 6 ? 12 : 0)), tk, 0.005, s * 0.9, 0.06, 0.045, 'sawtooth', 0);
+    voice(mtof(ch[k % 3] + 12 + (k >= 8 ? 12 : 0)), tk, 0.004, s * 0.3, 0.08, 0.014, 'square', 0);
+  }
+  for (const m of ch) voice(mtof(m), t, 0.3, n % 2 ? s * 12 : s * 14, 0.4, 0.009, 'sawtooth', 8);
+}
+function funBar(t, n) {
+  const bar = MSTYLES.fun.bar, [bass, ch] = P_FUN[n % 4], s = bar / 8, scale = [72, 74, 76, 79, 81, 84];
+  const line = [0, null, 7, null, 12, null, 7, 0];
+  for (let k = 0; k < 8; k++) {
+    const tk = t + k * s;
+    if (k === 0 || k === 4) kick(tk, 0.32);
+    if (k === 2 || k === 6) snare(tk, 0.14);
+    if (k % 2 === 1) hat(tk, 0.03);
+    if (line[k] != null) voice(mtof(bass + 12 + line[k]), tk, 0.005, s * 0.45, 0.08, 0.05, 'triangle', 0);
+    if (k % 2 === 1) for (const n of ch) voice(mtof(n + 12), tk, 0.004, s * 0.15, 0.06, 0.008, 'square', 0);
+    if (Math.random() < 0.55) voice(mtof(Math.random() < 0.5 ? mpick(ch) + 24 : mpick(scale)), tk + (Math.random() < 0.25 ? s / 2 : 0), 0.004, s * 0.35, 0.12, 0.02, 'square', 0);
+  }
+}
+function sadBar(t, n) {
+  const bar = MSTYLES.sad.bar, [bass, ch] = P_SAD[n % 4], s = bar / 4, scale = [69, 71, 72, 74, 76, 77, 79, 81];
+  for (const m of ch) { voice(mtof(m), t, 1.2, bar - 1.2, 2.2, 0.016, 'sine', 0); voice(mtof(m), t, 1.4, bar - 1.4, 2.2, 0.008, 'triangle', -7); }
+  voice(mtof(bass + 12), t, 0.8, bar - 0.8, 2, 0.045, 'sine', 0);
+  let note = mpick(scale);
+  for (let k = 0; k < 4; k++) {
+    if (Math.random() < (k === 0 ? 0.85 : 0.5)) {
+      voice(mtof(note), t + k * s + Math.random() * 0.08, 0.01, 0.1, 2.6, 0.04, 'triangle', 0);
+      const i = scale.indexOf(note); note = scale[clamp(i + (Math.random() < 0.65 ? -1 : 1) * (1 + (Math.random() < 0.3 ? 1 : 0)), 0, scale.length - 1)];
+    }
+  }
+}
+function neutralBar(t, n) {
+  const bar = MSTYLES.neutral.bar, [bass, ch] = P_NEU[n % 4], s = bar / 8;
+  voice(mtof(bass + 12), t, 0.02, s * 3.5, 0.4, 0.05, 'sine', 0); voice(mtof(bass + 12), t + 4 * s, 0.02, s * 3, 0.4, 0.04, 'sine', 0);
+  for (const m of ch) voice(mtof(m), t, 0.6, bar - 0.6, 1.2, 0.007, 'triangle', 0);
+  const order = [0, 2, 1, 3, 2, 1, 3, 2];
+  for (let k = 0; k < 8; k++) {
+    const tk = t + k * s;
+    if (k % 2 === 0 || Math.random() < 0.4) voice(mtof(ch[order[k] % ch.length] + 12), tk, 0.004, 0.04, 0.5, 0.022, 'sine', 0);
+    if (k % 2 === 1) hiss(tk, 0.035, 'highpass', 6000, 0.018);
+  }
+}
+const MSTYLES = {
+  calm: { name: 'Relaxing', vol: 1, bar: 8, echo: [0.48, 0.42], lp: 2200, play: (t) => scheduleBar(t) },
+  intense: { name: 'Intense', vol: 1, bar: 240 / 140, echo: [0.32, 0.16], lp: 4200, play: intenseBar },
+  fun: { name: 'Fun', vol: 1.7, bar: 240 / 124, echo: [0.24, 0.2], lp: 4800, play: funBar },
+  sad: { name: 'Sad', vol: 1.25, bar: 240 / 62, echo: [0.58, 0.5], lp: 1900, play: sadBar },
+  neutral: { name: 'Neutral', vol: 1.6, bar: 240 / 92, echo: [0.39, 0.28], lp: 2800, play: neutralBar },
+};
+function setMusicStyle(id) {
+  if (!MSTYLES[id]) return;
+  const changed = profile.mstyle !== id; profile.mstyle = id; profile.music = true;
+  audioUnlock(); applyVolume(); save(false); syncSoundUI();
+  if (changed && sfx.ctx && music.bus) { newMusicSide(); styleFx(0.3); music.next = sfx.ctx.currentTime + 0.12; music.chord = 0; music.bar = 0; }
 }
 function scheduleBar(t) {
   const [bass, notes] = PROG[music.chord];
@@ -4307,12 +4432,17 @@ function scheduleBar(t) {
 function musicSchedule() {
   const c = sfx.ctx; if (!c || c.state !== 'running' || !profile.music || document.hidden || !music.bus) return;
   const now = c.currentTime; if (music.next < now + 0.05) music.next = now + 0.1;
-  while (music.next < now + 1.2) { scheduleBar(music.next); music.next += BAR; music.chord = (music.chord + 1) % PROG.length; }
+  const st = MSTYLES[profile.mstyle] || MSTYLES.calm;
+  while (music.next < now + 1.2) {
+    try { st.play(music.next, music.bar); } catch (e) { if (window.NB_DEBUG) window.__musicErr = String(e && e.stack || e); }
+    music.next += st.bar; music.bar++; if (st === MSTYLES.calm) music.chord = (music.chord + 1) % PROG.length;
+  }
 }
 function syncSoundUI() {
   $('soundChk').checked = !!profile.sound; $('musicChk').checked = !!profile.music; $('volIn').value = String(Math.round(profile.volume * 100));
   $('muteBtn').setAttribute('aria-pressed', String(!!profile.sound));
   $('musicBtn').setAttribute('aria-pressed', String(!!profile.music));
+  for (const b of document.querySelectorAll('[data-mstyle]')) b.setAttribute('aria-pressed', String(!!profile.music && b.dataset.mstyle === profile.mstyle));
 }
 function toggleSound() { profile.sound = !profile.sound; audioUnlock(); applyVolume(); if (!profile.sound) setBoostSound(false); save(); syncSoundUI(); }
 function toggleMusic() { profile.music = !profile.music; audioUnlock(); applyVolume(); save(); syncSoundUI(); }
@@ -4521,7 +4651,14 @@ tapButton($('takeBackBtn'), () => { setBot(false); blurIfPlaying(); });
 })();
 tapButton($('trainBtn'), () => { if (startTraining()) toast('Training started. Keep playing while your bot studies.'); blurIfPlaying(); });
 $('dockAuto').addEventListener('change', (e) => { profile.auto = e.target.checked; save(); blurIfPlaying(); });
-$('exitBtn').addEventListener('click', () => { if (gameKind === 'online') leaveRoom(false); else showMenu(); });
+let exitArmed = 0;
+function exitTap() {
+  const b = $('exitBtn'), now = performance.now();
+  if (now - exitArmed > 2500) { exitArmed = now; b.classList.add('confirm'); b.textContent = 'Sure?'; setTimeout(() => { if (performance.now() - exitArmed >= 2500) { b.classList.remove('confirm'); updateRoomChip(); } }, 2600); return; }
+  exitArmed = 0; b.classList.remove('confirm');
+  if (gameKind === 'online') leaveRoom(false); else showMenu();
+}
+tapButton($('exitBtn'), exitTap);
 $('nameIn').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
 $('lockerName').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
 $('lockerBtn').addEventListener('click', openLocker);
@@ -4538,12 +4675,12 @@ $('swapChk').addEventListener('change', (e) => { profile.set.swap = e.target.che
 $('smoothChk').addEventListener('change', (e) => { profile.set.smooth = e.target.checked; save(false); resize(); });
 $('rivalIn').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) importRival(f); e.target.value = ''; });
 tapButton($('pauseBtn'), () => { pauseGame(); });
-$('resumeBtn').addEventListener('click', resumeGame);
-$('pauseMenuBtn').addEventListener('click', () => { paused = false; showMenu(); });
+$('resumeBtn').addEventListener('click', popGuard(resumeGame));
+$('pauseMenuBtn').addEventListener('click', popGuard(() => { paused = false; showMenu(); }));
 tapButton($('coachNext'), () => { const S = TUT[tut.step]; if (S.last) endTutorial(true); else { tut.step++; tut.t0 = performance.now(); updateCoach(); } });
 $('coachSkip').addEventListener('click', () => endTutorial(false));
 for (const b of document.querySelectorAll('[data-bots]')) b.addEventListener('click', () => setModeSel({ bots: +b.dataset.bots }));
-$('deathWatchBtn').addEventListener('click', () => startSpectate());
+$('deathWatchBtn').addEventListener('click', popGuard(() => startSpectate()));
 tapButton($('specNext'), () => { nextSpec(); blurIfPlaying(); });
 tapButton($('specRespawn'), () => { stopSpectate(); if (match.m === 'br') { if (gameKind === 'solo') startMatch(cfgOf(match)); } else startGame({ watch: false }); });
 tapButton($('chatBtn'), () => { toggleChat(); blurIfPlaying(); });
@@ -4560,8 +4697,8 @@ for (const b of document.querySelectorAll('.modetab')) b.addEventListener('click
 for (const b of document.querySelectorAll('[data-ctl]')) b.addEventListener('click', () => setModeSel({ ctl: +b.dataset.ctl }));
 for (const b of document.querySelectorAll('[data-tag]')) b.addEventListener('click', () => setModeSel({ tag: b.dataset.tag }));
 for (const b of document.querySelectorAll('[data-diff]')) b.addEventListener('click', () => setModeSel({ diff: b.dataset.diff }));
-$('resAgain').addEventListener('click', () => { if (gameKind === 'solo') startMatch(cfgOf(match)); });
-$('resMenu').addEventListener('click', () => { if (gameKind === 'online') leaveRoom(false); else showMenu(); });
+$('resAgain').addEventListener('click', popGuard(() => { if (gameKind === 'solo') startMatch(cfgOf(match)); }));
+$('resMenu').addEventListener('click', popGuard(() => { if (gameKind === 'online') leaveRoom(false); else showMenu(); }));
 $('watchBtn').addEventListener('click', () => { const wasMode = inModes(); match = { m: 'classic' }; abilClassic = false; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: true }); });
 $('onlineBtn').addEventListener('click', () => { showScreen('online'); updateOnlineScreen(); renderModeSel(); });
 $('onlineBack').addEventListener('click', showMenu);
@@ -4578,9 +4715,9 @@ $('resetYes').addEventListener('click', () => {
   profile.practice = 0; profile.acc = null; profile.near = null; profile.sessions = 0; profile.bestBot = 0;
   save(); $('resetConfirm').hidden = true; updateBotCard(); updateMenuButtons(); updateDock(); toast('Your bot was reset.');
 });
-$('againBtn').addEventListener('click', () => startGame({ watch: botWatch && botReady() }));
-$('deathTrainBtn').addEventListener('click', openTrainScreen);
-$('deathMenuBtn').addEventListener('click', () => { if (gameKind === 'online') leaveRoom(false); else showMenu(); });
+$('againBtn').addEventListener('click', popGuard(() => startGame({ watch: botWatch && botReady() })));
+$('deathTrainBtn').addEventListener('click', popGuard(openTrainScreen));
+$('deathMenuBtn').addEventListener('click', popGuard(() => { if (gameKind === 'online') leaveRoom(false); else showMenu(); }));
 $('trainDone').addEventListener('click', () => {
   if (player && player.alive) { mode = 'play'; showScreen(null); }
   else if (mode === 'menu') showMenu();
@@ -4594,6 +4731,7 @@ $('volIn').addEventListener('change', () => SFX.eat(2));
 tapButton($('muteBtn'), () => { toggleSound(); blurIfPlaying(); });
 tapButton($('inviteBtn'), () => { shareInvite(); blurIfPlaying(); });
 for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown']) document.addEventListener(ev, audioUnlock, true);
+for (const b of document.querySelectorAll('[data-mstyle]')) b.addEventListener('click', () => setMusicStyle(b.dataset.mstyle));
 $('musicChk').addEventListener('change', (e) => { profile.music = e.target.checked; audioUnlock(); applyVolume(); save(); syncSoundUI(); });
 tapButton($('musicBtn'), () => { toggleMusic(); blurIfPlaying(); });
 document.addEventListener('click', (e) => { const t = e.target && e.target.closest ? e.target.closest('.btn,.opt,.swatch,.chipbtn') : null; if (t && !t.disabled && t.id !== 'muteBtn' && t.id !== 'musicBtn' && t.id !== 'inviteBtn') SFX.click(); }, true);
@@ -4609,6 +4747,8 @@ function onViewChange() { resize(); updateDock(); updateRoomChip(); boardTick = 
 window.addEventListener('resize', onViewChange);
 window.addEventListener('orientationchange', () => { for (const ms of [60, 250, 600, 1200]) setTimeout(onViewChange, ms); });
 try { if (window.visualViewport) window.visualViewport.addEventListener('resize', onViewChange); } catch (e) { /* ignore */ }
+document.addEventListener('focusout', (e) => { if (e.target && e.target.tagName === 'INPUT') settleAfterTyping(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT' && e.target.type === 'text' && e.target.id !== 'codeIn') e.target.blur(); });
 try { if (typeof ResizeObserver === 'function') { const ro = new ResizeObserver(() => onViewChange()); ro.observe(canvas); ro.observe(mini); } } catch (e) { /* ignore */ }
 const sizeOff = () => Math.abs(canvas.clientWidth - W) > 1 || Math.abs(canvas.clientHeight - H) > 1 || canvas.width !== Math.round(W * DPR) || canvas.height !== Math.round(H * DPR);
 
@@ -4644,7 +4784,8 @@ function loop(now) {
   try { if (!paused) step(dt, now); } catch (e) { reportGlitch('game', e); }
   try {
     updateTheme(dt);
-    if (frame % 10 === 0) { fitApp(); if (sizeOff()) onViewChange(); }
+    if (frame % 300 === 0) heartbeat(mode === 'play' || mode === 'spec' || mode === 'dead');
+    if (frame % 10 === 0) { fitApp(); if (sizeOff()) onViewChange(); if ((window.scrollY || window.scrollX) && !typing()) window.scrollTo(0, 0); }
     updateCam(dt);
     render(now);
     if (mode === 'play' || mode === 'spec') { updateHud(); if (frame % 10 === 0) drawMini(); if (spec.on && frame % 15 === 0) updateSpecBar(); }
@@ -4658,7 +4799,11 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
+const HB_KEY = 'noodlebots.alive';
+function heartbeat(on) { try { if (on) localStorage.setItem(HB_KEY, String(Date.now())); else localStorage.removeItem(HB_KEY); } catch (e) { /* ignore */ } }
 function boot() {
+  let reopened = false; try { const t = +localStorage.getItem(HB_KEY); reopened = t > 0 && Date.now() - t < 120000; localStorage.removeItem(HB_KEY); } catch (e) { /* ignore */ }
+  if (reopened) setTimeout(() => toast('Your phone closed the game for a moment, so it restarted. Your stuff is saved!'), 900);
   load();
   resize();
   setupSoloWorld();
@@ -4668,7 +4813,7 @@ function boot() {
   $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION} · What's new`;
   ensureDaily(); buildChat(); updateDailyCard(); loadRivals(); applySettings(); updateTutBtn(); checkAch(true);
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
-  themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; syncSoundUI();
+  themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; paintPage(); syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
   showScreen('menu'); maybeShowNews();
   initOnline();
@@ -4720,6 +4865,22 @@ function boot() {
     rivalSnakes: () => snakes.filter((sn) => sn.rival).map((sn) => [sn.name, sn.alive]),
     setOf: () => ({ set: profile.set, dpr: +DPR.toFixed(2), swap: app.classList.contains('swap') }),
     levels: () => LEVELS.length,
+    music: () => ({ style: profile.mstyle, on: profile.music, bar: music.bar, ctx: sfx.ctx ? sfx.ctx.state : 'none' }),
+    renderStyle: async (id, secs) => {
+      const keep = { ctx: sfx.ctx, master: sfx.master, noise: sfx.noise, m: Object.assign({}, music), st: profile.mstyle, on: profile.music };
+      const oc = new OfflineAudioContext(1, Math.round(44100 * secs), 44100);
+      try {
+        sfx.ctx = oc; sfx.master = oc.createGain(); sfx.master.gain.value = 1; sfx.master.connect(oc.destination);
+        if (!sfx.noise) { const b = oc.createBuffer(1, 44100, 44100), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; sfx.noise = b; }
+        profile.mstyle = id; profile.music = true; music.side = null; musicInit();
+        const st = MSTYLES[id]; let t = 0.05, n = 0; while (t < secs) { st.play(t, n++); if (st === MSTYLES.calm) music.chord = (music.chord + 1) % PROG.length; t += st.bar; }
+        const out = (await oc.startRendering()).getChannelData(0);
+        let peak = 0, sum = 0; for (let i = 0; i < out.length; i++) { const v = Math.abs(out[i]); if (v > peak) peak = v; sum += out[i] * out[i]; }
+        return { id, bars: n, peak: +peak.toFixed(3), rms: +Math.sqrt(sum / out.length).toFixed(4) };
+      } finally { sfx.ctx = keep.ctx; sfx.master = keep.master; sfx.noise = keep.noise; Object.assign(music, keep.m); profile.mstyle = keep.st; profile.music = keep.on; }
+    },
+    musicErr: () => window.__musicErr || null,
+    exitState: () => ({ text: $('exitBtn').textContent, armed: performance.now() - exitArmed < 2500 }),
     setPractice: (p, ns) => { profile.practice = p; newSince = ns; profile.sessions = Math.max(1, profile.sessions); updateDock(); updateBotCard(); return botLevel(); },
     bars: () => ({ dock: [$('dockMeter').style.width, $('dockPend').style.width, $('dockSub').textContent], card: [$('bcMeter').style.width, $('bcPend').style.width, $('bcLine').textContent, $('bcName').textContent] }),
     toFood: () => { if (!player) return false; let best = null, bd = 1e18; for (let i = 0; i < activeSlots; i++) { const f = foodAt(i); if (!f || f.eaten) continue; const d = (f.x - player.x) ** 2 + (f.y - player.y) ** 2; if (d < bd && d > 900) { bd = d; best = f; } } if (!best) return false; const a = player.ang; player.x = best.x - Math.cos(a) * 4; player.y = best.y - Math.sin(a) * 4; for (const p of player.segs) { p.x = player.x; p.y = player.y; } return true; },
