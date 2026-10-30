@@ -248,6 +248,27 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .roomlist .rc{font-family:var(--f-num);font-weight:700;letter-spacing:.15em}
 .roomlist .rn{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .roomlist .empty{display:block;color:var(--muted);border-style:dashed}
+.fme{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.fme b{font-family:var(--f-num);font-size:19px;letter-spacing:.12em;color:var(--ink)}
+.fmsg{margin:0;font-size:13px}
+.flist:empty{display:none}
+.flist li{grid-template-columns:auto minmax(0,1fr) auto auto;padding:7px 7px 7px 10px}
+.flist li.pend{opacity:.75;border-style:dashed}
+.fdot{width:24px;height:24px;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.35) inset}
+.fwho{display:flex;flex-direction:column;min-width:0;gap:2px}
+.fname{font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fst{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fst.on{color:#a6e85b}
+.fst.on::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#a6e85b;margin-right:5px;vertical-align:1px}
+.flist .fx{padding:8px 10px;min-width:36px}
+.flist .fx.sure{background:var(--danger);color:var(--danger-ink);border-color:transparent}
+.freq li{grid-template-columns:auto minmax(0,1fr);border-color:rgba(255,212,71,.55)}
+.freq .acts{grid-column:1/-1;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+#onlineBtn{position:relative;overflow:visible}
+.fbadge{position:absolute;top:-9px;right:-6px;padding:4px 8px;border-radius:99px;background:#a6e85b;color:#14301a;font:700 12px/1 var(--f-body);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none}
+.fbadge.req{background:#ffd447;color:#1b1433}
+.invite{position:absolute;left:0;right:0;margin-inline:auto;top:max(12px,calc(env(safe-area-inset-top,0px) * 1.75));z-index:70;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:min(92vw,440px);box-sizing:border-box;padding:10px 12px;border-radius:16px;background:var(--panel-strong);border:1px solid var(--bot);box-shadow:0 12px 32px rgba(0,0,0,.45);font-size:14px;color:var(--ink);animation:toastIn .25s ease-out}
+.invite span{flex:1 1 180px;min-width:0}
 .maps{width:100%;border-collapse:collapse;font-size:13px}
 .maps th,.maps td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}
 .maps th{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -529,6 +550,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 </head>
 <body>
 <div id="app">
+  <div id="invitePop" class="invite" role="alertdialog" aria-labelledby="invText" hidden><span id="invText"></span><button class="btn small primary" id="invJoin" type="button">Join</button><button class="btn small" id="invNo" type="button">Not now</button></div>
   <canvas id="game" aria-label="Noodle Bots arena"></canvas>
 
   <div id="topcap" aria-hidden="true"></div>
@@ -614,7 +636,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       </div>
       <div class="play-row">
         <button class="btn primary big" id="soloBtn" type="button">Play solo</button>
-        <button class="btn big" id="onlineBtn" type="button">Play with friends</button>
+        <button class="btn big" id="onlineBtn" type="button">Play with friends<span class="fbadge" id="fBadge" hidden></span></button>
       </div>
       <button class="btn bot big" id="watchBtn" type="button">Watch my bot play</button>
       <div class="menu-links"><button class="btn small" id="tutBtn" type="button">How to play</button><button class="btn small" id="statsBtn" type="button">Stats &amp; trophies</button><button class="btn small" id="setBtn" type="button">Settings</button></div>
@@ -734,6 +756,17 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       </div>
       </div>
       <div class="col">
+      <div class="group" id="friendsGroup" hidden>
+        <p class="lbl">Friends</p>
+        <div class="fme"><span>Your friend code</span><b id="fCode">····-····</b><button class="btn small" id="fShare" type="button">Share</button></div>
+        <p class="modeinfo" id="fNameTip" hidden>Tip: type your name on the menu so friends know it's you.</p>
+        <label class="vh" for="fCodeIn">Add a friend with their code</label>
+        <div class="joinrow"><input id="fCodeIn" class="input code" type="text" name="nb-friend" maxlength="9" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="send" placeholder="Friend code" autocapitalize="characters"><button class="btn" id="fAddBtn" type="button">Add</button></div>
+        <p class="status fmsg" id="fMsg" hidden></p>
+        <ul class="roomlist flist freq" id="fReqList"></ul>
+        <ul class="roomlist flist" id="fList"></ul>
+        <p class="modeinfo">Friends can see when you're online and which room you're in. Only add people you know.</p>
+      </div>
       <div class="group">
         <p class="lbl">Arena size grows with your room</p>
         <table class="maps">
@@ -890,8 +923,10 @@ const NB = TB.length;
 const ORDER = TB.map((_, p) => TB.map((_, b) => b).sort((a, b) => Math.abs(a - p) - Math.abs(b - p)));
 const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
-const GAME_VERSION = '1.0.0';   // the first full release; everything before it is a Pre-Release
-const STORE_KEY = 'noodlebots.v2', MOVES_KEY = 'noodlebots.v2.moves';
+// BETA = the test copy at /noodle-bots/beta/. It keeps its own save and its own online channel, so testing never touches the real game.
+const BETA = false;
+const GAME_VERSION = '1.1.0';
+const STORE_KEY = BETA ? 'noodlebots.beta' : 'noodlebots.v2', MOVES_KEY = STORE_KEY + '.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
 const PATTERNS = [
@@ -949,6 +984,8 @@ function fadeFor(c1, c2) {
   fadeCache.set(k, a); return a;
 }
 const RAINBOW = Array.from({ length: 36 }, (_, i) => `hsl(${i * 10},90%,63%)`);
+const FID_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', FID_RE = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/, FR_MAX = 50;
+const fidShow = (id) => id.slice(0, 4) + '-' + id.slice(4);
 function cleanName(v, max = 14) {
   if (typeof v !== 'string') return 'Player';
   const s = v.replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '').trim().slice(0, max);
@@ -973,6 +1010,7 @@ const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553')
 
 /* ================= profile & storage ================= */
 const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false, retroRight: false, clean: false },
+  fid: '', friends: [], fOut: [], fBlock: [],
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
 let newSince = 0;
@@ -1002,6 +1040,9 @@ function applyProfileData(p) {
   if (typeof p.retroBest === 'number' && isFinite(p.retroBest)) profile.retroBest = clamp(Math.floor(p.retroBest), 0, 9999);
   if (['auto', 'calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
   if (typeof p.seenVer === 'string' && /^R?[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
+  if (typeof p.fid === 'string' && FID_RE.test(p.fid)) profile.fid = p.fid;
+  if (Array.isArray(p.friends)) { const ids = new Set(); profile.friends = p.friends.filter((f) => f && typeof f.id === 'string' && FID_RE.test(f.id) && !ids.has(f.id) && ids.add(f.id)).slice(0, FR_MAX).map((f) => ({ id: f.id, n: cleanName(f.n), lk: Number.isFinite(f.lk) ? clamp(Math.floor(f.lk), 0, 99999) : 0 })); }
+  for (const k of ['fOut', 'fBlock']) if (Array.isArray(p[k])) profile[k] = [...new Set(p[k].filter((x) => typeof x === 'string' && FID_RE.test(x)))].slice(0, 40);
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
   if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true, retroRight: p.set.retroRight === true, clean: p.set.clean === true };
   if (p.st && typeof p.st === 'object') {
@@ -1017,10 +1058,13 @@ function applyProfileData(p) {
 let saveTimer = 0;
 function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => save(false), 500); }
 function load() {
+  if (BETA) { try { if (!localStorage.getItem(STORE_KEY)) for (const [a, b] of [['noodlebots.v2', STORE_KEY], ['noodlebots.v2.rivals', RIVAL_KEY]]) { const v = localStorage.getItem(a); if (v) localStorage.setItem(b, v); } } catch (e) { /* ignore */ } }
   try {
     const raw = localStorage.getItem(STORE_KEY); if (!raw) return;
     const d = JSON.parse(raw);
     applyProfileData(d.profile);
+    // Friends you made in the beta come with you: the first time this version opens, it takes your beta friend code and friends.
+    if (!BETA && !profile.fid) { try { const b = JSON.parse(localStorage.getItem('noodlebots.beta') || 'null'); if (b && b.profile && FID_RE.test(b.profile.fid || '')) applyProfileData({ fid: b.profile.fid, friends: b.profile.friends, fOut: b.profile.fOut, fBlock: b.profile.fBlock }); } catch (e) { /* ignore */ } }
     newSince = clamp(int(d.newSince), 0, 1e7);
     if (d.weights) { const b = makeBrain(); if (setWeights(b, b64ToBytes(d.weights))) brain = b; }
     if (d.samples) loadSamples(b64ToBytes(d.samples));
@@ -1038,6 +1082,7 @@ function save(withMoves) {
   return ok;
 }
 function saveMoves() {
+  if (BETA) return true;
   for (const keep of [SAVE_SAMPLES, 4000, 0]) {
     try {
       if (keep > 0 && sampCount > 0) localStorage.setItem(MOVES_KEY, bytesToB64(packSamples(keep))); else localStorage.removeItem(MOVES_KEY);
@@ -2824,7 +2869,7 @@ function newCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ'; let s = ''; for (let i
    are tried at once in case one is down. */
 // Free public relay servers. Hosts use the first one that answers; friends listen on all of them to find the room.
 const NET_BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://mqtt.eclipseprojects.io/mqtt', 'wss://broker.hivemq.com:8884/mqtt', 'wss://test.mosquitto.org:8081/mqtt', 'wss://public:public@public.cloud.shiftr.io'];
-const NET_TOPIC = 'noodlebots/tt15/v2/', NET_MAX = 16, NET_SEND_MS = 100, NET_STALE_MS = 8000;
+const NET_TOPIC = BETA ? 'noodlebots/tt15/beta1/' : 'noodlebots/tt15/v2/', NET_MAX = 16, NET_SEND_MS = 100, NET_STALE_MS = 8000;
 const NET_TE = typeof TextEncoder === 'function' ? new TextEncoder() : null, NET_TD = typeof TextDecoder === 'function' ? new TextDecoder() : null;
 const netId = () => Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6);
 function mqStr(str) { const b = NET_TE.encode(str), o = new Uint8Array(2 + b.length); o[0] = b.length >> 8; o[1] = b.length & 255; o.set(b, 2); return o; }
@@ -2848,12 +2893,12 @@ function mqttConnect(url, opts) {
     const api = {
       url,
       get open() { return ready && !closed && ws.readyState === 1; },
-      publish(topic, text) { send(mqPacket(0x30, mqCat(mqStr(topic), NET_TE.encode(text)))); },
+      publish(topic, text, retain) { send(mqPacket(retain ? 0x31 : 0x30, mqCat(mqStr(topic), NET_TE.encode(text)))); },
       subscribe(filter) { const id = (pid++ % 65535) + 1; send(mqPacket(0x82, mqCat(new Uint8Array([id >> 8, id & 255]), mqStr(filter), new Uint8Array([0])))); },
       close() { if (closed) return; closed = true; clearInterval(ping); send(new Uint8Array([0xe0, 0])); setTimeout(() => { try { ws.close(); } catch (e) { /* ignore */ } }, 60); },
     };
     ws.onopen = () => {
-      const parts = [mqStr('MQTT'), new Uint8Array([4, 0x02 | (opts.will ? 0x04 : 0) | (user ? 0x80 : 0) | (pass ? 0x40 : 0), 0, 30]), mqStr(opts.clientId)];
+      const parts = [mqStr('MQTT'), new Uint8Array([4, 0x02 | (opts.will ? 0x04 | (opts.will.retain ? 0x20 : 0) : 0) | (user ? 0x80 : 0) | (pass ? 0x40 : 0), 0, 30]), mqStr(opts.clientId)];
       if (opts.will) { const wp = NET_TE.encode(opts.will.payload); parts.push(mqStr(opts.will.topic), new Uint8Array([wp.length >> 8, wp.length & 255]), wp); }
       if (user) parts.push(mqStr(user));
       if (pass) parts.push(mqStr(pass));
@@ -2876,7 +2921,7 @@ function mqttConnect(url, opts) {
           resolve(api);
         } else if (type === 3 && body.length >= 2) {
           const tl = (body[0] << 8) | body[1]; let off = 2 + tl; if ((head >> 1) & 3) off += 2;
-          if (off <= body.length && opts.onMessage) { try { opts.onMessage(NET_TD.decode(body.subarray(2, 2 + tl)), NET_TD.decode(body.subarray(off))); } catch (e) { /* ignore */ } }
+          if (off <= body.length && opts.onMessage) { try { opts.onMessage(NET_TD.decode(body.subarray(2, 2 + tl)), NET_TD.decode(body.subarray(off)), !!(head & 1)); } catch (e) { /* ignore */ } }
         }
       }
     };
@@ -3735,6 +3780,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '1.1.0', items: ['Friends! Open Play with friends to find your friend code. Add friends with their code, see when they are online and which room they are in, and tap Join to hop into their game.', 'In a room, tap Invite next to a friend and they get a pop-up to join you.', 'Friend requests need to be accepted, and you can remove or block anyone.'] },
   { v: '1.0.0', items: ['Noodle Bots is officially out! Version 1.0.0 is the first full release.', 'All the updates before this one are now called Pre-Releases, from Pre-Release 2.5.0 to Pre-Release 3.1.0. You can still read them all below.'] },
   { v: '3.1.0', pre: true, items: ['Hats ride on the head now: they turn with your snake and lean back the way it moves (the Cap and Halo are drawn from above).', 'Trailer mode in Settings: hides the scores, leaderboard and map so you can record clean videos.', 'Snakes burst in their own color when they crash.'] },
   { v: '3.0.1', pre: true, items: ['Old-school Snake works sideways: arrows on the left, a big board on the right, and a ⇄ Switch sides button to flip them.'] },
@@ -3898,7 +3944,7 @@ function resumeGame() {
   input.last = now; last = now; showScreen(null);
 }
 /* ---------- friends' bots for Bot Battle ---------- */
-const RIVAL_KEY = 'noodlebots.v2.rivals';
+const RIVAL_KEY = STORE_KEY + '.rivals';
 let rivals = [];
 function loadRivals() {
   try { const a = JSON.parse(localStorage.getItem(RIVAL_KEY) || '[]'); if (Array.isArray(a)) rivals = a.filter((r) => r && typeof r.w === 'string').slice(0, 4).map((r) => ({ name: cleanName(r.name), look: int(r.look), sk: typeof r.sk === 'string' ? r.sk : null, w: r.w, lvl: clamp(int(r.lvl, 1), 1, 20), brain: null })); } catch (e) { rivals = []; }
@@ -4335,6 +4381,7 @@ function clearPieces(all) {
 function setOnlineStatus(msg, warn) { const el = $('onlineStatus'); el.textContent = msg; el.classList.toggle('warn', !!warn); }
 function updateOnlineScreen() {
   if ($('online').hidden) return;
+  renderFriends();
   const body = $('onlineBody');
   if (!online.apiTried) { setOnlineStatus('Connecting…'); body.hidden = true; return; }
   if (!online.api) {
@@ -4361,6 +4408,235 @@ function updateOnlineScreen() {
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn small'; btn.textContent = 'Join';
     btn.addEventListener('click', () => joinRoom(r.code, false));
     li.append(a, b, btn); ul.append(li);
+  }
+}
+
+/* ---------- friends (website version) ----------
+   Everyone gets a friend code. Friend requests, "yes" answers and removals are kept on the
+   free message servers as retained messages, so they wait for you if you're offline. Each
+   player also keeps a status message there (menu / playing solo / in room ABCD) that only
+   matters to the people who have them as a friend. */
+const FR = { conns: [], started: false, status: new Map(), reqIn: new Map(), lastSig: '', lastAt: 0, seenInv: new Set(), inv: null, invTimer: 0, rmArm: '', rmAt: 0, tick: 0, msgTimer: 0 };
+const frT = (...p) => NET_TOPIC + 'f/u/' + p.join('/');
+const isFriend = (id) => profile.friends.some((f) => f.id === id);
+const frOnline = (st) => !!(st && !st.off && Date.now() - st.seen < 75000);
+function frNewId() { let id = ''; for (let i = 0; i < 8; i++) id += FID_ABC[Math.floor(Math.random() * FID_ABC.length)]; return id; }
+function frEnsure() { if (!profile.fid) { profile.fid = frNewId(); save(false); } frStart(); }
+function frPub(topic, obj, retain) { const text = obj === null ? '' : JSON.stringify(obj); for (const c of FR.conns) if (c.open) c.publish(topic, text, retain); }
+function frMe() { return { n: cleanName(profile.name), lk: packLook(profile.look) }; }
+function frStart() {
+  if (FR.started || online.kind !== 'web' || !profile.fid || !NET_TE || typeof WebSocket !== 'function') return;
+  FR.started = true;
+  const brokers = Array.isArray(window.NB_MQTT_BROKERS) ? window.NB_MQTT_BROKERS : NET_BROKERS;
+  // Stay on up to 3 of the free servers at once, so friends find each other even if one is down or blocked.
+  brokers.forEach((url, i) => setTimeout(() => frConnect(url, 0), i * 400));
+  FR.tick = setInterval(frTick, 2000);
+}
+function frConnect(url, attempt) {
+  if (FR.conns.length >= 3) return;
+  mqttConnect(url, {
+    clientId: 'nbf' + profile.fid + netId().slice(0, 4), timeout: 9000,
+    will: { topic: frT(profile.fid, 's'), payload: '{"off":1}', retain: true },
+    onMessage: frHear,
+    onClose: (c) => { FR.conns = FR.conns.filter((x) => x !== c); renderFriends(); if (attempt < 6) setTimeout(() => frConnect(url, attempt + 1), 2000 * (attempt + 1)); },
+  }).then((c) => {
+    if (FR.conns.length >= 3) { c.close(); return; }
+    FR.conns.push(c);
+    c.subscribe(frT(profile.fid, '#'));
+    for (const f of profile.friends) c.subscribe(frT(f.id, 's'));
+    FR.lastSig = ''; frTick(); renderFriends();
+  }).catch(() => { if (attempt < 2) setTimeout(() => frConnect(url, attempt + 1), 4000); });
+}
+function frMyStatus() {
+  const inRoom = !!(online.room && online.code);
+  const st = inRoom ? 'r' : (mode === 'play' || mode === 'spec') ? 'p' : 'm';
+  return Object.assign(frMe(), { st, r: inRoom ? online.code : null, c: inRoom ? online.players : null });
+}
+function frTick() {
+  if (!FR.conns.length) return;
+  const me = frMyStatus(), sig = JSON.stringify(me), now = Date.now();
+  if (sig !== FR.lastSig || now - FR.lastAt > 25000) { FR.lastSig = sig; FR.lastAt = now; frPub(frT(profile.fid, 's'), Object.assign(me, { t: now }), true); }
+  renderFriends();
+}
+function frHear(topic, text, retained) {
+  const pre = NET_TOPIC + 'f/u/';
+  if (topic.slice(0, pre.length) !== pre || text.length > 1500) return;
+  const [who, kind, from] = topic.slice(pre.length).split('/');
+  let m = null; if (text) { try { m = JSON.parse(text); } catch (e) { return; } if (!m || typeof m !== 'object') return; }
+  if (kind === 's') {
+    if (who === profile.fid || !isFriend(who) || !m) return;
+    const now = Date.now(), t = Number.isFinite(m.t) ? m.t : 0;
+    const old = FR.status.get(who);
+    if (old && retained && old.t >= t && !m.off) return;
+    const st = { off: !!m.off, st: ['m', 'p', 'r'].includes(m.st) ? m.st : 'm', r: typeof m.r === 'string' && /^[A-Z]{4}$/.test(m.r) ? m.r : null, c: clamp(int(m.c), 0, 99), t, seen: retained ? Math.min(now, t) : now };
+    FR.status.set(who, st);
+    const f = profile.friends.find((x) => x.id === who);
+    if (f && !m.off && typeof m.n === 'string') { const n = cleanName(m.n), lk = Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 99999) : f.lk; if (n !== f.n || lk !== f.lk) { f.n = n; f.lk = lk; saveSoon(); } }
+    renderFriends(); return;
+  }
+  if (who !== profile.fid || !FID_RE.test(from || '')) return;
+  if (kind === 'in') {
+    if (!m) { if (FR.reqIn.delete(from)) renderFriends(); return; }
+    if (m.t === 'req') {
+      if (profile.fBlock.includes(from)) { frPub(frT(profile.fid, 'in', from), null, true); return; }
+      if (isFriend(from)) { frPub(frT(from, 'in', profile.fid), Object.assign({ t: 'ok' }, frMe()), true); frPub(frT(profile.fid, 'in', from), null, true); return; }
+      if (profile.fOut.includes(from)) { frAccept(from, m); return; }      // we both asked each other
+      const had = FR.reqIn.has(from);
+      FR.reqIn.set(from, { n: cleanName(m.n), lk: Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 99999) : 0 });
+      if (FR.reqIn.size > 20) FR.reqIn.delete(FR.reqIn.keys().next().value);
+      if (!had && !retained) toast(`${cleanName(m.n)} sent you a friend request`);
+      renderFriends();
+    } else if (m.t === 'ok') {
+      if (profile.fOut.includes(from) && !isFriend(from)) { frAdd(from, m); toast(`${cleanName(m.n)} said yes! You're friends now.`); SFX.unlock(); }
+      profile.fOut = profile.fOut.filter((x) => x !== from); saveSoon();
+      frPub(frT(profile.fid, 'in', from), null, true); renderFriends();
+    } else if (m.t === 'no') {
+      profile.fOut = profile.fOut.filter((x) => x !== from); saveSoon();
+      frPub(frT(profile.fid, 'in', from), null, true); renderFriends();
+    } else if (m.t === 'rm') {
+      if (isFriend(from)) { profile.friends = profile.friends.filter((f) => f.id !== from); FR.status.delete(from); saveSoon(); }
+      frPub(frT(profile.fid, 'in', from), null, true); renderFriends();
+    }
+  } else if (kind === 'iv') {
+    if (!m || retained || !isFriend(from) || typeof m.r !== 'string' || !/^[A-Z]{4}$/.test(m.r)) return;
+    const key = from + m.r + (m.at || 0); if (FR.seenInv.has(key)) return; FR.seenInv.add(key);
+    if (online.room && online.code === m.r) return;
+    showInvite(profile.friends.find((f) => f.id === from), m.r);
+  }
+}
+function frAdd(id, m) {
+  if (isFriend(id) || profile.friends.length >= FR_MAX) return;
+  profile.friends.push({ id, n: cleanName(m && m.n), lk: m && Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 99999) : 0 });
+  profile.fOut = profile.fOut.filter((x) => x !== id); FR.reqIn.delete(id); save(false);
+  for (const c of FR.conns) if (c.open) c.subscribe(frT(id, 's'));
+  FR.lastSig = ''; frTick();
+}
+function frAccept(id, m) {
+  const r = m || FR.reqIn.get(id) || {};
+  frAdd(id, r);
+  frPub(frT(id, 'in', profile.fid), Object.assign({ t: 'ok' }, frMe()), true);
+  frPub(frT(profile.fid, 'in', id), null, true);
+  frMsg(`You and ${cleanName(r.n)} are friends now!`); renderFriends();
+}
+function frDecline(id, block) {
+  FR.reqIn.delete(id);
+  frPub(frT(id, 'in', profile.fid), { t: 'no' }, true);
+  frPub(frT(profile.fid, 'in', id), null, true);
+  if (block && !profile.fBlock.includes(id)) { profile.fBlock.push(id); profile.fBlock = profile.fBlock.slice(-40); save(false); }
+  renderFriends();
+}
+function frRemove(id) {
+  profile.friends = profile.friends.filter((f) => f.id !== id); FR.status.delete(id); save(false);
+  frPub(frT(id, 'in', profile.fid), { t: 'rm' }, true);
+  renderFriends();
+}
+function frCancel(id) {
+  profile.fOut = profile.fOut.filter((x) => x !== id); save(false);
+  frPub(frT(id, 'in', profile.fid), null, true); renderFriends();
+}
+function frMsg(text, warn) {
+  const el = $('fMsg'); el.textContent = text; el.hidden = !text; el.classList.toggle('warn', !!warn);
+  clearTimeout(FR.msgTimer); if (text) FR.msgTimer = setTimeout(() => { el.hidden = true; }, 6000);
+}
+function frAddCode(raw) {
+  const id = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!FID_RE.test(id)) { frMsg('Friend codes are 8 letters and numbers, like ABCD-2345.', true); return; }
+  frEnsure();
+  if (id === profile.fid) { frMsg("That's your own code! Send it to a friend instead.", true); return; }
+  if (isFriend(id)) { frMsg("You're already friends.", true); return; }
+  if (FR.reqIn.has(id)) { frAccept(id); $('fCodeIn').value = ''; return; }
+  if (profile.friends.length >= FR_MAX) { frMsg(`You can have up to ${FR_MAX} friends.`, true); return; }
+  profile.fBlock = profile.fBlock.filter((x) => x !== id);
+  if (!profile.fOut.includes(id)) { profile.fOut.push(id); profile.fOut = profile.fOut.slice(-20); save(false); }
+  frPub(frT(id, 'in', profile.fid), Object.assign({ t: 'req' }, frMe()), true);
+  $('fCodeIn').value = '';
+  frMsg(FR.conns.length ? `Friend request sent to ${fidShow(id)}. They'll see it next time they open the game.` : `Friend request saved. It sends as soon as you're connected.`);
+  renderFriends();
+}
+function frInvite(id) {
+  if (!online.room || !online.code) return;
+  frPub(frT(id, 'iv', profile.fid), Object.assign({ r: online.code, at: Date.now() }, frMe()), false);
+  const f = profile.friends.find((x) => x.id === id); toast(`Invite sent to ${f ? f.n : 'your friend'}`);
+}
+async function frShare() {
+  frEnsure();
+  const code = fidShow(profile.fid);
+  if (location.protocol === 'file:') { toast(`Your friend code: ${code}`); return; }
+  const url = location.origin + location.pathname + '#friend=' + profile.fid;
+  try { if (navigator.share) { await navigator.share({ title: 'Noodle Bots', text: `Add me as a friend in Noodle Bots! My friend code is ${code}`, url }); return; } }
+  catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(`Add me as a friend in Noodle Bots! My friend code is ${code} ${url}`); toast('Friend link copied'); }
+  catch (e) { toast(`Your friend code: ${code}`); }
+}
+function showInvite(f, room) {
+  if (!f) return;
+  FR.inv = { id: f.id, r: room };
+  $('invText').textContent = `${f.n} invited you to room ${room}!`;
+  $('invitePop').hidden = false; SFX.join();
+  clearTimeout(FR.invTimer); FR.invTimer = setTimeout(hideInvite, 20000);
+}
+function hideInvite() { $('invitePop').hidden = true; FR.inv = null; clearTimeout(FR.invTimer); }
+function frStatusText(id) {
+  const st = FR.status.get(id);
+  if (!FR.conns.length) return { t: 'Connecting…', on: false };
+  if (!frOnline(st)) return { t: 'Offline', on: false };
+  if (st.st === 'r' && st.r) return { t: online.code === st.r ? `In your room ${st.r}` : `In room ${st.r}${st.c ? ` · ${st.c} playing` : ''}`, on: true, r: st.r };
+  return { t: st.st === 'p' ? 'Playing solo' : 'On the menu', on: true };
+}
+function fDot(lk) { const l = unpackLook(lk), d = document.createElement('span'); d.className = 'fdot'; d.style.background = `linear-gradient(135deg, ${PALETTE[l.c1]} 50%, ${PALETTE[l.c2]} 50%)`; return d; }
+function renderFriends() {
+  const onWeb = online.kind === 'web';
+  // Menu button badge: friend requests first, then how many friends are online.
+  const badge = $('fBadge'), nReq = FR.reqIn.size, nOn = profile.friends.filter((f) => frOnline(FR.status.get(f.id))).length;
+  badge.hidden = !onWeb || (!nReq && !nOn); badge.className = 'fbadge' + (nReq ? ' req' : '');
+  badge.textContent = nReq ? `${nReq} friend request${nReq > 1 ? 's' : ''}` : `${nOn} online`;
+  const grp = $('friendsGroup'); grp.hidden = !onWeb;
+  if (!onWeb || $('online').hidden) return;
+  const sig = JSON.stringify([profile.fid, profile.name, [...FR.reqIn], profile.friends.map((f) => [f.id, f.n, f.lk, frStatusText(f.id)]), profile.fOut, FR.rmArm && performance.now() - FR.rmAt < 3000 ? FR.rmArm : '', online.code]);
+  if (sig === FR.drawn) return; FR.drawn = sig;
+  $('fCode').textContent = profile.fid ? fidShow(profile.fid) : '····-····';
+  $('fNameTip').hidden = !!profile.name.trim();
+  // requests
+  const rq = $('fReqList'); rq.textContent = '';
+  for (const [id, r] of FR.reqIn) {
+    const li = document.createElement('li'), who = document.createElement('span'); who.className = 'fwho';
+    const nm = document.createElement('span'); nm.className = 'fname'; nm.textContent = r.n;
+    const sub = document.createElement('span'); sub.className = 'fst'; sub.textContent = `wants to be friends · ${fidShow(id)}`;
+    who.append(nm, sub);
+    const acts = document.createElement('span'); acts.className = 'acts';
+    const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'btn small primary'; yes.textContent = 'Accept'; yes.addEventListener('click', () => frAccept(id));
+    const no = document.createElement('button'); no.type = 'button'; no.className = 'btn small'; no.textContent = 'No thanks'; no.addEventListener('click', () => frDecline(id, false));
+    const bl = document.createElement('button'); bl.type = 'button'; bl.className = 'btn small'; bl.textContent = 'Block'; bl.addEventListener('click', () => frDecline(id, true));
+    acts.append(yes, no, bl); li.append(fDot(r.lk), who, acts); rq.append(li);
+  }
+  // friends, online ones first
+  const ul = $('fList'); ul.textContent = '';
+  const list = profile.friends.map((f) => ({ f, s: frStatusText(f.id) })).sort((a, b) => (b.s.on - a.s.on) || a.f.n.localeCompare(b.f.n));
+  for (const { f, s } of list) {
+    const li = document.createElement('li'), who = document.createElement('span'); who.className = 'fwho';
+    const nm = document.createElement('span'); nm.className = 'fname'; nm.textContent = f.n;
+    const sub = document.createElement('span'); sub.className = 'fst' + (s.on ? ' on' : ''); sub.textContent = s.t;
+    who.append(nm, sub);
+    let act = document.createElement('span');
+    if (s.r && online.code !== s.r) { act = document.createElement('button'); act.type = 'button'; act.className = 'btn small primary'; act.textContent = 'Join'; act.addEventListener('click', () => { $('codeIn').value = s.r; joinRoom(s.r, false); }); }
+    else if (s.on && online.room && online.code && s.r !== online.code) { act = document.createElement('button'); act.type = 'button'; act.className = 'btn small'; act.textContent = 'Invite'; act.addEventListener('click', () => frInvite(f.id)); }
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'btn small fx'; x.setAttribute('aria-label', `Remove ${f.n}`);
+    const armed = FR.rmArm === f.id && performance.now() - FR.rmAt < 3000; x.textContent = armed ? 'Sure?' : '✕'; if (armed) x.classList.add('sure');
+    x.addEventListener('click', () => { if (FR.rmArm === f.id && performance.now() - FR.rmAt < 3000) { FR.rmArm = ''; frRemove(f.id); } else { FR.rmArm = f.id; FR.rmAt = performance.now(); renderFriends(); } });
+    li.append(fDot(f.lk), who, act, x); ul.append(li);
+  }
+  for (const id of profile.fOut) {
+    const li = document.createElement('li'); li.className = 'pend';
+    const who = document.createElement('span'); who.className = 'fwho';
+    const nm = document.createElement('span'); nm.className = 'fname'; nm.textContent = fidShow(id);
+    const sub = document.createElement('span'); sub.className = 'fst'; sub.textContent = 'Request sent · waiting for them';
+    who.append(nm, sub);
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'btn small fx'; x.textContent = '✕'; x.setAttribute('aria-label', `Cancel request to ${fidShow(id)}`); x.addEventListener('click', () => frCancel(id));
+    const dot = document.createElement('span'); dot.className = 'fdot'; dot.style.background = 'rgba(244,239,254,.12)';
+    li.append(dot, who, document.createElement('span'), x); ul.append(li);
+  }
+  if (!profile.friends.length && !profile.fOut.length && !FR.reqIn.size) {
+    const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'No friends yet. Share your code, or type a friend’s code above.'; ul.append(li);
   }
 }
 
@@ -5015,7 +5291,12 @@ for (const b of document.querySelectorAll('[data-diff]')) b.addEventListener('cl
 $('resAgain').addEventListener('click', popGuard(() => { if (gameKind === 'solo') startMatch(cfgOf(match)); }));
 $('resMenu').addEventListener('click', popGuard(() => { if (gameKind === 'online') leaveRoom(false); else showMenu(); }));
 $('watchBtn').addEventListener('click', () => { const wasMode = inModes(); match = { m: 'classic' }; abilClassic = false; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: true }); });
-$('onlineBtn').addEventListener('click', () => { showScreen('online'); updateOnlineScreen(); renderModeSel(); });
+$('onlineBtn').addEventListener('click', () => { showScreen('online'); updateOnlineScreen(); renderModeSel(); if (online.kind === 'web') frEnsure(); renderFriends(); });
+$('fAddBtn').addEventListener('click', () => frAddCode($('fCodeIn').value));
+$('fCodeIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); frAddCode($('fCodeIn').value); } });
+$('fShare').addEventListener('click', frShare);
+$('invJoin').addEventListener('click', () => { const v = FR.inv; hideInvite(); if (v) { showScreen('online'); updateOnlineScreen(); $('codeIn').value = v.r; joinRoom(v.r, false); } });
+$('invNo').addEventListener('click', hideInvite);
 $('onlineBack').addEventListener('click', showMenu);
 $('createBtn').addEventListener('click', () => joinRoom(newCode(), true));
 $('joinBtn').addEventListener('click', () => joinRoom($('codeIn').value.trim(), false));
@@ -5115,7 +5396,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-const HB_KEY = 'noodlebots.alive';
+const HB_KEY = BETA ? 'noodlebots.beta.alive' : 'noodlebots.alive';
 function heartbeat(on) { try { if (on) localStorage.setItem(HB_KEY, String(Date.now())); else localStorage.removeItem(HB_KEY); } catch (e) { /* ignore */ } }
 function boot() {
   let reopened = false; try { const t = +localStorage.getItem(HB_KEY); reopened = t > 0 && Date.now() - t < 120000; localStorage.removeItem(HB_KEY); } catch (e) { /* ignore */ }
@@ -5126,7 +5407,7 @@ function boot() {
   cam.x = 0; cam.y = 0;
   checkUnlocks();
   $('nameIn').value = profile.name;
-  $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION} · What's new`;
+  $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}${BETA ? ' BETA' : ''} · What's new`;
   ensureDaily(); buildChat(); updateDailyCard(); loadRivals(); applySettings(); updateTutBtn(); checkAch(true);
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; paintPage(); syncSoundUI();
@@ -5135,15 +5416,24 @@ function boot() {
   initOnline();
   if (online.kind === 'web') {
     const joinFromHash = () => {
+      const fm = /^#friend=([A-Za-z0-9-]{8,9})$/.exec(location.hash || '');
+      if (fm) {
+        showScreen('online'); updateOnlineScreen(); frEnsure(); $('fCodeIn').value = fm[1].toUpperCase();
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ }
+        frMsg('Tap Add to send a friend request to ' + fidShow(fm[1].toUpperCase().replace('-', ''))); renderFriends(); return;
+      }
       const m = /^#(?:room=)?([A-Za-z]{4})$/.exec(location.hash || '');
       if (!m || online.busy || (online.room && online.code === m[1].toUpperCase())) return;
       showScreen('online'); updateOnlineScreen(); $('codeIn').value = m[1].toUpperCase(); joinRoom(m[1], false);
     };
+    if (profile.fid) frStart();
     joinFromHash();
     window.addEventListener('hashchange', joinFromHash);
   }
+  renderFriends();
   if (window.NB_DEBUG) { window.__sfx = []; for (const k of Object.keys(SFX)) { const f = SFX[k]; SFX[k] = function (...a) { window.__sfx.push([k, Math.round(performance.now())]); return f.apply(this, a); }; } }
   if (window.NB_DEBUG) window.__nb = {
+    fr: () => ({ fid: profile.fid, friends: profile.friends.map((f) => [f.id, f.n, frStatusText(f.id).t]), out: profile.fOut.slice(), block: profile.fBlock.slice(), req: [...FR.reqIn.keys()], conns: FR.conns.length, inv: FR.inv, mine: frMyStatus() }),
     info: () => ({ kind: gameKind, mode, players: online.players, isHost: online.isHost, code: online.code, me: online.myPeer, snakes: snakes.map((sn) => [sn.kind, sn.name, Math.round(sn.x), Math.round(sn.y), sn.team, sn.role, sn.it ? 1 : 0, Math.round(sn.mass)]) }),
     match: () => ({ m: match.m, st: match.st, mc: match.mc, win: match.win, why: match.why, it: [...(match.it || [])], tl: Math.round(match.tl || 0), sd: !!match.sd, tm: match.tm, mid: match.mid, v: match.v }),
     killRole: (role, team, n) => { let k = 0; for (const sn of [...snakes]) if (sn.kind === 'npc' && sn.role === role && sn.team === team && k < (n || 1)) { killSnake(sn, null); k++; } return k; },
