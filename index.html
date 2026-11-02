@@ -106,6 +106,18 @@ h1,h2,p{margin:0}
 .btn.big{font-size:17px;padding:15px 18px;border-radius:14px;width:100%;white-space:normal;line-height:1.2;text-align:center}
 .btn.small{font-size:13px;padding:8px 12px;border-radius:10px}
 .btn svg{flex:none}
+.padico{width:1.4em;height:1.4em;vertical-align:-.34em;flex:none;display:inline-block}
+.padk{display:none}
+#app.pad .padk{display:inline-flex;align-items:center;margin-left:6px}
+#app.pad .dock kbd,#app.pad .banner kbd{display:none}
+#app.pad .padfocus{outline:3px solid var(--bot)!important;outline-offset:3px!important;box-shadow:0 0 0 7px rgba(82,229,255,.22)!important}
+#padHint{position:absolute;left:0;right:0;margin-inline:auto;bottom:max(12px,calc(env(safe-area-inset-bottom,0px) + 6px));width:max-content;max-width:94vw;box-sizing:border-box;z-index:65;display:none;gap:6px 16px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 16px;border-radius:999px;background:rgba(18,13,38,.88);border:1px solid var(--line);font:600 13px/1 var(--f-body);color:var(--ink);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#app.pad #padHint.show{display:flex}
+#padHint .ph{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#app.playing #padHint{bottom:auto;top:max(64px,calc(env(safe-area-inset-top,0px) * 1.75 + 52px));opacity:.92}
+.padmap{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 14px;font-size:13px}
+.padmap li{display:flex;align-items:center;gap:8px;color:var(--ink)}
+.padmap .pk{display:inline-flex;gap:3px;min-width:58px;color:var(--bot);font-size:18px}
 kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.2)}
 .boost{display:none}
 @media (pointer:coarse){.boost{display:inline-flex}.dock kbd,.banner kbd{display:none}}
@@ -550,7 +562,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 </head>
 <body>
 <div id="app">
-  <div id="invitePop" class="invite" role="alertdialog" aria-labelledby="invText" hidden><span id="invText"></span><button class="btn small primary" id="invJoin" type="button">Join</button><button class="btn small" id="invNo" type="button">Not now</button></div>
+  <div id="padHint" aria-hidden="true"></div>
+  <div id="invitePop" class="invite" role="alertdialog" aria-labelledby="invText" hidden><span id="invText"></span><button class="btn small primary" id="invJoin" type="button">Join<span class="padk" data-pad="BACK"></span></button><button class="btn small" id="invNo" type="button">Not now</button></div>
   <canvas id="game" aria-label="Noodle Bots arena"></canvas>
 
   <div id="topcap" aria-hidden="true"></div>
@@ -590,7 +603,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <button class="btn" id="trainBtn" type="button">Train bot</button>
         <button class="btn bot" id="botBtn" type="button">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg>
-          <span id="botBtnLabel">Bot takes over</span><kbd>B</kbd>
+          <span id="botBtnLabel">Bot takes over</span><kbd>B</kbd><span class="padk" data-pad="N"></span>
         </button>
         <label class="switch" for="dockAuto"><input type="checkbox" id="dockAuto"><span class="track"></span><span>Auto when away</span></label>
       </div>
@@ -893,6 +906,10 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         </div>
       </div>
       <div class="group"><p class="lbl">Buttons</p><label class="switch" for="swapChk"><input type="checkbox" id="swapChk"><span class="track"></span><span>Swap the button sides (Boost on the right)</span></label></div>
+      <div class="group" id="padGroup"><p class="lbl">Controller</p>
+        <p class="modeinfo">Connect a controller (Xbox, PlayStation, Switch and most others), then press any button. The dots show which button to press: bottom, right, left or top, so they work on any controller.</p>
+        <ul class="padmap" id="padMap"></ul>
+      </div>
       <div class="group"><p class="lbl">Graphics</p><label class="switch" for="smoothChk"><input type="checkbox" id="smoothChk"><span class="track"></span><span>Smooth mode: less detail so it runs faster on older tablets</span></label></div>
       <div class="group"><p class="lbl">Sound on iPhone</p><label class="switch" for="silentChk"><input type="checkbox" id="silentChk"><span class="track"></span><span>Play sound even when my iPhone is on silent</span></label><p class="bc-line">Off: game sounds are built in, nothing shows on the Dynamic Island, but the silent switch mutes them. On: sound plays on silent too, but iPhone shows music controls on the Dynamic Island.</p></div>
       <div class="group"><p class="lbl">Recording videos</p><label class="switch" for="cleanChk"><input type="checkbox" id="cleanChk"><span class="track"></span><span>Trailer mode: hide the scores, leaderboard and map while you play</span></label><p class="bc-line">The pause/Exit buttons and the Boost bar fade out but still work. Turn it off here when you're done.</p></div>
@@ -925,7 +942,7 @@ const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
 // BETA = the test copy at /noodle-bots/beta/. It keeps its own save and its own online channel, so testing never touches the real game.
 const BETA = false;
-const GAME_VERSION = '1.1.0';
+const GAME_VERSION = '1.1.1';
 const STORE_KEY = BETA ? 'noodlebots.beta' : 'noodlebots.v2', MOVES_KEY = STORE_KEY + '.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -1757,7 +1774,7 @@ function humanControl(s) {
     const hx = W / 2 + (s.x - cam.x) * cam.z, hy = H / 2 + (s.y - cam.y) * cam.z, dx = input.px - hx, dy = input.py - hy;
     if (dx * dx + dy * dy > 16) s.targetAng = Math.atan2(dy, dx);
   }
-  s.wantBoost = input.mBoost || input.kBoost || input.tBoost || !!input.tBoost2;
+  s.wantBoost = input.mBoost || input.kBoost || input.tBoost || !!input.tBoost2 || !!input.gBoost;
 }
 function record(s) { sense(s, recBuf); pushSample(recBuf, nearestBin(wrapA(s.targetAng - s.ang)) * 2 + (s.wantBoost ? 1 : 0), true); }
 
@@ -3780,6 +3797,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '1.1.1', items: ['Controller support! Connect an Xbox, PlayStation, Switch or most other controllers and press any button.', 'Steer with the stick, boost with the bottom button, and move around the menus with the d-pad.', 'Button hints use simple icons that work on any controller: the dots show which button to press (bottom, right, left or top). Settings has the full list.'] },
   { v: '1.1.0', items: ['Friends! Open Play with friends to find your friend code. Add friends with their code, see when they are online and which room they are in, and tap Join to hop into their game.', 'In a room, tap Invite next to a friend and they get a pop-up to join you.', 'Friend requests need to be accepted, and you can remove or block anyone.'] },
   { v: '1.0.0', items: ['Noodle Bots is officially out! Version 1.0.0 is the first full release.', 'All the updates before this one are now called Pre-Releases, from Pre-Release 2.5.0 to Pre-Release 3.1.0. You can still read them all below.'] },
   { v: '3.1.0', pre: true, items: ['Hats ride on the head now: they turn with your snake and lean back the way it moves (the Cap and Halo are drawn from above).', 'Trailer mode in Settings: hides the scores, leaderboard and map so you can record clean videos.', 'Snakes burst in their own color when they crash.'] },
@@ -4640,6 +4658,150 @@ function renderFriends() {
   }
 }
 
+/* ---------- game controllers ----------
+   Works with Xbox, PlayStation, Switch and most USB or Bluetooth controllers (the browser's
+   "standard" button layout). Button hints use universal icons: a diamond of four dots shows
+   which face button to press (bottom, right, left or top), so they make sense on every
+   controller whatever letters or shapes its buttons have. */
+const PB = { S: 0, E: 1, W: 2, N: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
+const GP = { prev: [], dir: '', dirAt: 0, screen: null, focus: null, lastRect: null, hold: new Set(), connected: false, hintUntil: 0, lastMode: '', hintKey: '', invShown: false };
+const PAD_BACK = { online: 'onlineBack', locker: 'lockerDone', news: 'newsDone', settings: 'setDone', stats: 'statsDone', train: 'trainDone', pause: 'resumeBtn', death: 'deathMenuBtn', result: 'resMenu', retro: 'retroBack' };
+function padIcon(k) {
+  const T = (t, y) => `<text x="12" y="${y}" text-anchor="middle" font-size="8.5" font-weight="800" font-family="system-ui,sans-serif" fill="currentColor">${t}</text>`;
+  let inner = '';
+  if (k === 'N' || k === 'E' || k === 'S' || k === 'W') {
+    const pos = { N: [12, 5], E: [19, 12], S: [12, 19], W: [5, 12] };
+    for (const [n, [x, y]] of Object.entries(pos)) inner += n === k ? `<circle cx="${x}" cy="${y}" r="3.9" fill="currentColor"/>` : `<circle cx="${x}" cy="${y}" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".5"/>`;
+  } else if (k === 'RT' || k === 'LT') inner = `<path d="M6 21.5V10a6 6 0 0 1 12 0v11.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>` + T(k[0], 18.5);
+  else if (k === 'RB' || k === 'LB') inner = `<rect x="2.5" y="7" width="19" height="10" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/>` + T(k[0], 15);
+  else if (k === 'START') inner = `<rect x="2.5" y="2.5" width="19" height="19" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".6"/><path d="M8 8.5h8M8 12h8M8 15.5h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`;
+  else if (k === 'BACK') inner = `<rect x="2.5" y="2.5" width="19" height="19" rx="6" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".6"/><rect x="6.5" y="6.5" width="7" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="10.5" y="10.5" width="7" height="7" rx="1.6" fill="currentColor"/>`;
+  else if (k === 'STICK') inner = `<circle cx="12" cy="12" r="9.6" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".6"/><circle cx="12" cy="12" r="4.6" fill="currentColor"/>`;
+  else if (k === 'DPAD') inner = `<path d="M9 2.5h6v6.5h6.5v6H15v6.5H9V15H2.5V9H9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 5.5l-1.6 2h3.2z" fill="currentColor"/>`;
+  return `<svg class="padico" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`;
+}
+function padSetup() {
+  for (const el of document.querySelectorAll('.padk[data-pad]')) el.innerHTML = padIcon(el.dataset.pad);
+  // the Use power button gets its hint added next to its key letter
+  const ab = $('abilBtn'); if (ab && !ab.querySelector('.padk')) { const sp = document.createElement('span'); sp.className = 'padk'; sp.innerHTML = padIcon('W'); ab.append(sp); }
+  const tb = $('takeBackBtn'); if (tb && !tb.querySelector('.padk')) { const sp = document.createElement('span'); sp.className = 'padk'; sp.innerHTML = padIcon('N'); tb.append(sp); }
+  const rows = [[['STICK'], 'Steer (or the d-pad)'], [['S'], 'Boost (or right trigger)'], [['W'], 'Use your power'], [['N'], 'Bot takes over / take back'],
+    [['START'], 'Pause'], [['BACK'], 'Quick chat online · join an invite'], [['DPAD', 'S'], 'Move around menus and pick'], [['E'], 'Back']];
+  $('padMap').innerHTML = rows.map(([ks, t]) => `<li><span class="pk">${ks.map(padIcon).join('')}</span><span>${t}</span></li>`).join('');
+}
+function padGet() {
+  let pads = []; try { pads = navigator.getGamepads ? navigator.getGamepads() : []; } catch (e) { return null; }
+  let best = null; for (const p of pads || []) if (p && p.connected && (!best || p.timestamp > best.timestamp)) best = p;
+  return best;
+}
+function padUse() { if (!app.classList.contains('pad')) { app.classList.add('pad'); GP.hintUntil = performance.now() + 7000; GP.hintKey = ''; } }
+function padOff() { if (!app.classList.contains('pad')) return; app.classList.remove('pad'); if (GP.focus) GP.focus.classList.remove('padfocus'); GP.focus = null; }
+const padScreen = () => screens.find((id) => !$(id).hidden) || null;
+function padTargets(root) {
+  const els = [...root.querySelectorAll('button, input[type=text], label.switch, label.btn, select')];
+  if (!$('invitePop').hidden) els.push(...$('invitePop').querySelectorAll('button'));
+  return els.filter((el) => !el.disabled && el.getClientRects().length && !el.closest('[hidden]') && getComputedStyle(el).visibility !== 'hidden');
+}
+function padFocus(el) {
+  if (GP.focus && GP.focus !== el) GP.focus.classList.remove('padfocus');
+  GP.focus = el; if (!el) return;
+  el.classList.add('padfocus'); GP.lastRect = el.getBoundingClientRect();
+  try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) { /* ignore */ }
+}
+function padPick(list) { return list.find((el) => el.classList.contains('primary') && !el.closest('.dock')) || list[0] || null; }
+function padMove(list, dir) {
+  const cur = GP.focus; if (!cur) { padFocus(padPick(list)); return; }
+  const r0 = cur.getBoundingClientRect(), x0 = r0.left + r0.width / 2, y0 = r0.top + r0.height / 2;
+  let best = null, bs = 1e9;
+  for (const el of list) {
+    if (el === cur) continue;
+    const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, dx = x - x0, dy = y - y0;
+    const along = dir === 'right' ? dx : dir === 'left' ? -dx : dir === 'down' ? dy : -dy;
+    if (along <= 6) continue;
+    // stay in the same row or column when there's something there
+    const side = dir === 'left' || dir === 'right' ? Math.abs(dy) : Math.abs(dx);
+    const overlap = dir === 'left' || dir === 'right' ? (r.bottom > r0.top + 4 && r.top < r0.bottom - 4) : (r.right > r0.left + 4 && r.left < r0.right - 4);
+    const sc = along + side * 2.4 - (overlap ? 400 : 0);
+    if (sc < bs) { bs = sc; best = el; }
+  }
+  if (best) { padFocus(best); SFX.click(); }
+}
+function padPress(el) {
+  if (!el) return;
+  if (el.tagName === 'INPUT') { try { el.focus(); } catch (e) { /* ignore */ } return; }
+  el.click(); SFX.click();
+}
+function padPoll(now) {
+  if (!GP.connected) return;
+  const p = padGet(); if (!p) { input.gBoost = false; return; }
+  const std = p.mapping === 'standard';
+  const cur = p.buttons.map((x) => !!x && (x.pressed || x.value > 0.5));
+  for (const i of [...GP.hold]) if (!cur[i]) GP.hold.delete(i);
+  const hit = (i) => cur[i] && !GP.prev[i] && !GP.hold.has(i);
+  const ax = p.axes || [], lx = ax[0] || 0, ly = ax[1] || 0, rx = std ? ax[2] || 0 : 0, ry = std ? ax[3] || 0 : 0;
+  const lm = Math.hypot(lx, ly), rm = Math.hypot(rx, ry);
+  if (cur.some(Boolean) || lm > 0.4 || rm > 0.4) padUse();
+  if (!app.classList.contains('pad')) { GP.prev = cur; input.gBoost = false; return; }
+  const dx = (cur[PB.RIGHT] ? 1 : 0) - (cur[PB.LEFT] ? 1 : 0), dy = (cur[PB.DOWN] ? 1 : 0) - (cur[PB.UP] ? 1 : 0);
+  const sx = lm > 0.6 ? lx : 0, sy = lm > 0.6 ? ly : 0;
+  const dir = dx || dy ? (Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'))
+    : sx || sy ? (Math.abs(sx) > Math.abs(sy) ? (sx > 0 ? 'right' : 'left') : (sy > 0 ? 'down' : 'up')) : '';
+  let dirHit = '';
+  if (dir !== GP.dir) { GP.dir = dir; GP.dirAt = now + 360; dirHit = dir; } else if (dir && now >= GP.dirAt) { GP.dirAt = now + 130; dirHit = dir; }
+  const scr = padScreen();
+  if (scr !== GP.screen) { GP.screen = scr; padFocus(null); GP.hintKey = ''; }
+  if (scr === 'retro') {
+    if (dirHit) retroTurn(dirHit);
+    if (hit(PB.S) || hit(PB.START)) { if (!RETRO.alive && !$('retroOver').hidden && now - RETRO.dead > 600) retroStart(); }
+    if (hit(PB.E)) retroClose();
+  } else if (scr) {
+    const list = padTargets($(scr));
+    if (!$('invitePop').hidden && !GP.invShown) { GP.invShown = true; padFocus($('invJoin')); }
+    if ($('invitePop').hidden) GP.invShown = false;
+    if (GP.focus && !list.includes(GP.focus)) {      // the button got rebuilt or hidden: pick the closest one to where it was
+      const r0 = GP.lastRect; let best = null, bd = 1e9;
+      if (r0) for (const el of list) { const r = el.getBoundingClientRect(), d = Math.hypot(r.left - r0.left, r.top - r0.top); if (d < bd) { bd = d; best = el; } }
+      padFocus(best);
+    }
+    if (!GP.focus && list.length) padFocus(padPick(list));
+    if (dirHit) padMove(list, dirHit);
+    if (hit(PB.S)) { GP.hold.add(PB.S); padPress(GP.focus); }
+    if (hit(PB.E)) { const b = PAD_BACK[scr] && $(PAD_BACK[scr]); if (b && !b.hidden && b.getClientRects().length) { GP.hold.add(PB.E); padPress(b); } }
+    if (hit(PB.START) && scr === 'pause') resumeGame();
+    input.gBoost = false;
+  } else if (mode === 'play' || mode === 'spec') {
+    if (dx || dy) { input.mode = 'joy'; input.joyAng = Math.atan2(dy, dx); humanInput(); }
+    else if (lm > 0.3 || rm > 0.3) { const [x, y] = lm > 0.3 ? [lx, ly] : [rx, ry]; input.mode = 'joy'; input.joyAng = Math.atan2(y, x); humanInput(); }
+    const boost = (cur[PB.S] && !GP.hold.has(PB.S)) || !!cur[PB.RT] || !!cur[PB.RB];
+    if (boost && !input.gBoost) humanInput();
+    input.gBoost = boost;
+    if (hit(PB.W) || hit(PB.LT) || hit(PB.LB)) { if (mode === 'play') { tryAbility(); humanInput(); } }
+    if (hit(PB.N)) { if (mode === 'play') { setBot(!botDriving, 'manual'); activity(); } }
+    if (hit(PB.START)) { if (gameKind === 'solo' && mode === 'play') pauseGame(); }
+    if (hit(PB.BACK)) { if (!$('invitePop').hidden) $('invJoin').click(); else if (gameKind === 'online' && online.code) toggleChat(); }
+  } else input.gBoost = false;
+  if (mode === 'play' && GP.lastMode !== 'play') GP.hintUntil = now + 7000;
+  GP.lastMode = mode;
+  padHintUpdate(scr, now);
+  GP.prev = cur;
+}
+function padHintUpdate(scr, now) {
+  const el = $('padHint'), I = padIcon, ph = (ks, t) => `<span class="ph">${ks.map(I).join('')}${t}</span>`;
+  let key = '', html = '';
+  if (scr === 'retro') { key = 'retro'; html = ph(['DPAD'], 'Turn') + ph(['S'], 'Play') + ph(['E'], 'Back'); }
+  else if (scr) { key = 'menu' + (PAD_BACK[scr] ? 'b' : ''); html = ph(['DPAD'], 'Move') + ph(['S'], 'Select') + (PAD_BACK[scr] ? ph(['E'], 'Back') : ''); }
+  else if ((mode === 'play') && now < GP.hintUntil) {
+    key = 'game' + (abilOn() ? 'a' : '') + gameKind;
+    html = ph(['STICK'], 'Steer') + ph(['S'], 'Boost') + (abilOn() ? ph(['W'], 'Power') : '') + ph(['N'], 'Bot') + (gameKind === 'solo' ? ph(['START'], 'Pause') : ph(['BACK'], 'Chat'));
+  }
+  if (key !== GP.hintKey) { GP.hintKey = key; el.innerHTML = html; el.classList.toggle('show', !!key); }
+}
+window.addEventListener('gamepadconnected', () => { GP.connected = true; padUse(); toast('Controller connected 🎮'); });
+window.addEventListener('gamepaddisconnected', () => { if (!padGet()) { GP.connected = false; input.gBoost = false; padOff(); } });
+// Touching the screen, the mouse or the keyboard switches the hints back.
+window.addEventListener('pointerdown', (e) => { if (e.pointerType) padOff(); }, true);
+window.addEventListener('keydown', () => padOff(), true);
+
 /* ================= arena backgrounds ================= */
 const THEMES = [
   { name: 'Grape Night', floor: C.floor, edge: C.danger, style: 'dots', ink: C.dot },
@@ -5127,7 +5289,7 @@ function activity() { input.last = performance.now(); }
 const blurIfPlaying = () => { if (mode === 'play' && document.activeElement && document.activeElement.blur) document.activeElement.blur(); };
 const joy = { active: false, id: -1, ox: 0, oy: 0, x: 0, y: 0, dragged: false };
 const isTouchLike = (e) => e.pointerType === 'touch' || e.pointerType === 'pen';
-const anyInputHeld = () => input.mBoost || input.kBoost || input.tBoost || input.tBoost2 || input.left || input.right || joy.active;
+const anyInputHeld = () => input.mBoost || input.kBoost || input.tBoost || input.tBoost2 || input.gBoost || input.left || input.right || joy.active;
 // Any real input counts as being here, and takes the snake back from an "away" bot.
 function humanInput() { activity(); if (botDriving && botReason === 'auto') setBot(false); }
 // Holding a finger down on a phone shouldn't select the leaderboard or other text, or pop up a menu.
@@ -5378,6 +5540,7 @@ function loop(now) {
       if (frame % 6 === 0) { updateTrainScreen(); if (mode === 'play') updateDock(); else if (!$('menu').hidden) updateBotCard(); }
     }
   } catch (e) { trainJob = null; reportGlitch('training', e); }
+  try { padPoll(now); } catch (e) { reportGlitch('controller', e); }
   try { if (!paused) step(dt, now); } catch (e) { reportGlitch('game', e); }
   try {
     updateTheme(dt);
@@ -5412,6 +5575,7 @@ function boot() {
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; paintPage(); syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
+  padSetup(); if (padGet()) GP.connected = true;
   showScreen('menu'); maybeShowNews();
   initOnline();
   if (online.kind === 'web') {
@@ -5433,6 +5597,7 @@ function boot() {
   renderFriends();
   if (window.NB_DEBUG) { window.__sfx = []; for (const k of Object.keys(SFX)) { const f = SFX[k]; SFX[k] = function (...a) { window.__sfx.push([k, Math.round(performance.now())]); return f.apply(this, a); }; } }
   if (window.NB_DEBUG) window.__nb = {
+    pad: () => ({ on: app.classList.contains('pad'), connected: GP.connected, screen: GP.screen, focus: GP.focus ? (GP.focus.id || GP.focus.textContent.trim().slice(0, 30)) : null, hint: $('padHint').textContent, show: $('padHint').classList.contains('show'), boost: !!input.gBoost, mode: input.mode, ang: input.joyAng }),
     fr: () => ({ fid: profile.fid, friends: profile.friends.map((f) => [f.id, f.n, frStatusText(f.id).t]), out: profile.fOut.slice(), block: profile.fBlock.slice(), req: [...FR.reqIn.keys()], conns: FR.conns.length, inv: FR.inv, mine: frMyStatus() }),
     info: () => ({ kind: gameKind, mode, players: online.players, isHost: online.isHost, code: online.code, me: online.myPeer, snakes: snakes.map((sn) => [sn.kind, sn.name, Math.round(sn.x), Math.round(sn.y), sn.team, sn.role, sn.it ? 1 : 0, Math.round(sn.mass)]) }),
     match: () => ({ m: match.m, st: match.st, mc: match.mc, win: match.win, why: match.why, it: [...(match.it || [])], tl: Math.round(match.tl || 0), sd: !!match.sd, tm: match.tm, mid: match.mid, v: match.v }),
