@@ -118,6 +118,14 @@ h1,h2,p{margin:0}
 .padmap{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 14px;font-size:13px}
 .padmap li{display:flex;align-items:center;gap:8px;color:var(--ink)}
 .padmap .pk{display:inline-flex;gap:3px;min-width:58px;color:var(--bot);font-size:18px}
+/* YouTube channel link */
+.btn.yt{display:flex;align-items:center;gap:12px;text-decoration:none;text-align:left;justify-content:flex-start;margin-top:12px;width:100%;box-sizing:border-box}
+.yt-play{width:30px;height:30px;flex:none}
+.yt-play circle{fill:#ff3d4f}
+.yt-play path{fill:#fff}
+.btn.yt > span{display:flex;flex-direction:column;gap:2px;line-height:1.2;min-width:0}
+.btn.yt small{font-weight:500;font-size:13px;color:var(--muted)}
+.btn.yt .nowrap{white-space:nowrap}
 kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.2)}
 .boost{display:none}
 @media (pointer:coarse){.boost{display:inline-flex}.dock kbd,.banner kbd{display:none}}
@@ -711,6 +719,10 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         </div>
         <p class="savemsg" id="saveMsg" aria-live="polite"></p>
       </div>
+      <a class="btn yt" id="ytLink" href="https://www.youtube.com/@noodle_bots" target="_blank" rel="noopener">
+        <svg class="yt-play" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11"/><path d="M9.8 7.6v8.8l7-4.4z"/></svg>
+        <span><b>Watch on YouTube</b><small>@noodle_bots · <span class="nowrap">new updates every Friday</span></small></span>
+      </a>
       </div>
       </div>
       <button class="version" id="versionLine" type="button">Noodle Bots</button>
@@ -942,7 +954,7 @@ const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
 // BETA = the test copy at /noodle-bots/beta/. It keeps its own save and its own online channel, so testing never touches the real game.
 const BETA = false;
-const GAME_VERSION = '1.1.1';
+const GAME_VERSION = '1.1.2';
 const STORE_KEY = BETA ? 'noodlebots.beta' : 'noodlebots.v2', MOVES_KEY = STORE_KEY + '.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -3797,6 +3809,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '1.1.2', items: ['Noodle Bots is on YouTube! Tap Watch on YouTube on the menu for trailers, Shorts and every Friday update.'] },
   { v: '1.1.1', items: ['Controller support! Connect an Xbox, PlayStation, Switch or most other controllers and press any button.', 'Steer with the stick, boost with the bottom button, and move around the menus with the d-pad.', 'Button hints use simple icons that work on any controller: the dots show which button to press (bottom, right, left or top). Settings has the full list.'] },
   { v: '1.1.0', items: ['Friends! Open Play with friends to find your friend code. Add friends with their code, see when they are online and which room they are in, and tap Join to hop into their game.', 'In a room, tap Invite next to a friend and they get a pop-up to join you.', 'Friend requests need to be accepted, and you can remove or block anyone.'] },
   { v: '1.0.0', items: ['Noodle Bots is officially out! Version 1.0.0 is the first full release.', 'All the updates before this one are now called Pre-Releases, from Pre-Release 2.5.0 to Pre-Release 3.1.0. You can still read them all below.'] },
@@ -4698,7 +4711,7 @@ function padUse() { if (!app.classList.contains('pad')) { app.classList.add('pad
 function padOff() { if (!app.classList.contains('pad')) return; app.classList.remove('pad'); if (GP.focus) GP.focus.classList.remove('padfocus'); GP.focus = null; }
 const padScreen = () => screens.find((id) => !$(id).hidden) || null;
 function padTargets(root) {
-  const els = [...root.querySelectorAll('button, input[type=text], label.switch, label.btn, select')];
+  const els = [...root.querySelectorAll('button, a[href], input[type=text], label.switch, label.btn, select')];
   if (!$('invitePop').hidden) els.push(...$('invitePop').querySelectorAll('button'));
   return els.filter((el) => !el.disabled && el.getClientRects().length && !el.closest('[hidden]') && getComputedStyle(el).visibility !== 'hidden');
 }
