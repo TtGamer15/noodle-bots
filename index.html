@@ -253,6 +253,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .opt[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 22%,transparent);border-color:var(--accent)}
 .opt:disabled{cursor:not-allowed;color:var(--muted)}
 .opt small{font-size:11px;color:var(--muted)}
+.opt small.newtag{color:#ffb35c;font-weight:700}
 .slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .slot{border:1px solid var(--line);border-radius:12px;padding:8px;display:grid;gap:6px;min-width:0}
 .slot canvas{width:100%;height:44px;display:block;border-radius:8px;background:var(--floor)}
@@ -954,7 +955,7 @@ const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
 // BETA = the test copy at /noodle-bots/beta/. It keeps its own save and its own online channel, so testing never touches the real game.
 const BETA = false;
-const GAME_VERSION = '1.1.2';
+const GAME_VERSION = '1.2.0';
 const STORE_KEY = BETA ? 'noodlebots.beta' : 'noodlebots.v2', MOVES_KEY = STORE_KEY + '.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -963,12 +964,16 @@ const PATTERNS = [
   { id: 'spots', name: 'Spots' }, { id: 'fade', name: 'Fade' },
   { id: 'rainbow', name: 'Rainbow', lock: { type: 'botLevel', v: 3, text: 'Bot level 3' } },
   { id: 'custom', name: 'Custom' },
+  { id: 'autumn', name: 'Autumn' }, { id: 'turkey', name: 'Turkey feathers' },
 ];
 const CUSTOM_PAT = 6, SKIN_MAX = 20;
+// Patterns with their own colors (Autumn leaves, Turkey feathers): the first color isn't used, the second still colors the hat.
+const PAT_OWN_COLOR = { 7: '#e8692c', 8: '#7a4a24' };
 const EYES = [
   { id: 'classic', name: 'Classic' }, { id: 'sleepy', name: 'Sleepy' }, { id: 'angry', name: 'Grumpy' }, { id: 'googly', name: 'Googly' },
   { id: 'shades', name: 'Shades', lock: { type: 'games', v: 10, text: 'Play 10 games' } },
   { id: 'starry', name: 'Star eyes', lock: { type: 'stars', v: 25, text: 'Get 25 ⭐' } },
+  { id: 'stuffed', name: 'Stuffed' }, { id: 'hungry', name: 'Hungry' },
 ];
 const HATS = [
   { id: 'none', name: 'None' }, { id: 'party', name: 'Party hat' }, { id: 'cap', name: 'Cap' }, { id: 'flower', name: 'Flower' },
@@ -978,7 +983,11 @@ const HATS = [
   { id: 'wizard', name: 'Wizard hat', lock: { type: 'stars', v: 3, text: 'Get 3 ⭐' } },
   { id: 'phones', name: 'Headphones', lock: { type: 'stars', v: 8, text: 'Get 8 ⭐' } },
   { id: 'bunny', name: 'Bunny ears', lock: { type: 'stars', v: 15, text: 'Get 15 ⭐' } },
+  { id: 'turkey', name: 'Turkey hat', tag: '🦃 New' }, { id: 'pilgrim', name: 'Pilgrim hat', tag: '🦃 New' },
+  { id: 'leaves', name: 'Leaf crown', tag: '🦃 New' }, { id: 'chef', name: 'Chef hat', tag: '🦃 New' },
+  { id: 'pie', name: 'Pumpkin pie hat', tag: '🦃 New' },
 ];
+const FALL_HATS = [10, 11, 12, 13, 14];   // computer snakes sometimes wear these in November
 const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [9000, 'Arena Shark'], [15000, 'Mega Noodle'], [23000, 'Legend'], [33000, 'Your Twin'], [45000, 'Mythic Noodle'], [60000, 'Galaxy Brain'], [80000, 'Noodle Royalty'], [105000, 'Ultimate Twin']];
 // About 1,200 moves get recorded per minute of steering, so each level takes a little longer than the last (about 1 to 20 minutes of play).
 
@@ -1013,6 +1022,25 @@ function fadeFor(c1, c2) {
   fadeCache.set(k, a); return a;
 }
 const RAINBOW = Array.from({ length: 36 }, (_, i) => `hsl(${i * 10},90%,63%)`);
+// Autumn pattern: red, orange and gold leaf colors flowing down the body
+const AUTUMN = (() => {
+  const st = ['#d9352b', '#ef6b2b', '#f8a632', '#ffd45c', '#ea8a2c', '#b24a20'], out = [];
+  for (let i = 0; i < 36; i++) { const t = i / 36 * st.length, k = Math.floor(t), f = t - k, A = hexRgb(st[k]), B = hexRgb(st[(k + 1) % st.length]); out.push(`rgb(${Math.round(A[0] + (B[0] - A[0]) * f)},${Math.round(A[1] + (B[1] - A[1]) * f)},${Math.round(A[2] + (B[2] - A[2]) * f)})`); }
+  return out;
+})();
+const FEATHER = ['#e0452e', '#f28c28', '#f7c948', '#c9542a'], FEATHER_D = FEATHER.map((h) => shade(h, 0.62));
+const LEAF_COLS = ['#e0452e', '#f28c28', '#f7c948', '#c0392b', '#e8732a', '#b5651d'];
+// A maple leaf, 1 unit tall, pointing up (-y), stem at the bottom
+const MAPLE = (() => {
+  const R = [[0, -1], [0.14, -0.6], [0.38, -0.8], [0.34, -0.4], [0.84, -0.54], [0.62, -0.18], [0.9, 0.06], [0.42, 0.14], [0.5, 0.44], [0.08, 0.3], [0.04, 0.78]];
+  const pts = [...R, ...R.slice().reverse().map(([x, y]) => [-x, y])], p = new Path2D();
+  pts.forEach(([x, y], i) => (i ? p.lineTo(x * 0.5, y * 0.5) : p.moveTo(x * 0.5, y * 0.5))); p.closePath(); return p;
+})();
+function drawMaple(c, x, y, sz, ang, col, vein) {
+  c.save(); c.translate(x, y); c.rotate(ang); c.scale(sz, sz); c.fillStyle = col; c.fill(MAPLE);
+  if (vein) { c.strokeStyle = vein; c.lineWidth = 0.05; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, 0.38); c.lineTo(0, -0.38); c.moveTo(0, 0.05); c.lineTo(0.3, -0.2); c.moveTo(0, 0.05); c.lineTo(-0.3, -0.2); c.stroke(); }
+  c.restore();
+}
 const FID_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', FID_RE = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/, FR_MAX = 50;
 const fidShow = (id) => id.slice(0, 4) + '-' + id.slice(4);
 function cleanName(v, max = 14) {
@@ -1020,10 +1048,11 @@ function cleanName(v, max = 14) {
   const s = v.replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '').trim().slice(0, max);
   return s || 'Player';
 }
+// One digit each for color 1, color 2, pattern and eyes, then two digits for the hat (there are more than 10 hats).
 function packLook(l) { return l.c1 + 10 * l.c2 + 100 * l.pat + 1000 * l.eye + 10000 * l.hat; }
 function unpackLook(n) {
   n = Math.max(0, int(n));
-  return { c1: n % 10, c2: Math.floor(n / 10) % 10, pat: Math.min(PATTERNS.length - 1, Math.floor(n / 100) % 10), eye: Math.min(EYES.length - 1, Math.floor(n / 1000) % 10), hat: Math.min(HATS.length - 1, Math.floor(n / 10000) % 10) };
+  return { c1: n % 10, c2: Math.floor(n / 10) % 10, pat: Math.min(PATTERNS.length - 1, Math.floor(n / 100) % 10), eye: Math.min(EYES.length - 1, Math.floor(n / 1000) % 10), hat: Math.min(HATS.length - 1, Math.floor(n / 10000) % 100) };
 }
 // A custom snake is a list of palette colors, head first, that repeats down the body.
 function parseSkin(v) { if (typeof v !== 'string' || !/^[0-9]{1,20}$/.test(v)) return null; return [...v].map(Number).filter((k) => k < PALETTE.length); }
@@ -1054,7 +1083,7 @@ function applyProfileData(p) {
       base: ['tag', 'br'].includes(ms.base) ? ms.base : 'classic', ab: typeof ms.ab === 'string' && Object.prototype.hasOwnProperty.call(ABIL, ms.ab) ? ms.ab : 'jump' };
   }
   if (typeof p.volume === 'number' && isFinite(p.volume)) profile.volume = clamp(p.volume, 0, 1);
-  if (typeof p.theme === 'number' && isFinite(p.theme)) profile.theme = clamp(Math.floor(p.theme), -1, 11);
+  if (typeof p.theme === 'number' && isFinite(p.theme)) profile.theme = clamp(Math.floor(p.theme), -1, THEMES.length - 1);
   for (const k of ['acc', 'near']) if (p[k] === null || (typeof p[k] === 'number' && isFinite(p[k]))) profile[k] = p[k] === null ? null : clamp(p[k], 0, 1);
   if (typeof p.name === 'string') profile.name = p.name.slice(0, 14);
   if (typeof p.look === 'number' && isFinite(p.look)) profile.look = unpackLook(p.look);
@@ -1070,7 +1099,7 @@ function applyProfileData(p) {
   if (['auto', 'calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
   if (typeof p.seenVer === 'string' && /^R?[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (typeof p.fid === 'string' && FID_RE.test(p.fid)) profile.fid = p.fid;
-  if (Array.isArray(p.friends)) { const ids = new Set(); profile.friends = p.friends.filter((f) => f && typeof f.id === 'string' && FID_RE.test(f.id) && !ids.has(f.id) && ids.add(f.id)).slice(0, FR_MAX).map((f) => ({ id: f.id, n: cleanName(f.n), lk: Number.isFinite(f.lk) ? clamp(Math.floor(f.lk), 0, 99999) : 0 })); }
+  if (Array.isArray(p.friends)) { const ids = new Set(); profile.friends = p.friends.filter((f) => f && typeof f.id === 'string' && FID_RE.test(f.id) && !ids.has(f.id) && ids.add(f.id)).slice(0, FR_MAX).map((f) => ({ id: f.id, n: cleanName(f.n), lk: Number.isFinite(f.lk) ? clamp(Math.floor(f.lk), 0, 999999) : 0 })); }
   for (const k of ['fOut', 'fBlock']) if (Array.isArray(p[k])) profile[k] = [...new Set(p[k].filter((x) => typeof x === 'string' && FID_RE.test(x)))].slice(0, 40);
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
   if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true, retroRight: p.set.retroRight === true, clean: p.set.clean === true };
@@ -1499,7 +1528,7 @@ function updateSize(s) { s.r = radiusFor(s.mass); s.spacing = s.r * 0.45; }
 function applyLook(s, look, skin) {
   s.look = look; s.skin = look.pat === CUSTOM_PAT && skin && skin.length ? skin.slice(0, SKIN_MAX) : null;
   s.skinCols = s.skin ? s.skin.map((k) => PALETTE[k]) : null;
-  s.color = PALETTE[s.skin ? s.skin[0] : look.c1]; s.colorB = PALETTE[look.c2];
+  s.color = s.skin ? PALETTE[s.skin[0]] : PAT_OWN_COLOR[look.pat] || PALETTE[look.c1]; s.colorB = PALETTE[look.c2];
   s.color2 = shade(s.color, 0.8); s.outline = s.skin ? '#1b1433' : shade(s.color, 0.42); s.fade = fadeFor(look.c1, look.c2);
 }
 function makeSnake(o) {
@@ -1517,8 +1546,9 @@ function makeSnake(o) {
 }
 function randomLook() {
   const c1 = Math.floor(Math.random() * 10); let c2 = Math.floor(Math.random() * 10); if (c2 === c1) c2 = (c1 + 3) % 10;
-  const hatRoll = Math.random();
-  return { c1, c2, pat: Math.floor(Math.random() * 5), eye: Math.floor(Math.random() * 4), hat: hatRoll < 0.78 ? 0 : 1 + Math.floor(Math.random() * 3) };
+  const hatRoll = Math.random(), fall = new Date().getMonth() === 10;   // November
+  const hat = fall && hatRoll >= 0.6 && hatRoll < 0.84 ? FALL_HATS[Math.floor(Math.random() * FALL_HATS.length)] : hatRoll < 0.78 ? 0 : 1 + Math.floor(Math.random() * 3);
+  return { c1, c2, pat: Math.floor(Math.random() * 5), eye: Math.floor(Math.random() * 4), hat };
 }
 function breedGenome() {
   const pool = profile.npcPool;
@@ -3334,8 +3364,8 @@ function applyHost(pr) {
     const x = num(e[1]), y = num(e[2]), a = num(e[3]) / 100, m = num(e[4], 120) / 10, b = e[5] === 1, code = int(e[6]);
     let s = online.rnpcs.get(id);
     if (!s || !s.alive) {
-      const ni = clamp(Math.floor(code / 100000), 0, NPC_NAMES.length - 1);
-      s = makeSnake({ kind: 'rnpc', name: NPC_NAMES[ni], nameIdx: ni, look: unpackLook(code % 100000), mass: m, pos: [x, y], ang: a, npcId: id });
+      const ni = clamp(Math.floor(code / 1000000), 0, NPC_NAMES.length - 1);
+      s = makeSnake({ kind: 'rnpc', name: NPC_NAMES[ni], nameIdx: ni, look: unpackLook(code % 1000000), mass: m, pos: [x, y], ang: a, npcId: id });
       if (match.m === 'br' && match.rvMap && match.rvMap.has(id)) { s.bot = true; const sk = match.rvMap.get(id); if (sk && sk.length) applyLook(s, s.look, sk); }
       s.errX = 0; s.errY = 0; s.grace = 0; setNet(s, x, y, a, m, b, now, num(e[9]) / 100, num(e[10], 100) / 100); s.errX = 0; s.errY = 0;
       for (const p of s.segs) { p.x = s.x; p.y = s.y; }
@@ -3344,7 +3374,7 @@ function applyHost(pr) {
     s.team = e[7] === 0 || e[7] === 1 ? e[7] : -1; s.role = CODE_ROLE[int(e[8])] || ''; s.it = match.m === 'tag' && match.it.has('b' + id);
     if (match.m === 'br' && match.names && match.names['b' + id] && s.name !== match.names['b' + id]) s.name = match.names['b' + id];
     if (e.length >= 15) applyNetFx(s, int(e[11]), num(e[12]), int(e[13]), num(e[14]), now, e[15] === 1); else if (s.fx || s.slowEnd) applyNetFx(s, 0, 0, s.fxUse, 0, now);
-    if (s.role === 'M' && s.lookCode !== code) { s.lookCode = code; applyLook(s, unpackLook(code % 100000)); }
+    if (s.role === 'M' && s.lookCode !== code) { s.lookCode = code; applyLook(s, unpackLook(code % 1000000)); }
   }
   const quiet = new Set(Array.isArray(pr.rm) ? pr.rm.slice(0, 60).map((x) => int(x)) : []);
   for (const [id, s] of online.rnpcs) if (!seen.has(id)) { if (quiet.has(id)) { const i = snakes.indexOf(s); if (i >= 0) snakes.splice(i, 1); s.alive = false; } else if (s.alive) killSnake(s, null); online.rnpcs.delete(id); }
@@ -3388,7 +3418,7 @@ function sendPresence(now, force) {
     pr.w = [online.tier, online.filler ? 1 : 0, Math.round(npcIQ * 100)];
     const abOn = abilOn();
     pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 36).map((s) => {
-      const e = [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 100000 * s.nameIdx, s.team, ROLE_CODE[s.role] || 0, Math.round((s.w || 0) * 100), Math.round(speedOf(s, now) / (s.boosting ? BOOST_SPEED : BASE_SPEED) * 100)];
+      const e = [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 1000000 * s.nameIdx, s.team, ROLE_CODE[s.role] || 0, Math.round((s.w || 0) * 100), Math.round(speedOf(s, now) / (s.boosting ? BOOST_SPEED : BASE_SPEED) * 100)];
       if (abOn && (s.fx || s.slowEnd > now)) e.push(s.fx ? FX_CODE[s.fx] || 0 : 0, s.fx ? Math.round(s.fxEnd - now) : 0, s.fxUse || 0, s.slowEnd > now ? Math.round(s.slowEnd - now) : 0, s.hold ? 1 : 0);
       return e;
     });
@@ -3483,6 +3513,8 @@ function segColor(s, i, n, t) {
     case 4: return s.fade[Math.min(11, Math.floor((i / Math.max(1, n)) * 12))];
     case 5: return RAINBOW[(i * 2 + t) % 36];
     case 6: return s.skinCols ? s.skinCols[(i >> 2) % s.skinCols.length] : s.color;
+    case 7: return AUTUMN[(i * 2) % 36];
+    case 8: return ((i >> 2) & 1) ? '#86552b' : '#704322';
     default: return ((i >> 2) & 1) ? s.color2 : s.color;
   }
 }
@@ -3560,6 +3592,23 @@ function drawSnakeBody(c, s, b, t, now, z) {
     }
     c.fill();
   }
+  if (s.look.pat === 8) {   // rows of feathers, each with a white edge and a colored tip, overlapping from the tail up to the head
+    for (let i = n - 2 - ((n - 2) % 3); i >= 3; i -= 3) {
+      const p = segs[i]; if (!vis(p)) continue;
+      const q = segs[i - 1], a = Math.atan2(p.y - q.y, p.x - q.x), ux = Math.cos(a), uy = Math.sin(a), k = (i / 3) % FEATHER.length;
+      c.fillStyle = '#fff3dc'; c.beginPath(); c.ellipse(p.x + ux * r * 0.34, p.y + uy * r * 0.34, r * 0.6, r * 0.82, a, 0, TAU); c.fill();
+      c.fillStyle = FEATHER[k]; c.beginPath(); c.ellipse(p.x + ux * r * 0.24, p.y + uy * r * 0.24, r * 0.6, r * 0.8, a, 0, TAU); c.fill();
+      c.fillStyle = (i / 3) & 1 ? '#7a4a24' : '#8a5a2c'; c.beginPath(); c.ellipse(p.x - ux * r * 0.06, p.y - uy * r * 0.06, r * 0.6, r * 0.8, a, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(40,20,8,0.35)'; c.lineWidth = r * 0.07; c.beginPath(); c.moveTo(p.x - ux * r * 0.5, p.y - uy * r * 0.5); c.lineTo(p.x + ux * r * 0.5, p.y + uy * r * 0.5); c.stroke();
+    }
+  }
+  if (s.look.pat === 7) {   // little maple leaves scattered along the body
+    for (let i = n - 2 - ((n - 2) % 5); i >= 4; i -= 5) {
+      const p = segs[i]; if (!vis(p)) continue;
+      const q = segs[i - 1], a = Math.atan2(q.y - p.y, q.x - p.x) + ((i / 5) & 1 ? 0.7 : -0.7), side = ((i / 5) & 1 ? 1 : -1) * r * 0.3;
+      drawMaple(c, p.x - Math.sin(a) * side, p.y + Math.cos(a) * side, r * 0.95, a + Math.PI / 2, AUTUMN[(i * 2 + 18) % 36], 'rgba(90,30,10,0.4)');
+    }
+  }
   if (!smooth) {
     c.fillStyle = 'rgba(255,255,255,0.13)'; c.beginPath();
     for (let i = n - 1; i >= 0; i -= 2) { const p = segs[i]; if (!vis(p)) continue; c.moveTo(p.x - r * 0.2 + r * 0.38, p.y - r * 0.3); c.arc(p.x - r * 0.2, p.y - r * 0.3, r * 0.38, 0, TAU); }
@@ -3585,6 +3634,32 @@ function drawEyes(c, s, now) {
     c.fillStyle = 'rgba(255,255,255,0.35)';
     for (const side of [-1, 1]) { c.beginPath(); c.arc(r * 0.44, side * r * 0.46 - r * 0.12, r * 0.09, 0, TAU); c.fill(); }
     c.restore(); return;
+  }
+  if (style === 'stuffed') {   // happy, closed, very full eyes ^ ^ with rosy cheeks
+    for (const side of [-1, 1]) {
+      const ex = h.x + ca * r * 0.32 + px * r * 0.48 * side, ey = h.y + sa * r * 0.32 + py * r * 0.48 * side;
+      c.fillStyle = 'rgba(255,110,150,0.55)'; c.beginPath(); c.ellipse(ex, ey + r * 0.3, r * 0.2, r * 0.12, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#15102a'; c.lineWidth = r * 0.14; c.lineCap = 'round'; c.beginPath(); c.arc(ex, ey + r * 0.12, r * 0.25, Math.PI * 1.12, Math.PI * 1.88); c.stroke();
+    }
+    return;
+  }
+  if (style === 'hungry') {   // big shiny eyes, and the tongue keeps flicking out
+    const ph = ((now + s.id * 377) % 1500) / 1500, out = ph < 0.3 ? Math.sin(ph / 0.3 * Math.PI) : 0;
+    if (out > 0.03) {
+      c.save(); c.translate(h.x, h.y); c.rotate(s.ang); c.strokeStyle = '#ff2e48'; c.lineWidth = r * 0.12; c.lineCap = 'round'; c.lineJoin = 'round';
+      const x0 = r * 0.82, x1 = x0 + r * 0.95 * out, wig = Math.sin(now * 0.05) * r * 0.06;
+      c.beginPath(); c.moveTo(x0, 0); c.lineTo(x1, wig); c.lineTo(x1 + r * 0.26 * out, wig - r * 0.17 * out); c.moveTo(x1, wig); c.lineTo(x1 + r * 0.26 * out, wig + r * 0.17 * out); c.stroke();
+      c.restore();
+    }
+    for (const side of [-1, 1]) {
+      const ex = h.x + ca * r * 0.32 + px * r * 0.48 * side, ey = h.y + sa * r * 0.32 + py * r * 0.48 * side;
+      c.fillStyle = '#ffffff'; c.beginPath(); c.arc(ex, ey, r * 0.42, 0, TAU); c.fill();
+      const qx = ex + lx * r * 0.1, qy = ey + ly * r * 0.1;
+      c.fillStyle = '#15102a'; c.beginPath(); c.arc(qx, qy, r * 0.29, 0, TAU); c.fill();
+      c.fillStyle = '#ffffff'; c.beginPath(); c.arc(qx - r * 0.1, qy - r * 0.1, r * 0.1, 0, TAU); c.fill();
+      c.beginPath(); c.arc(qx + r * 0.09, qy + r * 0.08, r * 0.05, 0, TAU); c.fill();
+    }
+    return;
   }
   const ew = style === 'googly' ? r * 0.44 : r * 0.36;
   for (const side of [-1, 1]) {
@@ -3651,6 +3726,53 @@ function drawHat(c, s, now) {
       c.fillStyle = tint(s.colorB, 0.3); c.beginPath(); c.ellipse(0, r * 0.05, r * 0.1, r * 0.45, 0, 0, TAU); c.fill();
       c.restore();
     }
+  } else if (id === 'turkey') {   // a roast turkey, drumsticks up
+    c.strokeStyle = edge; c.lineWidth = ew;
+    for (const side of [-1, 1]) {
+      c.save(); c.translate(bx + side * r * 0.5, by - r * 0.42); c.rotate(side * 0.8);
+      c.fillStyle = '#fff4df'; c.fillRect(-r * 0.06, -r * 0.9, r * 0.12, r * 0.45);
+      c.beginPath(); c.arc(-r * 0.09, -r * 0.92, r * 0.1, 0, TAU); c.arc(r * 0.09, -r * 0.92, r * 0.1, 0, TAU); c.fill();
+      c.fillStyle = '#b9622a'; c.beginPath(); c.ellipse(0, -r * 0.3, r * 0.24, r * 0.36, 0, 0, TAU); c.fill(); c.stroke();
+      c.fillStyle = 'rgba(255,232,180,0.45)'; c.beginPath(); c.ellipse(-r * 0.08, -r * 0.4, r * 0.07, r * 0.15, 0, 0, TAU); c.fill();
+      c.restore();
+    }
+    c.fillStyle = '#d0813a'; c.beginPath(); c.ellipse(bx, by - r * 0.3, r * 0.66, r * 0.46, 0, 0, TAU); c.fill(); c.stroke();
+    c.strokeStyle = 'rgba(120,58,20,0.45)'; c.lineWidth = ew; c.beginPath(); c.ellipse(bx, by - r * 0.2, r * 0.5, r * 0.28, 0, Math.PI * 0.15, Math.PI * 0.85); c.stroke();
+    c.fillStyle = 'rgba(255,232,180,0.6)'; c.beginPath(); c.ellipse(bx - r * 0.25, by - r * 0.52, r * 0.24, r * 0.11, -0.35, 0, TAU); c.fill();
+  } else if (id === 'pilgrim') {   // tall black hat, buckle on the band
+    c.strokeStyle = 'rgba(255,255,255,0.28)'; c.lineWidth = ew; c.fillStyle = '#2d2538';
+    c.beginPath(); c.ellipse(bx, by + r * 0.02, r * 0.86, r * 0.21, 0, 0, TAU); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(bx - r * 0.5, by); c.lineTo(bx - r * 0.4, by - r * 1.08); c.lineTo(bx + r * 0.4, by - r * 1.08); c.lineTo(bx + r * 0.5, by); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = s.colorB; c.beginPath(); c.moveTo(bx - r * 0.49, by - r * 0.08); c.lineTo(bx - r * 0.46, by - r * 0.36); c.lineTo(bx + r * 0.46, by - r * 0.36); c.lineTo(bx + r * 0.49, by - r * 0.08); c.closePath(); c.fill();
+    c.strokeStyle = '#ffd447'; c.lineWidth = r * 0.09; c.strokeRect(bx - r * 0.17, by - r * 0.38, r * 0.34, r * 0.32);
+    c.strokeStyle = 'rgba(255,255,255,0.22)'; c.lineWidth = r * 0.08; c.lineCap = 'round'; c.beginPath(); c.moveTo(bx - r * 0.3, by - r * 0.5); c.lineTo(bx - r * 0.25, by - r * 0.95); c.stroke();
+  } else if (id === 'leaves') {   // a crown of autumn leaves around the back of the head
+    for (let j = 0; j < 7; j++) {
+      const a = Math.PI * (1.0 + j / 6), x = bx + Math.cos(a) * r * 0.66, y = by + r * 0.12 + Math.sin(a) * r * 0.66;
+      drawMaple(c, x, y, r * (j % 2 ? 0.62 : 0.74), a + Math.PI / 2, LEAF_COLS[j % LEAF_COLS.length], 'rgba(90,30,10,0.5)');
+    }
+  } else if (id === 'chef') {   // a puffy white chef's hat
+    const puffs = [[-0.38, -0.66, 0.36], [0.38, -0.66, 0.36], [0, -0.9, 0.42]];
+    c.fillStyle = '#fbf8ff'; c.strokeStyle = edge; c.lineWidth = ew * 2;
+    for (const [x, y, rr] of puffs) { c.beginPath(); c.arc(bx + x * r, by + y * r, rr * r, 0, TAU); c.stroke(); }
+    c.strokeRect(bx - r * 0.46, by - r * 0.7, r * 0.92, r * 0.62);
+    for (const [x, y, rr] of puffs) { c.beginPath(); c.arc(bx + x * r, by + y * r, rr * r, 0, TAU); c.fill(); }
+    c.fillRect(bx - r * 0.46, by - r * 0.7, r * 0.92, r * 0.62);
+    c.strokeStyle = 'rgba(120,110,160,0.35)'; c.lineWidth = ew * 0.8; c.beginPath();
+    for (const x of [-0.2, 0.2]) { c.moveTo(bx + x * r, by - r * 0.62); c.lineTo(bx + x * r, by - r * 0.2); }
+    c.stroke();
+    c.fillStyle = '#ece6f7'; c.strokeStyle = edge; c.lineWidth = ew; c.beginPath(); c.rect(bx - r * 0.52, by - r * 0.22, r * 1.04, r * 0.3); c.fill(); c.stroke();
+  } else if (id === 'pie') {   // a slice of pumpkin pie with whipped cream
+    const tip = by + r * 0.3, back = by - r * 1.0, w = r * 0.64;
+    c.fillStyle = '#c98a45'; c.strokeStyle = edge; c.lineWidth = ew;
+    c.beginPath(); c.moveTo(bx, tip); c.lineTo(bx - w, back + r * 0.14); c.quadraticCurveTo(bx, back - r * 0.22, bx + w, back + r * 0.14); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#e8822a'; c.beginPath(); c.moveTo(bx, tip - r * 0.16); c.lineTo(bx - w * 0.78, back + r * 0.3); c.quadraticCurveTo(bx, back + r * 0.04, bx + w * 0.78, back + r * 0.3); c.closePath(); c.fill();
+    c.fillStyle = '#e6aa62';
+    for (let k = 0; k <= 5; k++) { const t = k / 5, x = (1 - t) * (1 - t) * (bx - w) + 2 * (1 - t) * t * bx + t * t * (bx + w), y = (1 - t) * (1 - t) * (back + r * 0.14) + 2 * (1 - t) * t * (back - r * 0.22) + t * t * (back + r * 0.14); c.beginPath(); c.arc(x, y + r * 0.04, r * 0.13, 0, TAU); c.fill(); }
+    c.fillStyle = '#fffaf0'; c.strokeStyle = 'rgba(18,12,40,0.25)'; c.lineWidth = ew * 0.8;
+    c.beginPath(); c.arc(bx - r * 0.12, by - r * 0.38, r * 0.15, 0, TAU); c.arc(bx + r * 0.13, by - r * 0.38, r * 0.15, 0, TAU); c.fill();
+    c.beginPath(); c.arc(bx, by - r * 0.48, r * 0.19, 0, TAU); c.fill(); c.stroke();
+    c.beginPath(); c.arc(bx + r * 0.02, by - r * 0.64, r * 0.1, 0, TAU); c.fill();
   }
   c.restore();
 }
@@ -3809,6 +3931,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '1.2.0', items: ['🦃 The Thanksgiving update! 5 new hats: Turkey hat, Pilgrim hat, Leaf crown, Chef hat and Pumpkin pie hat. Find them in Customize snake with a 🦃 New tag.', 'New eyes: Stuffed (happy and full) and Hungry (watch the tongue).', 'New patterns: Autumn, in red, orange and gold leaf colors, and Turkey feathers.', 'New backgrounds: Harvest Moon and Autumn Park, with leaves falling across the arena.', 'All through November, computer snakes sometimes show up in the new hats too.'] },
   { v: '1.1.2', items: ['Noodle Bots is on YouTube! Tap Watch on YouTube on the menu for trailers, Shorts and every Friday update.'] },
   { v: '1.1.1', items: ['Controller support! Connect an Xbox, PlayStation, Switch or most other controllers and press any button.', 'Steer with the stick, boost with the bottom button, and move around the menus with the d-pad.', 'Button hints use simple icons that work on any controller: the dots show which button to press (bottom, right, left or top). Settings has the full list.'] },
   { v: '1.1.0', items: ['Friends! Open Play with friends to find your friend code. Add friends with their code, see when they are online and which room they are in, and tap Join to hop into their game.', 'In a room, tap Invite next to a friend and they get a pop-up to join you.', 'Friend requests need to be accepted, and you can remove or block anyone.'] },
@@ -4323,10 +4446,12 @@ function buildLocker() {
   mkSw('c1Row', 'c1'); mkSw('c2Row', 'c2');
   const mkOpts = (rowId, arr, key) => {
     const row = $(rowId); row.textContent = '';
-    arr.forEach((it, i) => {
+    const order = arr.map((_, i) => i); if (key === 'pat') order.push(...order.splice(CUSTOM_PAT, 1));   // Custom (build your own) stays last
+    order.forEach((i) => { const it = arr[i];
       const b = document.createElement('button'); b.type = 'button'; b.className = 'opt';
       const noPieces = key === 'pat' && it.id === 'custom' && !profile.skin.length, ok = isUnlocked(it) && !noPieces; b.disabled = !ok; b.setAttribute('aria-pressed', String(profile.look[key] === i));
       const t = document.createElement('span'); t.textContent = it.name; b.append(t);
+      if (it.tag) { const tg = document.createElement('small'); tg.className = 'newtag'; tg.textContent = it.tag; b.append(tg); }
       if (noPieces) { const sm = document.createElement('small'); sm.textContent = 'Build it below'; b.append(sm); }
       else if (!ok) { const sm = document.createElement('small'); sm.textContent = `Unlock: ${it.lock.text} · ${lockProgress(it.lock)}`; b.append(sm); }
       b.addEventListener('click', () => { profile.look[key] = i; save(); buildLocker(); });
@@ -4334,7 +4459,7 @@ function buildLocker() {
     });
   };
   mkOpts('patRow', PATTERNS, 'pat'); mkOpts('eyeRow', EYES, 'eye'); mkOpts('hatRow', HATS, 'hat');
-  const custom = profile.look.pat === CUSTOM_PAT && profile.skin.length > 0;
+  const custom = (profile.look.pat === CUSTOM_PAT && profile.skin.length > 0) || !!PAT_OWN_COLOR[profile.look.pat];
   $('c1Group').hidden = custom; $('c2Lbl').textContent = custom ? 'Hat color' : 'Second color (and hat)';
   buildBuilder();
   const tr = $('themeRow'); tr.textContent = '';
@@ -4502,7 +4627,7 @@ function frHear(topic, text, retained) {
     const st = { off: !!m.off, st: ['m', 'p', 'r'].includes(m.st) ? m.st : 'm', r: typeof m.r === 'string' && /^[A-Z]{4}$/.test(m.r) ? m.r : null, c: clamp(int(m.c), 0, 99), t, seen: retained ? Math.min(now, t) : now };
     FR.status.set(who, st);
     const f = profile.friends.find((x) => x.id === who);
-    if (f && !m.off && typeof m.n === 'string') { const n = cleanName(m.n), lk = Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 99999) : f.lk; if (n !== f.n || lk !== f.lk) { f.n = n; f.lk = lk; saveSoon(); } }
+    if (f && !m.off && typeof m.n === 'string') { const n = cleanName(m.n), lk = Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 999999) : f.lk; if (n !== f.n || lk !== f.lk) { f.n = n; f.lk = lk; saveSoon(); } }
     renderFriends(); return;
   }
   if (who !== profile.fid || !FID_RE.test(from || '')) return;
@@ -4513,7 +4638,7 @@ function frHear(topic, text, retained) {
       if (isFriend(from)) { frPub(frT(from, 'in', profile.fid), Object.assign({ t: 'ok' }, frMe()), true); frPub(frT(profile.fid, 'in', from), null, true); return; }
       if (profile.fOut.includes(from)) { frAccept(from, m); return; }      // we both asked each other
       const had = FR.reqIn.has(from);
-      FR.reqIn.set(from, { n: cleanName(m.n), lk: Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 99999) : 0 });
+      FR.reqIn.set(from, { n: cleanName(m.n), lk: Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 999999) : 0 });
       if (FR.reqIn.size > 20) FR.reqIn.delete(FR.reqIn.keys().next().value);
       if (!had && !retained) toast(`${cleanName(m.n)} sent you a friend request`);
       renderFriends();
@@ -4537,7 +4662,7 @@ function frHear(topic, text, retained) {
 }
 function frAdd(id, m) {
   if (isFriend(id) || profile.friends.length >= FR_MAX) return;
-  profile.friends.push({ id, n: cleanName(m && m.n), lk: m && Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 99999) : 0 });
+  profile.friends.push({ id, n: cleanName(m && m.n), lk: m && Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 999999) : 0 });
   profile.fOut = profile.fOut.filter((x) => x !== id); FR.reqIn.delete(id); save(false);
   for (const c of FR.conns) if (c.open) c.subscribe(frT(id, 's'));
   FR.lastSig = ''; frTick();
@@ -4614,7 +4739,7 @@ function frStatusText(id) {
   if (st.st === 'r' && st.r) return { t: online.code === st.r ? `In your room ${st.r}` : `In room ${st.r}${st.c ? ` · ${st.c} playing` : ''}`, on: true, r: st.r };
   return { t: st.st === 'p' ? 'Playing solo' : 'On the menu', on: true };
 }
-function fDot(lk) { const l = unpackLook(lk), d = document.createElement('span'); d.className = 'fdot'; d.style.background = `linear-gradient(135deg, ${PALETTE[l.c1]} 50%, ${PALETTE[l.c2]} 50%)`; return d; }
+function fDot(lk) { const l = unpackLook(lk), d = document.createElement('span'); d.className = 'fdot'; d.style.background = `linear-gradient(135deg, ${PAT_OWN_COLOR[l.pat] || PALETTE[l.c1]} 50%, ${PALETTE[l.c2]} 50%)`; return d; }
 function renderFriends() {
   const onWeb = online.kind === 'web';
   // Menu button badge: friend requests first, then how many friends are online.
@@ -4829,6 +4954,8 @@ const THEMES = [
   { name: 'Sky Blue', light: true, floor: '#bfe3ff', edge: '#2a74d0', style: 'clouds', ink: 'rgba(255,255,255,0.75)' },
   { name: 'Snow Day', light: true, floor: '#edf2fb', edge: '#5d84e0', style: 'snow', ink: 'rgba(120,150,210,0.45)' },
   { name: 'Lemonade', light: true, floor: '#fff2a6', edge: '#f08a00', style: 'grid', ink: 'rgba(230,150,10,0.32)' },
+  { name: 'Harvest Moon', floor: '#1a1026', edge: '#ffa34d', style: 'moon', ink: 'rgba(255,214,160,0.8)', leaves: true },
+  { name: 'Autumn Park', light: true, floor: '#efdcae', edge: '#c4561c', style: 'park', ink: 'rgba(150,110,40,0.35)', leaves: true },
 ];
 let themeCur = 0, themePrev = 0, themeFade = 1, themeClock = 0;
 function rng(sd) { return () => { sd = (sd + 0x6d2b79f5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -4870,6 +4997,18 @@ function tileFor(th) {
   } else if (th.style === 'clouds') {
     c.width = c.height = 260; g.fillStyle = th.ink;
     for (let i = 0; i < 5; i++) { const x = R() * 260, y = R() * 260, w = 18 + R() * 16; around(260, 260, (ox, oy) => { g.beginPath(); g.arc(x + ox, y + oy, w * 0.55, 0, TAU); g.arc(x + ox + w * 0.6, y + oy - w * 0.25, w * 0.7, 0, TAU); g.arc(x + ox + w * 1.25, y + oy, w * 0.5, 0, TAU); g.rect(x + ox, y + oy - w * 0.1, w * 1.25, w * 0.55); g.fill(); }); }
+  } else if (th.style === 'moon') {
+    c.width = c.height = 240;
+    for (let i = 0; i < 40; i++) { const x = R() * 240, y = R() * 240, r = 0.5 + R() * 1.1; g.globalAlpha = 0.2 + R() * 0.5; g.fillStyle = th.ink; around(240, 240, (ox, oy) => { g.beginPath(); g.arc(x + ox, y + oy, r, 0, TAU); g.fill(); }); }
+    g.globalAlpha = 0.16;
+    for (let i = 0; i < 5; i++) { const x = R() * 240, y = R() * 240, a = R() * TAU, sz = 13 + R() * 5, col = LEAF_COLS[Math.floor(R() * LEAF_COLS.length)]; around(240, 240, (ox, oy) => drawMaple(g, x + ox, y + oy, sz, a, col)); }
+    g.globalAlpha = 1;
+  } else if (th.style === 'park') {
+    c.width = c.height = 260; g.strokeStyle = th.ink; g.lineWidth = 1.5; g.lineCap = 'round';
+    for (let i = 0; i < 12; i++) { const x = R() * 260, y = R() * 260; around(260, 260, (ox, oy) => { g.beginPath(); g.moveTo(x + ox, y + oy); g.lineTo(x + ox - 3, y + oy - 7); g.moveTo(x + ox, y + oy); g.lineTo(x + ox, y + oy - 9); g.moveTo(x + ox, y + oy); g.lineTo(x + ox + 3, y + oy - 7); g.stroke(); }); }
+    g.globalAlpha = 0.3;
+    for (let i = 0; i < 6; i++) { const x = R() * 260, y = R() * 260, a = R() * TAU, sz = 12 + R() * 7, col = LEAF_COLS[Math.floor(R() * LEAF_COLS.length)]; around(260, 260, (ox, oy) => drawMaple(g, x + ox, y + oy, sz, a, col, 'rgba(90,40,10,0.45)')); }
+    g.globalAlpha = 1;
   } else if (th.style === 'snow') {
     c.width = c.height = 200; g.strokeStyle = th.ink; g.fillStyle = th.ink; g.lineWidth = 1.3; g.lineCap = 'round';
     for (let i = 0; i < 26; i++) { const x = R() * 200, y = R() * 200, r = 0.8 + R() * 1.6; around(200, 200, (ox, oy) => { g.beginPath(); g.arc(x + ox, y + oy, r, 0, TAU); g.fill(); }); }
@@ -4911,6 +5050,47 @@ function drawThemeLayer(th, a, b, now) {
   else if (th.style === 'stars') { tx = cam.x * 0.45; ty = cam.y * 0.45; }
   ctx.save(); ctx.globalAlpha = a; ctx.translate(tx, ty); ctx.fillStyle = th.pattern;
   ctx.fillRect(b.x0 - tx, b.y0 - ty, b.x1 - b.x0, b.y1 - b.y0); ctx.restore();
+  if (th.style === 'moon') drawHarvestMoon(a, b);
+  if (th.leaves) drawFallingLeaves(th, a, b, now);
+}
+// A big orange moon far away: it drifts only a little as you move around.
+function drawHarvestMoon(a, b) {
+  const mx = cam.x * 0.86 + 420, my = cam.y * 0.86 - 300, R = 210;
+  if (mx + R * 2.4 < b.x0 || mx - R * 2.4 > b.x1 || my + R * 2.4 < b.y0 || my - R * 2.4 > b.y1) return;
+  ctx.save(); ctx.globalAlpha = a;
+  const glow = ctx.createRadialGradient(mx, my, R * 0.8, mx, my, R * 2.4);
+  glow.addColorStop(0, 'rgba(255,160,70,0.22)'); glow.addColorStop(1, 'rgba(255,160,70,0)');
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(mx, my, R * 2.4, 0, TAU); ctx.fill();
+  ctx.globalAlpha = a * 0.5; const body = ctx.createRadialGradient(mx - R * 0.3, my - R * 0.3, R * 0.1, mx, my, R);
+  body.addColorStop(0, '#ffd08a'); body.addColorStop(1, '#f08a3a'); ctx.fillStyle = body; ctx.beginPath(); ctx.arc(mx, my, R, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(190,90,40,0.35)';
+  for (const [x, y, r] of [[-0.35, -0.2, 0.18], [0.25, 0.3, 0.24], [0.4, -0.35, 0.11], [-0.15, 0.45, 0.1]]) { ctx.beginPath(); ctx.arc(mx + x * R, my + y * R, r * R, 0, TAU); ctx.fill(); }
+  ctx.restore();
+}
+// Leaves tumbling down and drifting with the wind. They repeat in big squares, so there are always some on screen.
+let leafSprites = null;
+function drawFallingLeaves(th, a, b, now) {
+  if (!leafSprites) {
+    leafSprites = [...LEAF_COLS, 'rgb(70,40,10)'].map((col, i) => { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d'); drawMaple(g, 32, 32, 58, 0, col, i < LEAF_COLS.length ? 'rgba(90,30,10,0.5)' : null); return cv; });
+  }
+  const shadow = th.light ? leafSprites[LEAF_COLS.length] : null;
+  const CELL = 700, t = now / 1000;
+  if (!th.leafSeed) { const R = rng(th.name.length * 131 + 7); th.leafSeed = Array.from({ length: 13 }, () => ({ x: R() * CELL, y: R() * CELL, v: 38 + R() * 40, sw: 18 + R() * 36, f: 0.5 + R() * 0.8, ph: R() * TAU, sp: (R() - 0.5) * 2.6, s: 15 + R() * 10, k: Math.floor(R() * LEAF_COLS.length) })); }
+  const gx0 = Math.floor((b.x0 - 30) / CELL), gx1 = Math.floor((b.x1 + 30) / CELL), gy0 = Math.floor((b.y0 - 30) / CELL), gy1 = Math.floor((b.y1 + 30) / CELL);
+  const cells = (gx1 - gx0 + 1) * (gy1 - gy0 + 1), step = cells > 20 || profile.set.smooth ? 2 : 1;
+  const base = ctx.getTransform(), al = a * (th.light ? 0.95 : 0.7); ctx.save(); ctx.globalAlpha = al;
+  for (let j = 0; j < th.leafSeed.length; j += step) {
+    const L = th.leafSeed[j];
+    const lx = (((L.x + Math.sin(t * L.f + L.ph) * L.sw + t * 16) % CELL) + CELL) % CELL, ly = (((L.y + t * L.v) % CELL) + CELL) % CELL;
+    const rot = L.ph + t * L.sp, flip = Math.max(0.2, Math.abs(Math.cos(t * L.f * 1.6 + L.ph))), hs = L.s / 2;
+    for (let gx = gx0; gx <= gx1; gx++) for (let gy = gy0; gy <= gy1; gy++) {
+      const x = gx * CELL + lx, y = gy * CELL + ly;
+      if (x < b.x0 - hs || x > b.x1 + hs || y < b.y0 - hs || y > b.y1 + hs) continue;
+      if (shadow) { ctx.globalAlpha = al * 0.16; ctx.setTransform(base); ctx.translate(x + L.s * 0.45, y + L.s * 0.7); ctx.rotate(rot); ctx.scale(flip, 1); ctx.drawImage(shadow, -hs, -hs, L.s, L.s); ctx.globalAlpha = al; }
+      ctx.setTransform(base); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(flip, 1); ctx.drawImage(leafSprites[L.k], -hs, -hs, L.s, L.s);
+    }
+  }
+  ctx.setTransform(base); ctx.restore();
 }
 
 /* ================= sound effects & music (made with Web Audio, no sound files) ================= */
