@@ -260,6 +260,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .status{font-size:14px;line-height:1.5;color:var(--muted);padding:10px 12px;border-radius:12px;background:rgba(244,239,254,.06)}
 .status.warn{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--ink)}
 .joinrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+#nameIn.rude{border-color:#ff7a7a;box-shadow:0 0 0 3px rgba(255,122,122,.25)}
+.namenote{margin:6px 2px 0;font-size:13px;color:#ff9a9a}
 .rolechip{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;vertical-align:1px}
 .input.rolein{letter-spacing:.06em;text-transform:uppercase}
 .rolemsg:empty{display:none}
@@ -635,6 +637,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <div class="me-info">
           <label class="lbl" for="nameIn">Your name <span class="rolechip" id="roleChip" hidden></span></label>
           <input id="nameIn" class="input" type="text" name="nb-nick" maxlength="14" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Player">
+          <p class="namenote" id="nameNote" role="status" hidden>That name isn't allowed. Try a different one!</p>
           <button class="btn small" id="lockerBtn" type="button">Customize snake</button>
         </div>
       </div>
@@ -962,7 +965,7 @@ const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
 // BETA = the test copy at /noodle-bots/beta/. It keeps its own save and its own online channel, so testing never touches the real game.
 const BETA = true;
-const GAME_VERSION = '1.2.1';
+const GAME_VERSION = '1.2.2';
 const STORE_KEY = BETA ? 'noodlebots.beta' : 'noodlebots.v2', MOVES_KEY = STORE_KEY + '.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -1085,10 +1088,24 @@ function drawMaple(c, x, y, sz, ang, col, vein) {
 }
 const FID_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', FID_RE = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/, FR_MAX = 50;
 const fidShow = (id) => id.slice(0, 4) + '-' + id.slice(4);
+// Rude names (swears, slurs, rude words, including spellings like "a55" or "f u c k") show as "Player".
+const RUDE_SUB = atob('ZnVjayxmdWssZnZjayxwaHVjayxzaGl0LGJpdGNoLGJpYXRjaCxjdW50LG5pZ2csbmlnYSxuaWdyLHdob3JlLHNsdXQscG9ybixwdXNzeSxwZW5pcyx2YWdpbmEsZmFnZ290LGZhZ290LHJldGFyZCxhc3Nob2xlLGRpY2toZWFkLG1vdGhlcmYsY29ja3N1Y2ssamFja2FzcyxiYXN0YXJkLHdhbmtlcix0d2F0LGZjayxraWxseW91cnNlbGYsaGl0bGVyLGRpbGRvLHNleHksb3JnYXNtLGR1bWJhc3MsZmF0YXNzLGJpZ2FzcyxzbWFydGFzcyxhc3N3aXBlLGFzc2hhdCx0ZXN0aWNsZSxib29iaWVz').split(','), RUDE_WORD = new Set(atob('YXNzLGFyc2UsZGljayxkaWssY29jayx0aXQsdGl0cyx0aXR0eSx0aXR0aWVzLGJvb2IsYm9vYnMsc2V4LGN1bSxhbmFsLHJhcGUscmFwaXN0LG5hemksa3lzLG51ZGUsbnVkZXMsbmFrZWQsaG9ybnksYm9uZXIscGlzcyxmYWcsZmFncyxra2ssc3RmdSx3dGYsZ3RmbyxtaWxmLG5pcHBsZSxuaXBwbGVzLHRob3QsaG9lLGhvZXM=').split(','));
+const LEET = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', 8: 'b', 9: 'g', '@': 'a', '$': 's', '!': 'i', '|': 'i', '+': 't', '€': 'e' };
+function isRudeName(v) {
+  const raw = String(v || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  const de = (s) => s.replace(/[0-9@$!|+€]/g, (ch) => LEET[ch] || ch);
+  const sq = de(raw.toLowerCase()).replace(/[^a-z]/g, ''), sqC = sq.replace(/(.)\1+/g, '$1');
+  for (const w of RUDE_SUB) { if (sq.includes(w)) return true; const wc = w.replace(/(.)\1+/g, '$1'); if (wc.length >= 4 && sqC.includes(wc)) return true; }
+  for (let t of de(raw.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()).split(/[^a-z]+/)) {
+    if (!t) continue; t = t.replace(/(.)\1\1+/g, '$1$1');
+    if (RUDE_WORD.has(t) || (t.length > 3 && t.endsWith('s') && RUDE_WORD.has(t.slice(0, -1)))) return true;
+  }
+  return false;
+}
 function cleanName(v, max = 14) {
   if (typeof v !== 'string') return 'Player';
   const s = v.replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '').trim().slice(0, max);
-  return s || 'Player';
+  return s && !isRudeName(s) ? s : 'Player';
 }
 // One digit each for color 1, color 2, pattern and eyes, then two digits for the hat (there are more than 10 hats).
 function packLook(l) { return l.c1 + 10 * l.c2 + 100 * l.pat + 1000 * l.eye + 10000 * l.hat; }
@@ -1719,6 +1736,7 @@ function bodyFromPath(s) {
   }
 }
 function setNetPath(s, pr, now) {
+  if (pr.bd === 0) return;   // this update left the body shape out: keep the last one
   const d = pr.bd; if (!Array.isArray(d) || d.length < 2 || d.length > 200) { s.netPath = null; return; }
   const n = d.length >> 1, need = (n + 1) * 2, P = s.netPath && s.netPath.length >= need ? s.netPath : new Float32Array(need + 16);
   let x = clamp(num(pr.x), -GRID_R, GRID_R), y = clamp(num(pr.y), -GRID_R, GRID_R); P[0] = x; P[1] = y;
@@ -2943,6 +2961,7 @@ function step(dt, now) {
   }
   setBoostSound(!!(player && player.alive && mode === 'play' && player.boosting));
   if (gameKind === 'online') {
+    if (frame % 15 === 0) netAdapt(now);
     sendPresence(now);
     if (frame % 30 === 0) { computeRoomMeta(); for (const [id, t] of eatenDrops) if (now - t > 60000) eatenDrops.delete(id); }
   }
@@ -2995,6 +3014,7 @@ function mqttConnect(url, opts) {
     const api = {
       url,
       get open() { return ready && !closed && ws.readyState === 1; },
+      get backlog() { return ws.bufferedAmount || 0; },
       publish(topic, text, retain) { send(mqPacket(retain ? 0x31 : 0x30, mqCat(mqStr(topic), NET_TE.encode(text)))); },
       subscribe(filter) { const id = (pid++ % 65535) + 1; send(mqPacket(0x82, mqCat(new Uint8Array([id >> 8, id & 255]), mqStr(filter), new Uint8Array([0])))); },
       close() { if (closed) return; closed = true; clearInterval(ping); send(new Uint8Array([0xe0, 0])); setTimeout(() => { try { ws.close(); } catch (e) { /* ignore */ } }, 60); },
@@ -3057,6 +3077,15 @@ function makeNetRoom() {
   R.touch = () => { R.cache = null; if (!R.pending) { R.pending = true; setTimeout(R.flush, 16); } };
   R.setPres = (id, pr) => { if (!pr || typeof pr !== 'object' || Array.isArray(pr)) return; R.pres.set(id, { p: pr, t: Date.now() }); R.touch(); };
   R.drop = (id) => { if (R.pres.delete(id)) R.touch(); };
+  // How far behind the other players' updates arrive (ms), compared with the quickest we've had from each of them.
+  // Each update carries the time it was sent. Clocks on different devices don't match, so only the change matters.
+  R.ages = new Map();
+  R.noteAge = (id, off) => {
+    const now = Date.now(); let a = R.ages.get(id);
+    if (!a) { a = { base: off, at: now, cur: 0, t: now }; R.ages.set(id, a); }
+    a.base = Math.min(off, a.base + (now - a.at) * 0.003); a.at = now; a.cur = Math.max(0, off - a.base); a.t = now;
+  };
+  R.lag = () => { const now = Date.now(), v = []; for (const [id, a] of R.ages) { if (now - a.t > 4000) R.ages.delete(id); else v.push(a.cur); } v.sort((x, y) => x - y); return v.length ? v[v.length >> 1] : 0; };
   R.setConn = (c) => { if (R.connected === c) return; R.connected = c; for (const h of R.connH) { try { h(c); } catch (e) { /* ignore */ } } };
   R.fail = (code) => { if (R.dead) return; R.dead = true; R.setConn(false); for (const h of R.errH) { try { h({ code, message: code }); } catch (e) { /* ignore */ } } };
   R.makeApi = (send, close) => ({
@@ -3066,8 +3095,9 @@ function makeNetRoom() {
       const snap = Object.assign({}, R.my);
       if (R.id) R.setPres(R.id, snap);
       const now = Date.now(); clearTimeout(R.trail);
-      if (now - R.sentAt >= NET_SEND_MS) { R.sentAt = now; send(snap); }
-      else R.trail = setTimeout(() => { R.sentAt = Date.now(); send(Object.assign({}, R.my)); }, NET_SEND_MS - (now - R.sentAt));
+      const gap = R.gap || NET_SEND_MS;
+      if (now - R.sentAt >= gap) { R.sentAt = now; send(snap); }
+      else R.trail = setTimeout(() => { R.sentAt = Date.now(); send(Object.assign({}, R.my)); }, gap - (now - R.sentAt));
       return Promise.resolve();
     },
     peers: () => R.snapshot(),
@@ -3081,7 +3111,7 @@ function makeNetRoom() {
 function webRoom(code, create) {
   return new Promise((resolve, reject) => {
     const brokers = Array.isArray(window.NB_MQTT_BROKERS) ? window.NB_MQTT_BROKERS : NET_BROKERS;
-    const me = netId(), base = NET_TOPIC + code + '/';
+    const me = netId(), base = NET_TOPIC + 'r2/' + code + '/';
     const R = makeNetRoom(); R.id = me;
     let client = null, settled = false, dog = 0, reconnecting = false;
     const seen = new Map();
@@ -3092,15 +3122,20 @@ function webRoom(code, create) {
       if (kind === 'x') { seen.delete(id); R.drop(id); return; }
       if (kind !== 'p' || text.length > 6000) return;
       let pr; try { pr = JSON.parse(text); } catch (e) { return; }
+      if (typeof pr.ts === 'number') R.noteAge(id, Date.now() - pr.ts);
       seen.set(id, Date.now()); R.setPres(id, pr);
     };
     const optsFor = (url, onMsg) => ({ clientId: 'nb' + me + netId().slice(0, 4), will: { topic: base + 'x/' + me, payload: '1' }, onMessage: onMsg || hear, onClose: (c) => { if (c === client) lost(url); }, timeout: 9000 });
-    const send = (pr) => { if (client && client.open) client.publish(base + 'p/' + me, JSON.stringify(pr)); };
+    const send = (pr) => { if (client && client.open && client.backlog < 6000) client.publish(base + 'p/' + me, JSON.stringify(pr)); };
     const api = R.makeApi(send, () => {
       clearInterval(dog);
       const c = client; client = null;
       if (c) { if (c.open) c.publish(base + 'x/' + me, '1'); setTimeout(() => c.close(), 80); }
     });
+    api.lag = () => R.lag();
+    api.gap = (ms) => { R.gap = ms; };
+    // Reconnect to throw away a pile of late updates waiting on the server, and start fresh.
+    api.refresh = () => { const c = client; if (!c || reconnecting || R.dead) return false; R.ages.clear(); client = null; try { c.close(); } catch (e) { /* ignore */ } lost(c.url); return true; };
     const begin = (c) => {
       client = c; R.setConn(true); settled = true;
       dog = setInterval(() => { const now = Date.now(); for (const [id, t] of seen) if (now - t > NET_STALE_MS) { seen.delete(id); R.drop(id); } }, 1000);
@@ -3264,7 +3299,7 @@ async function joinRoom(code, create) {
     return;
   } finally { online.busy = false; $('createBtn').disabled = $('joinBtn').disabled = false; }
   online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0; chal('friends'); profile.st.online++;
-  online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = [];
+  online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = []; online.lagLv = 0; online.sendMs = NET_SEND_MS; online.lagHi = 0; online.lagLow = 0; online.refreshAt = 0; online.sendN = 0;
   online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear(); online.brains.clear();
   gameKind = 'online'; myDeaths = 0; match = { m: 'classic' };
   const cfg0 = create ? newMatchCfg() : null; online.pendingCfg = cfg0 && cfg0.m !== 'classic' ? cfg0 : null;
@@ -3317,7 +3352,7 @@ function onRoomPeersInner(change) {
 function applyPeer(peer, pr, now) {
   let rs = online.remotes.get(peer);
   if (!rs) { rs = { snake: null, d: int(pr.d), name: cleanName(pr.n), seenE: new Set() }; online.remotes.set(peer, rs); if (mode === 'play') { toast(`${rs.name} joined the room`); SFX.join(); } }
-  rs.name = cleanName(pr.n);
+  rs.name = cleanName(pr.n); rs.lg = clamp(int(pr.lg), 0, 3);
   const d = int(pr.d), aliveNow = pr.al === 1 && typeof pr.x === 'number';
   if (rs.snake && rs.snake.alive && (!aliveNow || d > rs.d)) {
     const s = rs.snake; s.netD = d; rs.d = d;
@@ -3377,13 +3412,16 @@ function computeRoomMeta() {
   let ltSum = 0; for (const p of ps) ltSum += p.sameTab ? (player && player.alive ? run.time : 0) : clamp(num(p.presence.lt), 0, 36000);
   online.avgLt = ps.length ? ltSum / ps.length : run.time;
   const now = performance.now();
-  const claimants = ps.filter((p) => p.presence.h === 1).map((p) => p.peer).sort();
+  const wall = Date.now(), live = (p) => p.sameTab || (p.presence.hid !== 1 && (!(p.updatedAt > 0) || wall - p.updatedAt < 4000));
+  const claimants = ps.filter((p) => (p.sameTab ? online.claim : p.presence.h === 1 && live(p))).map((p) => p.peer).sort();
+  // Coming back to the app after someone else took over the computer snakes: let them keep going.
+  if (online.claim && now < (online.yieldUntil || 0) && claimants.some((id) => id !== online.myPeer)) { online.claim = false; online.yieldUntil = 0; stopHosting(); const k = claimants.indexOf(online.myPeer); if (k >= 0) claimants.splice(k, 1); }
   let host = claimants[0] || null;
   if (online.claim && host && online.myPeer && host !== online.myPeer) { online.claim = false; stopHosting(); }
   if (!host) {
     if (!online.noClaimSince) online.noClaimSince = now;
     else if (now - online.noClaimSince > 1500 && online.myPeer) {
-      const lowest = ps.map((p) => p.peer).sort()[0];
+      const lowest = ps.filter(live).map((p) => p.peer).sort()[0];
       if (lowest === online.myPeer || ps.length === 0) { online.claim = true; host = online.myPeer; }
     }
   } else online.noClaimSince = 0;
@@ -3400,7 +3438,7 @@ function applyHost(pr) {
   const now = performance.now();
   applyMatchFromHost(pr.md);
   if (Array.isArray(pr.w)) { if (!inModes()) setTier(pr.w[0]); online.filler = pr.w[1] === 1; online.hostIq = clamp(num(pr.w[2], 10), 0, 100) / 100; }
-  const seen = new Set();
+  const npUpd = pr.np !== 0, seen = new Set();   // np 0: this update left the computer snakes out
   if (Array.isArray(pr.np)) for (const e of pr.np.slice(0, 40)) {
     if (!Array.isArray(e) || e.length < 7) continue;
     const id = int(e[0]); seen.add(id);
@@ -3420,7 +3458,7 @@ function applyHost(pr) {
     if (s.role === 'M' && s.lookCode !== code) { s.lookCode = code; applyLook(s, unpackLook(code % 1000000)); }
   }
   const quiet = new Set(Array.isArray(pr.rm) ? pr.rm.slice(0, 60).map((x) => int(x)) : []);
-  for (const [id, s] of online.rnpcs) if (!seen.has(id)) { if (quiet.has(id)) { const i = snakes.indexOf(s); if (i >= 0) snakes.splice(i, 1); s.alive = false; } else if (s.alive) killSnake(s, null); online.rnpcs.delete(id); }
+  if (npUpd) for (const [id, s] of online.rnpcs) if (!seen.has(id)) { if (quiet.has(id)) { const i = snakes.indexOf(s); if (i >= 0) snakes.splice(i, 1); s.alive = false; } else if (s.alive) killSnake(s, null); online.rnpcs.delete(id); }
   if (Array.isArray(pr.nk)) for (const e of pr.nk.slice(0, 20)) {
     if (Array.isArray(e) && online.myPeer && e[1] === online.myPeer) {
       const k = 'nk' + int(e[0]);
@@ -3442,17 +3480,40 @@ function stopHosting() {
   snakes = snakes.filter((s) => s.kind !== 'npc');
   online.lastHostPres = null;
 }
+// Every quarter second: are other players' updates arriving late? Then everyone sends a little less often
+// (each player says how much slower they need it), and if they're more than 1.5 s late, reconnect to catch up.
+const NET_GAPS = [100, 150, 220, 320];
+function netAdapt(now) {
+  const r = online.room; if (!r || typeof r.lag !== 'function') return;
+  const lag = r.lag(), lv = online.lagLv || 0;
+  if (lag > 1500 && now - (online.refreshAt || 0) > 10000) {
+    online.refreshAt = now; online.lagLv = Math.min(3, lv + 1); online.lagUp = now; online.lagHi = 0;
+    if (r.refresh()) online.catchups = (online.catchups || 0) + 1;
+  } else if (lag > 400) {
+    if (!online.lagHi) online.lagHi = now;
+    else if (now - online.lagHi > 1500 && now - (online.lagUp || 0) > 2500 && lv < 3) { online.lagLv = lv + 1; online.lagUp = now; online.lagHi = 0; }
+  } else {
+    online.lagHi = 0;
+    // only speed back up after a good long calm spell, so it doesn't keep flipping between fast and slow
+    if (lag < 120) { if (!online.lagLow) online.lagLow = now; } else online.lagLow = 0;
+    if (lv > 0 && online.lagLow && now - online.lagLow > 20000 && now - Math.max(online.lagUp || 0, online.refreshAt || 0) > 20000) { online.lagLv = lv - 1; online.lagUp = now; online.lagLow = 0; }
+  }
+  let room = online.lagLv || 0; for (const rs of online.remotes.values()) if (rs.lg > room) room = rs.lg;
+  online.sendMs = NET_GAPS[room]; if (typeof r.gap === 'function') r.gap(online.sendMs);
+}
 function sendPresence(now, force) {
   const r = online.room; if (!r) return;
-  if (!force && now - (online.lastSend || 0) < NET_SEND_MS - 8) return;
+  if (!force && now - (online.lastSend || 0) < (online.sendMs || NET_SEND_MS) - 8) return;
   online.lastSend = now;
-  while (online.eatLog.length && now - online.eatLog[0].t > 2500) online.eatLog.shift();
+  // Every other update leaves out the body shape and the computer snakes (they're predicted smoothly in between).
+  online.sendN = (online.sendN || 0) + 1; const half = (online.sendN & 1) === 1 && !force;
+  while (online.eatLog.length && now - online.eatLog[0].t > 1200) online.eatLog.shift();
   if (online.eatLog.length > 70) online.eatLog.splice(0, online.eatLog.length - 70);
   online.nk = online.nk.filter((e) => now - e.t < 3000);
   const p = player, alive = !!(p && p.alive);
   const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), rl: myRole || undefined, p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
     h: online.claim ? 1 : 0, e: online.eatLog.map((x) => x.id), kb: lastKiller, hid: document.hidden ? 1 : null };
-  if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; pr.bd = bodyDeltas(p); const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
+  if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; pr.bd = half ? 0 : bodyDeltas(p); const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
     pr.fx = p.fx ? [FX_CODE[p.fx] || 0, Math.round(p.fxEnd - now), p.fxUse || 0, p.hold ? 1 : 0] : null; pr.sl = p.slowEnd > now ? Math.round(p.slowEnd - now) : null; }
   pr.sk = skinStr();
   pr.qc = myChat && now - myChat.t < 3000 ? [myChat.id, myChat.i, 1] : null;
@@ -3460,7 +3521,7 @@ function sendPresence(now, force) {
   if (online.isHost) {
     pr.w = [online.tier, online.filler ? 1 : 0, Math.round(npcIQ * 100)];
     const abOn = abilOn();
-    pr.np = snakes.filter((s) => s.kind === 'npc').slice(0, 36).map((s) => {
+    pr.np = half ? 0 : snakes.filter((s) => s.kind === 'npc').slice(0, 36).map((s) => {
       const e = [s.npcId, Math.round(s.x), Math.round(s.y), Math.round(s.ang * 100), Math.round(s.mass * 10), s.boosting ? 1 : 0, packLook(s.look) + 1000000 * s.nameIdx, s.team, ROLE_CODE[s.role] || 0, Math.round((s.w || 0) * 100), Math.round(speedOf(s, now) / (s.boosting ? BOOST_SPEED : BASE_SPEED) * 100)];
       if (abOn && (s.fx || s.slowEnd > now)) e.push(s.fx ? FX_CODE[s.fx] || 0 : 0, s.fx ? Math.round(s.fxEnd - now) : 0, s.fxUse || 0, s.slowEnd > now ? Math.round(s.slowEnd - now) : 0, s.hold ? 1 : 0);
       return e;
@@ -3469,6 +3530,7 @@ function sendPresence(now, force) {
     pr.nk = online.nk.map((e) => [e.id, e.peer]);
     online.rmBots = online.rmBots.filter((e) => now - e.t < 4000); pr.rm = online.rmBots.length ? online.rmBots.map((e) => e.id) : null;
   } else { pr.w = null; pr.np = null; pr.nk = null; pr.md = null; pr.rm = null; }
+  pr.ts = Date.now(); pr.lg = online.lagLv || 0;
   pr.bw = match.m === 'ctl' && !online.isHost && player && player.role === 'L' ? nextBrainChunk() : null;
   let txt = JSON.stringify(pr);
   while (txt.length > 3900 && pr.e.length) { pr.e = pr.e.slice(Math.ceil(pr.e.length / 2)); txt = JSON.stringify(pr); }
@@ -3975,8 +4037,9 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '1.2.2', items: ['Online rooms run much smoother, even on slow internet. Updates are smaller, the game sends them a little less often if someone can\'t keep up, and it catches up instead of falling further and further behind.', 'If the player running the computer snakes leaves the app, someone else takes over right away, so the computer snakes don\'t freeze.', 'Rude names are blocked. They show up as "Player".', 'Playing with friends? Everyone needs this version to join the same room, so tell them to refresh the page.'] },
   { v: '1.2.1', items: ['Roles! Some players get a special role next to their name: 👑 Owner, 💡 Weird Idea Maker or 💎 Elite. Everyone sees it on the name tag, the leaderboard and in friends lists.', 'Got a role code from TtGamer15? Go to Settings → Role code and type it in. Each code works one time.'] },
-  { v: '1.2.0', items: ['🦃 The Thanksgiving update! 5 new hats: Turkey hat, Pilgrim hat, Leaf crown, Chef hat and Pumpkin pie hat. Find them in Customize snake with a 🦃 New tag.', 'New eyes: Stuffed (happy and full) and Hungry (watch the tongue).', 'New patterns: Autumn, in red, orange and gold leaf colors, and Turkey feathers.', 'New backgrounds: Harvest Moon and Autumn Park, with leaves falling across the arena.', 'All through November, computer snakes sometimes show up in the new hats too.'] },
+  { v: '1.2.0', pin: '🦃 The Thanksgiving update', until: '2026-12-01', items: ['🦃 The Thanksgiving update! 5 new hats: Turkey hat, Pilgrim hat, Leaf crown, Chef hat and Pumpkin pie hat. Find them in Customize snake with a 🦃 New tag.', 'New eyes: Stuffed (happy and full) and Hungry (watch the tongue).', 'New patterns: Autumn, in red, orange and gold leaf colors, and Turkey feathers.', 'New backgrounds: Harvest Moon and Autumn Park, with leaves falling across the arena.', 'All through November, computer snakes sometimes show up in the new hats too.'] },
   { v: '1.1.2', items: ['Noodle Bots is on YouTube! Tap Watch on YouTube on the menu for trailers, Shorts and every Friday update.'] },
   { v: '1.1.1', items: ['Controller support! Connect an Xbox, PlayStation, Switch or most other controllers and press any button.', 'Steer with the stick, boost with the bottom button, and move around the menus with the d-pad.', 'Button hints use simple icons that work on any controller: the dots show which button to press (bottom, right, left or top). Settings has the full list.'] },
   { v: '1.1.0', items: ['Friends! Open Play with friends to find your friend code. Add friends with their code, see when they are online and which room they are in, and tap Join to hop into their game.', 'In a room, tap Invite next to a friend and they get a pop-up to join you.', 'Friend requests need to be accepted, and you can remove or block anyone.'] },
@@ -4003,11 +4066,15 @@ const newsLabel = (n) => (n.pre ? `Pre-Release ${n.v}` : `Version ${n.v}`);
 function openNews(onlyNew) {
   const list = $('newsList'); list.textContent = '';
   const at = NEWS.findIndex((n) => newsKey(n) === seenKey(profile.seenVer));   // NEWS is newest first
-  let shown = at > 0 ? NEWS.slice(0, at) : NEWS.slice(0, 1);
-  if (!onlyNew) shown = NEWS;
+  const fresh = at > 0 ? NEWS.slice(0, at) : NEWS.slice(0, 1);
+  let shown = onlyNew ? fresh : NEWS;
+  // A big update can stay pinned on top for a while (the Thanksgiving update, all November), with smaller changes under it.
+  const pin = NEWS.find((n) => n.pin && (!n.until || Date.now() < Date.parse(n.until)));
+  if (pin) shown = [pin, ...shown.filter((n) => n !== pin)];
   shown.forEach((n, i) => {
-    const d = document.createElement('div'); if (i > 0) d.className = 'old';
-    const h = document.createElement('h3'); h.textContent = i === 0 && n === NEWS[0] ? `New in ${newsLabel(n).replace('Version', 'version')}` : newsLabel(n);
+    const d = document.createElement('div'); if (i > 0 && !fresh.includes(n)) d.className = 'old';
+    const h = document.createElement('h3');
+    h.textContent = n === pin ? `${pin.pin} · ${newsLabel(n).replace('Version', 'version')}` : n === NEWS[0] && fresh.includes(n) ? `${pin && pin !== n ? 'Also new' : 'New'} in ${newsLabel(n).replace('Version', 'version')}` : newsLabel(n);
     const ul = document.createElement('ul'); for (const t of n.items) { const li = document.createElement('li'); li.textContent = t; ul.append(li); }
     d.append(h, ul); list.append(d);
   });
@@ -5686,7 +5753,12 @@ function exitTap() {
   if (gameKind === 'online') leaveRoom(false); else showMenu();
 }
 tapButton($('exitBtn'), exitTap);
-$('nameIn').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
+$('nameIn').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); const bad = isRudeName(profile.name); $('nameIn').classList.toggle('rude', bad); $('nameNote').hidden = !bad; });
+$('nameIn').addEventListener('change', (e) => {
+  if (!isRudeName(e.target.value)) return;
+  profile.name = 'Player'; e.target.value = ''; e.target.classList.remove('rude'); saveSoon(); setLobbyPresence();
+  $('nameNote').hidden = false;   // keep saying why the name was cleared
+});
 $('lockerName').addEventListener('input', (e) => { profile.name = e.target.value.slice(0, 14); saveSoon(); setLobbyPresence(); });
 $('lockerBtn').addEventListener('click', openLocker);
 $('lockerDone').addEventListener('click', showMenu);
@@ -5788,7 +5860,7 @@ document.addEventListener('click', (e) => { const t = e.target && e.target.close
 const clearTouches = () => { joy.active = false; joy.id = -1; input.tBoost = input.tBoost2 = false; };
 // If every finger is off the screen, nothing can still be held down, whatever pointer events got lost.
 for (const ev of ['touchend', 'touchcancel']) window.addEventListener(ev, (e) => { if (!e.touches || e.touches.length === 0) clearTouches(); }, { passive: true });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { if (gameKind === 'solo' && mode === 'play' && player && player.alive) pauseGame(); save(); clearTouches(); input.mBoost = input.kBoost = input.left = input.right = false; } if (online.room) sendPresence(performance.now(), true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { if (gameKind === 'solo' && mode === 'play' && player && player.alive) pauseGame(); save(); clearTouches(); input.mBoost = input.kBoost = input.left = input.right = false; } if (online.room) { if (!document.hidden && online.claim) online.yieldUntil = performance.now() + 3000; sendPresence(performance.now(), true); } });
 window.addEventListener('pageshow', () => setTimeout(onViewChange, 50));
 window.addEventListener('pagehide', () => { save(); if (online.kind === 'web' && online.room) { try { online.room.leave(); } catch (e) { /* ignore */ } } });
 // Phones can turn sideways without a resize event arriving in time (or at all inside an app). If the
