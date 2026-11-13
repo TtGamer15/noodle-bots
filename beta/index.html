@@ -260,6 +260,18 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .status{font-size:14px;line-height:1.5;color:var(--muted);padding:10px 12px;border-radius:12px;background:rgba(244,239,254,.06)}
 .status.warn{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--ink)}
 .joinrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+/* Thanksgiving menus (November only): warm colors, a turkey greeting and leaves falling behind the cards */
+#fallLeaves{position:absolute;inset:0;overflow:hidden;pointer-events:none;display:none}
+#app.fall.menuup #fallLeaves{display:block}
+#fallLeaves i{position:absolute;top:-60px;left:var(--x);width:var(--s);height:var(--s);background:var(--c);opacity:.85;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50.0 0.0 L57.0 20.0 L69.0 10.0 L67.0 30.0 L92.0 23.0 L81.0 41.0 L95.0 53.0 L71.0 57.0 L75.0 72.0 L54.0 65.0 L52.0 89.0 L48.0 89.0 L46.0 65.0 L25.0 72.0 L29.0 57.0 L5.0 53.0 L19.0 41.0 L8.0 23.0 L33.0 30.0 L31.0 10.0 L43.0 20.0 L50.0 0.0Z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50.0 0.0 L57.0 20.0 L69.0 10.0 L67.0 30.0 L92.0 23.0 L81.0 41.0 L95.0 53.0 L71.0 57.0 L75.0 72.0 L54.0 65.0 L52.0 89.0 L48.0 89.0 L46.0 65.0 L25.0 72.0 L29.0 57.0 L5.0 53.0 L19.0 41.0 L8.0 23.0 L33.0 30.0 L31.0 10.0 L43.0 20.0 L50.0 0.0Z'/%3E%3C/svg%3E") center/contain no-repeat;animation:nbLeaf var(--d) linear var(--dl) infinite;will-change:transform}
+@keyframes nbLeaf{0%{transform:translate3d(0,0,0) rotate(0deg)}25%{transform:translate3d(var(--sw),28vh,0) rotate(110deg)}50%{transform:translate3d(0,56vh,0) rotate(200deg)}75%{transform:translate3d(calc(var(--sw) * -1),84vh,0) rotate(290deg)}100%{transform:translate3d(0,calc(100vh + 120px),0) rotate(380deg)}}
+@media (prefers-reduced-motion:reduce){#fallLeaves{display:none!important}}
+#app.fall .screen{background:radial-gradient(ellipse at center,rgba(58,26,10,.26),rgba(20,9,6,.86))}
+#app.fall .card{background:linear-gradient(180deg,#2c1b22 0%,#21152c 100%);border-color:rgba(255,170,90,.34);box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 40px rgba(255,140,50,.08)}
+#app.fall .logo span{color:#ffc24d;text-shadow:4px 4px 0 #b5561d}
+.fallchip{justify-self:start;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,170,90,.45);background:linear-gradient(90deg,rgba(232,87,42,.22),rgba(255,196,77,.16));color:#ffd9a8;font:600 14px var(--f-body);cursor:pointer;text-align:left}
+.fallchip span{color:#ffc24d;text-decoration:underline;text-underline-offset:3px}
+.fallchip:hover{border-color:#ffb35c}
 #nameIn.rude{border-color:#ff7a7a;box-shadow:0 0 0 3px rgba(255,122,122,.25)}
 .namenote{margin:6px 2px 0;font-size:13px;color:#ff9a9a}
 .rolechip{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;vertical-align:1px}
@@ -625,12 +637,14 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
     </div>
   </div>
 
+  <div id="fallLeaves" aria-hidden="true"></div>
   <!-- Menu -->
   <section id="menu" class="screen">
     <div class="card wide">
       <div class="menu-grid">
       <div class="col">
       <h1 class="logo">Noodle <span>Bots</span></h1>
+      <button class="fallchip" id="fallChip" type="button" hidden>🦃 Happy Thanksgiving! <span>See what's new</span></button>
       <p class="tag">Eat, grow, and teach a bot to play exactly like you. Then hand it the controls whenever you need a break.</p>
       <div class="me-row">
         <canvas id="menuPreview" class="preview" aria-label="Your snake"></canvas>
@@ -758,6 +772,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       </div>
       <div class="group"><p class="lbl">Eyes</p><div class="opts" id="eyeRow"></div></div>
       <div class="group"><p class="lbl">Hat</p><div class="opts" id="hatRow"></div></div>
+      <div class="group"><p class="lbl">Trail</p><div class="opts" id="trRow"></div></div>
       <div class="group"><p class="lbl">Arena background</p><div class="opts" id="themeRow"></div></div>
       <div class="group"><p class="lbl">Music</p><div class="opts" id="musicStyleRow"></div><p class="bc-line" id="musicHint" hidden>Music is off right now. Picking one turns it on.</p></div>
       </div>
@@ -965,7 +980,7 @@ const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
 // BETA = the test copy at /noodle-bots/beta/. It keeps its own save and its own online channel, so testing never touches the real game.
 const BETA = true;
-const GAME_VERSION = '1.2.2';
+const GAME_VERSION = '1.3.0';
 const STORE_KEY = BETA ? 'noodlebots.beta' : 'noodlebots.v2', MOVES_KEY = STORE_KEY + '.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -1033,6 +1048,20 @@ function sha256hex(ascii) {
   return out;
 }
 const FALL_HATS = [10, 11, 12, 13, 14];   // computer snakes sometimes wear these in November
+// Trails: little things your snake leaves behind as it slithers. `life` is how long each bit lasts (s), `rate` how many per second.
+const TRAILS = [
+  { id: 'none', name: 'None' },
+  { id: 'sparkle', name: 'Sparkles', tag: '✨ New', life: 0.9, rate: 16 },
+  { id: 'bubble', name: 'Bubbles', tag: '✨ New', life: 1.3, rate: 10 },
+  { id: 'leaf', name: 'Fall leaves', tag: '🦃 New', life: 1.4, rate: 8 },
+  { id: 'feather', name: 'Turkey feathers', tag: '🦃 New', life: 1.3, rate: 8 },
+  { id: 'heart', name: 'Hearts', tag: '✨ New', life: 1.2, rate: 9, lock: { type: 'games', v: 15, text: 'Play 15 games' } },
+  { id: 'star', name: 'Stars', tag: '✨ New', life: 1.1, rate: 10, lock: { type: 'stars', v: 10, text: 'Get 10 ⭐' } },
+  { id: 'fire', name: 'Flames', tag: '✨ New', life: 0.7, rate: 26, lock: { type: 'kills', v: 10, text: 'Take out 10 snakes' } },
+  { id: 'rainbow', name: 'Rainbow', tag: '✨ New', life: 0.8, rate: 30, lock: { type: 'best', v: 2000, text: 'Reach length 2,000' } },
+];
+const TR_RAINBOW = 8;
+const trailNum = (v) => clamp(int(v), 0, TRAILS.length - 1);
 const LEVELS = [[0, 'Not trained yet'], [1, 'Hatchling'], [1000, 'Snack Hunter'], [2500, 'Slick Noodle'], [5000, 'Coil Master'], [9000, 'Arena Shark'], [15000, 'Mega Noodle'], [23000, 'Legend'], [33000, 'Your Twin'], [45000, 'Mythic Noodle'], [60000, 'Galaxy Brain'], [80000, 'Noodle Royalty'], [105000, 'Ultimate Twin']];
 // About 1,200 moves get recorded per minute of steering, so each level takes a little longer than the last (about 1 to 20 minutes of play).
 
@@ -1116,8 +1145,9 @@ function unpackLook(n) {
 // A custom snake is a list of palette colors, head first, that repeats down the body.
 function parseSkin(v) { if (typeof v !== 'string' || !/^[0-9]{1,20}$/.test(v)) return null; return [...v].map(Number).filter((k) => k < PALETTE.length); }
 function skinStr() { return profile.look.pat === CUSTOM_PAT && profile.skin.length ? profile.skin.join('') : null; }
-function lookToSlot() { const c = packLook(profile.look), k = skinStr(); return k ? `${c}|${k}` : c; }
-function slotToLook(v) { if (typeof v === 'number') return { look: unpackLook(v), skin: null }; const p = String(v).split('|'); return { look: unpackLook(+p[0]), skin: parseSkin(p[1]) }; }
+function lookToSlot() { const c = packLook(profile.look) + 1000000 * (profile.look.tr || 0), k = skinStr(); return k ? `${c}|${k}` : c; }
+const slotLook = (n) => Object.assign(unpackLook(n), { tr: trailNum(Math.floor(Math.max(0, n) / 1000000) % 10) });
+function slotToLook(v) { if (typeof v === 'number') return { look: slotLook(v), skin: null }; const p = String(v).split('|'); return { look: slotLook(+p[0]), skin: parseSkin(p[1]) }; }
 function bytesToB64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
 function b64ToBytes(b) { const s = atob(b); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
 
@@ -1126,7 +1156,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false, retroRight: false, clean: false },
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0, tr: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false, retroRight: false, clean: false },
   fid: '', friends: [], fOut: [], fBlock: [],
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
@@ -1146,7 +1176,8 @@ function applyProfileData(p) {
   for (const k of ['acc', 'near']) if (p[k] === null || (typeof p[k] === 'number' && isFinite(p[k]))) profile[k] = p[k] === null ? null : clamp(p[k], 0, 1);
   if (typeof p.name === 'string') profile.name = p.name.slice(0, 14);
   if (typeof p.look === 'number' && isFinite(p.look)) profile.look = unpackLook(p.look);
-  if (Array.isArray(p.slots)) profile.slots = [0, 1, 2].map((i) => { const v = p.slots[i]; if (typeof v === 'number' && isFinite(v)) return Math.max(0, Math.floor(v)); if (typeof v === 'string' && /^\d{1,6}\|[0-9]{1,20}$/.test(v)) return v; return null; });
+  profile.look.tr = typeof p.trail === 'number' && isFinite(p.trail) ? trailNum(p.trail) : profile.look.tr || 0;
+  if (Array.isArray(p.slots)) profile.slots = [0, 1, 2].map((i) => { const v = p.slots[i]; if (typeof v === 'number' && isFinite(v)) return Math.max(0, Math.floor(v)); if (typeof v === 'string' && /^\d{1,7}\|[0-9]{1,20}$/.test(v)) return v; return null; });
   if (Array.isArray(p.skin)) profile.skin = p.skin.filter((k) => Number.isInteger(k) && k >= 0 && k < PALETTE.length).slice(0, SKIN_MAX); else if (typeof p.skin === 'string') profile.skin = parseSkin(p.skin) || [];
   if (Array.isArray(p.npcPool)) profile.npcPool = p.npcPool.slice(0, 12)
     .filter((e) => e && Array.isArray(e.g) && e.g.length === GENES.length && e.g.every((v) => typeof v === 'number' && isFinite(v)) && typeof e.f === 'number' && isFinite(e.f))
@@ -1192,7 +1223,7 @@ function load() {
 // Your settings, stats and bot brain are small and get saved often. The list of recorded moves is big
 // (a few megabytes), so it's only saved when you're not in the middle of a game, which keeps play smooth.
 function save(withMoves) {
-  const p = Object.assign({}, profile, { look: packLook(profile.look) });
+  const p = Object.assign({}, profile, { look: packLook(profile.look), trail: profile.look.tr || 0 });
   const d = { v: 3, profile: p, newSince, weights: brain && profile.sessions > 0 ? bytesToB64(getWeightBytes(brain)) : null };
   let ok = false;
   try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); ok = true; } catch (e) { /* storage full or blocked */ }
@@ -1226,7 +1257,7 @@ function isUnlocked(item) {
   return false;
 }
 let unlockedKeys = null;
-function unlockSnapshot() { const s = new Set(); for (const [arr, tag] of [[PATTERNS, 'p'], [EYES, 'e'], [HATS, 'h']]) arr.forEach((it, i) => { if (isUnlocked(it)) s.add(tag + i); }); return s; }
+function unlockSnapshot() { const s = new Set(); for (const [arr, tag] of [[PATTERNS, 'p'], [EYES, 'e'], [HATS, 'h'], [TRAILS, 't']]) arr.forEach((it, i) => { if (isUnlocked(it)) s.add(tag + i); }); return s; }
 function creditKill(name) { profile.kills++; toast(`You took out ${name}`); SFX.kill(); checkUnlocks(); chal('kill'); }
 /* ---------- trophies ---------- */
 const ACH = [
@@ -1341,7 +1372,7 @@ function updateDailyCard() {
 function checkUnlocks() {
   const now = unlockSnapshot();
   if (unlockedKeys) {
-    const fresh = [...now].filter((k) => !unlockedKeys.has(k)).map((k) => (k[0] === 'p' ? PATTERNS : k[0] === 'e' ? EYES : HATS)[+k.slice(1)].name);
+    const fresh = [...now].filter((k) => !unlockedKeys.has(k)).map((k) => (k[0] === 'p' ? PATTERNS : k[0] === 'e' ? EYES : k[0] === 't' ? TRAILS : HATS)[+k.slice(1)].name);
     if (fresh.length) { toast(fresh.length <= 2 ? `New in your locker: ${fresh.join(' and ')}` : `${fresh.length} new things in your locker!`); SFX.unlock(); }
   }
   unlockedKeys = now;
@@ -3365,8 +3396,8 @@ function applyPeer(peer, pr, now) {
   }
   rs.d = d;
   if (aliveNow && !rs.snake) {
-    const s = makeSnake({ kind: 'remote', name: rs.name, look: unpackLook(pr.s), skin: parseSkin(pr.sk), mass: num(pr.m, START_MASS), pos: [num(pr.x), num(pr.y)], ang: num(pr.a) });
-    s.peer = peer; s.netD = d; s.errX = 0; s.errY = 0; s.grace = 0; s.lookCode = pr.s; s.skinCode = typeof pr.sk === 'string' ? pr.sk : null;
+    const s = makeSnake({ kind: 'remote', name: rs.name, look: Object.assign(unpackLook(pr.s), { tr: trailNum(pr.tr) }), skin: parseSkin(pr.sk), mass: num(pr.m, START_MASS), pos: [num(pr.x), num(pr.y)], ang: num(pr.a) });
+    s.peer = peer; s.netD = d; s.errX = 0; s.errY = 0; s.grace = 0; s.lookCode = int(pr.s) * 10 + trailNum(pr.tr); s.skinCode = typeof pr.sk === 'string' ? pr.sk : null;
     setNet(s, num(pr.x), num(pr.y), num(pr.a), num(pr.m, START_MASS), !!pr.b, now, pr.w, pr.sp);
     s.errX = 0; s.errY = 0; for (const p of s.segs) { p.x = s.x; p.y = s.y; }
     snakes.push(s); rs.snake = s; syncRoles();
@@ -3374,7 +3405,8 @@ function applyPeer(peer, pr, now) {
     const s = rs.snake;
     setNet(s, num(pr.x), num(pr.y), num(pr.a), num(pr.m, s.mass), !!pr.b, now, pr.w, pr.sp);
     s.name = rs.name; const sk = typeof pr.sk === 'string' ? pr.sk : null;
-    if (s.lookCode !== pr.s || s.skinCode !== sk) { s.lookCode = pr.s; s.skinCode = sk; applyLook(s, unpackLook(pr.s), parseSkin(sk)); }
+    const lc = int(pr.s) * 10 + trailNum(pr.tr);
+    if (s.lookCode !== lc || s.skinCode !== sk) { s.lookCode = lc; s.skinCode = sk; applyLook(s, Object.assign(unpackLook(pr.s), { tr: trailNum(pr.tr) }), parseSkin(sk)); }
   }
   if (aliveNow && rs.snake) setNetPath(rs.snake, pr, now);
   hearChat(rs, pr, now);
@@ -3511,7 +3543,7 @@ function sendPresence(now, force) {
   if (online.eatLog.length > 70) online.eatLog.splice(0, online.eatLog.length - 70);
   online.nk = online.nk.filter((e) => now - e.t < 3000);
   const p = player, alive = !!(p && p.alive);
-  const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), rl: myRole || undefined, p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
+  const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), tr: profile.look.tr || undefined, rl: myRole || undefined, p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
     h: online.claim ? 1 : 0, e: online.eatLog.map((x) => x.id), kb: lastKiller, hid: document.hidden ? 1 : null };
   if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; pr.bd = half ? 0 : bodyDeltas(p); const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
     pr.fx = p.fx ? [FX_CODE[p.fx] || 0, Math.round(p.fxEnd - now), p.fxUse || 0, p.hold ? 1 : 0] : null; pr.sl = p.slowEnd > now ? Math.round(p.slowEnd - now) : null; }
@@ -3722,6 +3754,116 @@ function drawSnakeBody(c, s, b, t, now, z) {
   if (vis(segs[0])) { drawEyes(c, s, now); if (s.role === 'L' && match.m === 'ctl') drawLeaderCrown(c, s); else drawHat(c, s, now); if (s.bot) drawAntenna(c, s, now); }
   c.globalAlpha = 1;
 }
+/* ---------- trails ----------
+   Each snake keeps its own short list of trail bits, dropped at its tail as it moves. Computer snakes: about
+   1 in 5 has one of the free trails, picked from its id, so everyone in a room sees the same ones. */
+function trailOf(s) {
+  if (s.kind === 'npc' || s.kind === 'rnpc') { const k = s.npcId != null ? s.npcId : s.id, hsh = Math.imul((k | 0) + 7, 2654435761) >>> 0; return hsh % 100 < 22 ? 1 + ((hsh >>> 9) % 4) : 0; }
+  return (s.look && s.look.tr) || 0;
+}
+function heartPath(c, x, y, z) {
+  c.beginPath(); c.moveTo(x, y + z * 0.38);
+  c.bezierCurveTo(x - z * 1.05, y - z * 0.35, x - z * 0.5, y - z * 1.05, x, y - z * 0.45);
+  c.bezierCurveTo(x + z * 0.5, y - z * 1.05, x + z * 1.05, y - z * 0.35, x, y + z * 0.38); c.closePath();
+}
+let trailLeafSprites = null;
+// One trail bit. age 0..1, k = its own random number, r = the snake's size.
+function drawTrailBit(c, id, x, y, age, k, r, now, light) {
+  const fade = 1 - age * age;
+  if (id === 1) {   // sparkle: a twinkling four-point star
+    const z = r * 0.85 * (1 - age * 0.6) * (0.7 + 0.3 * Math.sin(now * 0.025 + k * 40)), w = z * 0.26;
+    c.globalAlpha = fade; c.fillStyle = light ? '#d99a00' : k < 0.5 ? '#fff6c4' : '#ffe066';
+    c.beginPath(); c.moveTo(x, y - z); c.lineTo(x + w, y - w); c.lineTo(x + z, y); c.lineTo(x + w, y + w); c.lineTo(x, y + z); c.lineTo(x - w, y + w); c.lineTo(x - z, y); c.lineTo(x - w, y - w); c.closePath(); c.fill();
+  } else if (id === 2) {   // bubble, popping at the end
+    const z = r * (0.36 + 0.24 * k) * (1 + age * 0.45);
+    c.globalAlpha = age < 0.86 ? 0.9 : (1 - age) / 0.14 * 0.9; c.strokeStyle = light ? '#2f8fc4' : 'rgba(180,235,255,1)'; c.lineWidth = Math.max(1, r * 0.06);
+    c.beginPath(); c.arc(x, y, age < 0.86 ? z : z * (1 + (age - 0.86) * 4), 0, TAU); c.stroke();
+    if (age < 0.86) { c.fillStyle = light ? 'rgba(47,143,196,0.18)' : 'rgba(180,235,255,0.14)'; c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.arc(x - z * 0.35, y - z * 0.35, z * 0.22, 0, TAU); c.fill(); }
+  } else if (id === 3) {   // fall leaf, tumbling
+    if (!trailLeafSprites) trailLeafSprites = LEAF_COLS.map((col) => { const cv = document.createElement('canvas'); cv.width = cv.height = 48; drawMaple(cv.getContext('2d'), 24, 24, 44, 0, col, 'rgba(90,30,10,0.5)'); return cv; });
+    const z = r * 1.8, flip = Math.max(0.25, Math.abs(Math.cos(now * 0.004 + k * 9)));
+    c.globalAlpha = fade; c.save(); c.translate(x, y); c.rotate(k * 9 + now * 0.002 * (k < 0.5 ? 1 : -1)); c.scale(flip, 1); c.drawImage(trailLeafSprites[Math.floor(k * LEAF_COLS.length)], -z / 2, -z / 2, z, z); c.restore();
+  } else if (id === 4) {   // turkey feather, spinning slowly
+    const z = r * 1.0, a = k * 9 + now * 0.0018, ca = Math.cos(a), sa = Math.sin(a), col = FEATHER[Math.floor(k * FEATHER.length)];
+    c.globalAlpha = fade; c.fillStyle = col; c.beginPath(); c.ellipse(x, y, z, z * 0.36, a, 0, TAU); c.fill();
+    c.fillStyle = FEATHER_D[Math.floor(k * FEATHER.length)]; c.beginPath(); c.ellipse(x + ca * z * 0.45, y + sa * z * 0.45, z * 0.3, z * 0.3, a, 0, TAU); c.fill();
+    c.fillStyle = '#fff3dc'; c.beginPath(); c.ellipse(x + ca * z * 0.82, y + sa * z * 0.82, z * 0.14, z * 0.26, a, 0, TAU); c.fill();
+    c.strokeStyle = 'rgba(60,30,12,0.6)'; c.lineWidth = Math.max(1, r * 0.06); c.beginPath(); c.moveTo(x - ca * z * 1.1, y - sa * z * 1.1); c.lineTo(x + ca * z * 0.8, y + sa * z * 0.8); c.stroke();
+  } else if (id === 5) {   // heart, popping in then floating off
+    const z = r * 0.75 * (age < 0.15 ? 0.6 + age / 0.15 * 0.55 : 1.15 - (age - 0.15) * 0.35);
+    c.globalAlpha = fade; heartPath(c, x, y, z); c.fillStyle = k < 0.5 ? '#ff5d9e' : '#ff8fc0'; c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.55)'; c.beginPath(); c.arc(x - z * 0.4, y - z * 0.45, z * 0.16, 0, TAU); c.fill();
+  } else if (id === 6) {   // star, spinning
+    const z = r * 0.82 * (1 - age * 0.45);
+    c.globalAlpha = fade; c.save(); c.translate(x, y); c.rotate(k * 7 + now * 0.004); drawStar(c, 0, 0, z, light ? '#e0a000' : k < 0.5 ? '#ffd447' : '#ffe58a'); c.restore();
+  } else if (id === 7) {   // flame: yellow, then orange, red, and a puff of smoke
+    const z = r * 0.72 * (1 - age * 0.5) * (0.85 + 0.3 * k);
+    const col = age < 0.25 ? '#ffe066' : age < 0.5 ? '#ff9f2b' : age < 0.75 ? '#ff4a1c' : 'rgba(110,100,100,1)';
+    c.globalAlpha = age < 0.75 ? 0.9 * fade : 0.4 * (1 - age) / 0.25; c.fillStyle = col; c.beginPath(); c.arc(x, y, z, 0, TAU); c.fill();
+  }
+  c.globalAlpha = 1;
+}
+// The rainbow is a ribbon through the bits, in order.
+function drawRainbow(c, pts, r) {
+  c.lineCap = 'round';
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i]; if (Math.hypot(a.x - b.x, a.y - b.y) > r * 5) continue;
+    const age = Math.max(a.age, b.age); if (age >= 1) continue;
+    c.globalAlpha = 0.85 * (1 - age); c.strokeStyle = `hsl(${Math.round(b.hue) % 360},92%,62%)`; c.lineWidth = r * 1.25 * (1 - age * 0.55);
+    c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
+  }
+  c.globalAlpha = 1;
+}
+let trailLast = 0;
+function drawTrails(c, b, now) {
+  const dt = trailLast ? Math.min(0.1, Math.max(0, (now - trailLast) / 1000)) : 0; trailLast = now;
+  const light = !!THEMES[themeCur].light, cut = profile.set.smooth ? 0.5 : 1;
+  for (const s of snakes) {
+    const id = trailOf(s), L = s.trp;
+    if (!id && !(L && L.length)) continue;
+    if (!s.trp) s.trp = [];
+    const T = TRAILS[id], n = s.segs.length;
+    if (id && T && n > 2 && !s.predDead && s.alive !== false && !(s === player && !player.alive)) {
+      const tl = s.segs[n - 1], pv = s.segs[n - 2];
+      if (tl.x > b.x0 - 400 && tl.x < b.x1 + 400 && tl.y > b.y0 - 400 && tl.y < b.y1 + 400) {
+        s.tra = (s.tra || 0) + dt * T.rate * (s.boosting ? 1.8 : 1) * cut;
+        let bx = tl.x - pv.x, by = tl.y - pv.y; const d = Math.hypot(bx, by) || 1; bx /= d; by /= d;
+        while (s.tra >= 1 && s.trp.length < 60) {
+          s.tra -= 1; const k = Math.random(), j = (Math.random() - 0.5) * s.r * (id === TR_RAINBOW ? 0 : 1.6), sp = id === TR_RAINBOW ? 0 : s.r * (0.8 + Math.random() * 1.6);
+          s.trp.push({ x: tl.x - by * j, y: tl.y + bx * j, vx: bx * sp - by * (Math.random() - 0.5) * s.r, vy: by * sp + bx * (Math.random() - 0.5) * s.r, t0: now, life: T.life * (0.8 + 0.4 * Math.random()), k, hue: (now * 0.3) % 360 });
+        }
+        if (s.tra > 1) s.tra = 1;
+      }
+    }
+    const P = s.trp, rise = id === 2 ? 14 : id === 5 ? 20 : id === 7 ? 10 : 0;
+    while (P.length && (now - P[0].t0) / 1000 > P[0].life) P.shift();
+    if (!P.length) continue;
+    if (id === TR_RAINBOW) { drawRainbow(c, P.map((q) => ({ x: q.x, y: q.y, age: (now - q.t0) / 1000 / q.life, hue: q.hue })), s.r); continue; }
+    if (id === 7 && !light) c.globalCompositeOperation = 'lighter';
+    for (const q of P) {
+      const t = (now - q.t0) / 1000, age = t / q.life; if (age >= 1) continue;
+      const x = q.x + q.vx * t, y = q.y + q.vy * t - rise * t * (1 + q.k);
+      if (x < b.x0 - 60 || x > b.x1 + 60 || y < b.y0 - 60 || y > b.y1 + 60) continue;
+      drawTrailBit(c, id || trailOf(s), x, y, age, q.k, s.r, now, light);
+    }
+    c.globalCompositeOperation = 'source-over';
+  }
+}
+// In Customize and the menu the snake stands still, so the trail streams off its tail instead.
+function drawTrailPreview(c, s, id, now, light) {
+  const T = TRAILS[id]; if (!id || !T || s.segs.length < 3) return;
+  const tl = s.segs[s.segs.length - 1], pv = s.segs[s.segs.length - 2];
+  let bx = tl.x - pv.x, by = tl.y - pv.y; const d = Math.hypot(bx, by) || 1; bx /= d; by /= d;
+  const N = id === TR_RAINBOW ? 28 : 11, span = s.r * 8, pts = [];
+  for (let k = 0; k < N; k++) {
+    const ph = ((now / 1000) / T.life + k / N) % 1, seed = (k * 0.618034) % 1, j = id === TR_RAINBOW ? Math.sin(now * 0.004 - ph * 5) * s.r * 0.8 : (seed - 0.5) * s.r * 1.3 * (1 + ph);
+    pts.push({ x: tl.x + bx * ph * span - by * j, y: tl.y + by * ph * span + bx * j - (id === 2 || id === 5 ? ph * s.r * 1.5 : 0), age: ph, k: seed, hue: (now * 0.3 + ph * 300) % 360 });
+  }
+  if (id === TR_RAINBOW) { pts.sort((p, q) => p.age - q.age); drawRainbow(c, pts, s.r); return; }
+  if (id === 7 && !light) c.globalCompositeOperation = 'lighter';
+  for (const p of pts) drawTrailBit(c, id, p.x, p.y, p.age, p.k, s.r, now, light);
+  c.globalCompositeOperation = 'source-over';
+}
 function drawStar(c, x, y, rad, col) {
   c.fillStyle = col; c.beginPath();
   for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? rad * 0.45 : rad; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
@@ -3918,6 +4060,7 @@ function render(now) {
   ctx.globalAlpha = 1;
 
   const air = [];
+  drawTrails(ctx, b, now);
   for (const s of snakes) if (s !== player && !s.predDead) { if (s.fx === 'jump') air.push(s); else drawSnake(ctx, s, b, t, now, z); }
   if (player && player.alive) { if (player.fx === 'jump') air.push(player); else drawSnake(ctx, player, b, t, now, z); }
   for (const s of air) drawSnake(ctx, s, b, t, now, z);
@@ -3986,6 +4129,7 @@ function drawPreview(cv, look, now, skin) {
   const ph = now * 0.004;
   for (let i = 0; i < n; i++) { const x = headX - i * s.r * 0.45; s.segs.push({ x, y: cy + Math.sin(ph - i * 0.32) * h * 0.16 }); }
   s.ang = Math.atan2(s.segs[0].y - s.segs[1].y, s.segs[0].x - s.segs[1].x); s.targetAng = s.ang + Math.sin(now * 0.0015) * 0.6;
+  drawTrailPreview(c, s, (look && look.tr) || 0, now, !!th.light);
   drawSnake(c, s, { x0: -1e5, x1: 1e5, y0: -1e5, y1: 1e5 }, Math.floor(now / 50) % 36, now, 1);
 }
 
@@ -3996,7 +4140,19 @@ let screenAt = 0, lastDownAt = 0;
 addEventListener('pointerdown', () => { lastDownAt = performance.now(); }, true);
 // A finger that was already down (steering) when a screen popped up shouldn't press its buttons.
 const popGuard = (fn) => (e) => { if (e && e.detail === 0) { fn(e); return; } const now = performance.now(); if (now - screenAt < 350 || lastDownAt < screenAt) return; fn(e); };
-function showScreen(name) { if (name && $(name).hidden) screenAt = performance.now(); for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('playing', (mode === 'play' || mode === 'spec') && !name); }
+function showScreen(name) { if (name && $(name).hidden) screenAt = performance.now(); for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('menuup', !!name); app.classList.toggle('playing', (mode === 'play' || mode === 'spec') && !name); }
+// November: the menus get a Thanksgiving look (it turns itself off on December 1).
+const FALL_MENU = new Date().getMonth() === 10;
+const FALL_BG = () => [THEMES.findIndex((t) => t.name === 'Harvest Moon'), THEMES.findIndex((t) => t.name === 'Autumn Park')];
+if (FALL_MENU) {
+  app.classList.add('fall'); $('fallChip').hidden = false; $('fallChip').addEventListener('click', () => openNews(false));
+  const box = $('fallLeaves'), cols = ['#e0452e', '#f28c28', '#f7c948', '#c0392b', '#e8732a', '#b5651d'];
+  for (let i = 0; i < 16; i++) {
+    const el = document.createElement('i'), dur = 9 + Math.random() * 9;
+    el.style.cssText = `--x:${(Math.random() * 100).toFixed(1)}%;--s:${Math.round(16 + Math.random() * 20)}px;--c:${cols[i % cols.length]};--d:${dur.toFixed(1)}s;--dl:${(-Math.random() * dur).toFixed(1)}s;--sw:${Math.round(20 + Math.random() * 50)}px`;
+    box.append(el);
+  }
+}
 /* ---------- quick chat: preset messages only, so it stays friendly ---------- */
 const QC = ['GG!', 'Nice one!', 'Help!', 'Watch this!', 'Oops!', '😂'];
 let qcSeq = 0, qcLast = -1e9, myChat = null;
@@ -4037,6 +4193,7 @@ function drawChat(s, h, top, z, now) {
 }
 /* ---------- what's new: shows once after each update ---------- */
 const NEWS = [
+  { v: '1.3.0', items: ['✨ Snake trails! Pick one in Customize snake: Sparkles, Bubbles, Fall leaves, Turkey feathers, Hearts, Stars, Flames or Rainbow. A few of them unlock as you play.', 'Everyone in an online room sees your trail, and some computer snakes leave trails too.', '🍂 The menus are dressed up for Thanksgiving all November.'] },
   { v: '1.2.2', items: ['Online rooms run much smoother, even on slow internet. Updates are smaller, the game sends them a little less often if someone can\'t keep up, and it catches up instead of falling further and further behind.', 'If the player running the computer snakes leaves the app, someone else takes over right away, so the computer snakes don\'t freeze.', 'Rude names are blocked. They show up as "Player".', 'Playing with friends? Everyone needs this version to join the same room, so tell them to refresh the page.'] },
   { v: '1.2.1', items: ['Roles! Some players get a special role next to their name: 👑 Owner, 💡 Weird Idea Maker or 💎 Elite. Everyone sees it on the name tag, the leaderboard and in friends lists.', 'Got a role code from TtGamer15? Go to Settings → Role code and type it in. Each code works one time.'] },
   { v: '1.2.0', pin: '🦃 The Thanksgiving update', until: '2026-12-01', items: ['🦃 The Thanksgiving update! 5 new hats: Turkey hat, Pilgrim hat, Leaf crown, Chef hat and Pumpkin pie hat. Find them in Customize snake with a 🦃 New tag.', 'New eyes: Stuffed (happy and full) and Hungry (watch the tongue).', 'New patterns: Autumn, in red, orange and gold leaf colors, and Turkey feathers.', 'New backgrounds: Harvest Moon and Autumn Park, with leaves falling across the arena.', 'All through November, computer snakes sometimes show up in the new hats too.'] },
@@ -4621,7 +4778,7 @@ function buildLocker() {
       row.append(b);
     });
   };
-  mkOpts('patRow', PATTERNS, 'pat'); mkOpts('eyeRow', EYES, 'eye'); mkOpts('hatRow', HATS, 'hat');
+  mkOpts('patRow', PATTERNS, 'pat'); mkOpts('eyeRow', EYES, 'eye'); mkOpts('hatRow', HATS, 'hat'); mkOpts('trRow', TRAILS, 'tr');
   const custom = (profile.look.pat === CUSTOM_PAT && profile.skin.length > 0) || !!PAT_OWN_COLOR[profile.look.pat];
   $('c1Group').hidden = custom; $('c2Lbl').textContent = custom ? 'Hat color' : 'Second color (and hat)';
   buildBuilder();
@@ -5121,7 +5278,7 @@ const THEMES = [
   { name: 'Harvest Moon', floor: '#1a1026', edge: '#ffa34d', style: 'moon', ink: 'rgba(255,214,160,0.8)', leaves: true },
   { name: 'Autumn Park', light: true, floor: '#efdcae', edge: '#c4561c', style: 'park', ink: 'rgba(150,110,40,0.35)', leaves: true },
 ];
-let themeCur = 0, themePrev = 0, themeFade = 1, themeClock = 0;
+let themeCur = 0, themePrev = 0, themeFade = 1, themeClock = 0, fallBgOn = false;
 function rng(sd) { return () => { sd = (sd + 0x6d2b79f5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function tileFor(th) {
   if (th.tile) return th.tile;
@@ -5204,7 +5361,15 @@ function paintPage() {
 }
 function updateTheme(dt) {
   if (themeFade < 1) themeFade = Math.min(1, themeFade + dt / 2.5);
-  if (profile.theme < 0) { themeClock += dt; if (themeClock > 45) { themeClock = 0; setTheme((themeCur + 1) % THEMES.length); } }
+  // November: behind the menus (not in Customize, where you pick your map) the fall maps take turns; your own map comes back when you play.
+  const fb = FALL_MENU && app.classList.contains('menuup') && $('locker').hidden ? FALL_BG() : null;
+  if (fb) {
+    fallBgOn = true; if (!fb.includes(themeCur)) { themeClock = 0; setTheme(fb[0]); }
+    themeClock += dt; if (themeClock > 45) { themeClock = 0; setTheme(fb[(fb.indexOf(themeCur) + 1) % 2]); }
+  } else {
+    if (fallBgOn) { fallBgOn = false; themeClock = 0; if (profile.theme >= 0) setTheme(profile.theme); }
+    if (profile.theme < 0) { themeClock += dt; if (themeClock > 45) { themeClock = 0; setTheme((themeCur + 1) % THEMES.length); } }
+  }
 }
 function drawThemeLayer(th, a, b, now) {
   if (a <= 0.01) return;
@@ -5586,7 +5751,7 @@ async function unzipEntry(e) {
 const slug = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 20);
 function buildSaveZip() {
   const enc = new TextEncoder();
-  const data = { format: 'noodle-bots-save', version: 1, savedAt: new Date().toISOString(), profile: Object.assign({}, profile, { look: packLook(profile.look) }), newSince };
+  const data = { format: 'noodle-bots-save', version: 1, savedAt: new Date().toISOString(), profile: Object.assign({}, profile, { look: packLook(profile.look), trail: profile.look.tr || 0 }), newSince };
   const files = [{ name: 'noodlebots-save.json', data: enc.encode(JSON.stringify(data, null, 2)) }];
   if (botReady()) files.push({ name: 'bot-brain.bin', data: getWeightBytes(brain) });
   if (sampCount > 0) files.push({ name: 'moves.bin', data: packSamples(SAVE_SAMPLES) });
@@ -5938,7 +6103,7 @@ function boot() {
   $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}${BETA ? ' BETA' : ''} · What's new`;
   ensureDaily(); buildChat(); updateDailyCard(); loadRivals(); applySettings(); updateTutBtn(); checkAch(true);
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
-  themeCur = themePrev = profile.theme >= 0 ? profile.theme : 0; paintPage(); syncSoundUI();
+  themeCur = themePrev = FALL_MENU ? FALL_BG()[0] : profile.theme >= 0 ? profile.theme : 0; fallBgOn = FALL_MENU; paintPage(); syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
   padSetup(); if (padGet()) GP.connected = true;
   showScreen('menu'); maybeShowNews();
