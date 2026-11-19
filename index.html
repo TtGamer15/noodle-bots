@@ -138,12 +138,12 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .savemsg{font-size:13px;color:var(--muted);min-height:1.2em}
 .version{font:500 12px var(--f-num);color:var(--muted);text-align:center;letter-spacing:.08em;opacity:.8;appearance:none;background:none;border:0;padding:6px;margin:0 auto;display:block;cursor:pointer}
 .version:hover,.version:focus-visible{opacity:1;color:var(--ink);text-decoration:underline}
-.news{display:grid;gap:14px}
-.news h3{margin:0 0 6px;font:700 13px var(--f-num);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
-.news ul{margin:0;padding-left:20px;display:grid;gap:6px;line-height:1.4}
-.news .old h3{color:var(--muted)}
-.news .old{opacity:.85}
+.news ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.news li{display:grid;grid-template-columns:1.7em minmax(0,1fr);gap:6px;line-height:1.4}
+.news .em{font-size:17px;line-height:1.3}
+#newsTitle{font-size:20px;line-height:1.2}
 .card.wide{max-width:980px}
+.card.menucard{max-width:520px}
 .btn,.opt,.swatch,.chipbtn,.switch{touch-action:manipulation}
 .iqline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .iqbar{width:64px;height:6px;border-radius:999px;background:rgba(244,239,254,.12);overflow:hidden;flex:none}
@@ -269,11 +269,6 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .fallchip:hover{border-color:#ffb35c}
 #nameIn.rude{border-color:#ff7a7a;box-shadow:0 0 0 3px rgba(255,122,122,.25)}
 .namenote{margin:6px 2px 0;font-size:13px;color:#ff9a9a}
-.rolechip{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;vertical-align:1px}
-.input.rolein{letter-spacing:.06em;text-transform:uppercase}
-.rolemsg:empty{display:none}
-.rolemsg.bad{color:#ff9a9a}
-.rolemsg.good{color:#8ff0b0}
 .code{font-family:var(--f-num);font-weight:700;letter-spacing:.3em;text-transform:uppercase}
 .roomlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .roomlist li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 8px 8px 12px;border:1px solid var(--line);border-radius:12px;font-size:13px}
@@ -499,18 +494,6 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .chatpop button{flex:1 1 auto;appearance:none;border:1px solid var(--line);background:rgba(244,239,254,.08);color:var(--ink);font:600 14px var(--f-body);padding:9px 12px;border-radius:12px;cursor:pointer;touch-action:manipulation;white-space:nowrap}
 .chatpop button:active{transform:translateY(1px)}
 .chatpop button:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
-/* ---------- daily challenges ---------- */
-.daily{border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);background:color-mix(in srgb,var(--accent) 6%,transparent);border-radius:16px;padding:14px;display:grid;gap:10px}
-.daily-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.stars{font:700 15px var(--f-num);color:var(--accent);font-variant-numeric:tabular-nums}
-.chal-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.chal-list li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:4px 10px;align-items:center;font-size:14px}
-.chal-list .chk{grid-row:span 2;width:24px;height:24px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;font:700 12px var(--f-num);color:var(--muted)}
-.chal-list li.done .chk{background:var(--accent);border-color:transparent;color:var(--accent-ink)}
-.chal-list li.done .ct{color:var(--muted);text-decoration:line-through}
-.chal-list .cp{font:500 12px var(--f-num);color:var(--muted);font-variant-numeric:tabular-nums}
-.chal-list .meter{grid-column:2 / 4}
-.chal-list .meter > div{background:var(--accent)}
 /* ---------- menu links, coach, stats, settings ---------- */
 .menu-links{display:flex;flex-wrap:wrap;gap:8px}
 .menu-links .btn{flex:1 1 auto}
@@ -635,16 +618,14 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   <div id="fallLeaves" aria-hidden="true"></div>
   <!-- Menu -->
   <section id="menu" class="screen">
-    <div class="card wide">
-      <div class="menu-grid">
-      <div class="col">
+    <div class="card menucard">
       <h1 class="logo">Noodle <span>Bots</span></h1>
       <button class="fallchip" id="fallChip" type="button" hidden>🦃 Happy Thanksgiving! <span>See what's new</span></button>
       <p class="tag">Eat, grow, and teach a bot to play exactly like you. Then hand it the controls whenever you need a break.</p>
       <div class="me-row">
         <canvas id="menuPreview" class="preview" aria-label="Your snake"></canvas>
         <div class="me-info">
-          <label class="lbl" for="nameIn">Your name <span class="rolechip" id="roleChip" hidden></span></label>
+          <label class="lbl" for="nameIn">Your name</label>
           <input id="nameIn" class="input" type="text" name="nb-nick" maxlength="14" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Player">
           <p class="namenote" id="nameNote" role="status" hidden>That name isn't allowed. Try a different one!</p>
           <button class="btn small" id="lockerBtn" type="button">Customize snake</button>
@@ -661,14 +642,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
           <button type="button" class="modetab" data-mode="bb" aria-pressed="false">Bot Battle</button>
         </div>
         <p class="modeinfo" id="modeInfo"></p>
-        <div class="optrow" id="optCtl" hidden><span class="lbl">Teams</span><button type="button" class="opt" data-ctl="1">1v1</button><button type="button" class="opt" data-ctl="2">2v2</button><button type="button" class="opt" data-ctl="3">3v3</button></div>
-        <div class="optrow" id="optBase" hidden><span class="lbl">Play</span><button type="button" class="opt" data-base="classic">Classic</button><button type="button" class="opt" data-base="tag">Tag</button><button type="button" class="opt" data-base="br">Shrinking Arena</button></div>
         <div class="abils" id="optAbil" hidden role="group" aria-label="Your power"></div>
         <p class="modeinfo" id="abilInfo" hidden></p>
-        <div class="optrow" id="optTag" hidden><button type="button" class="opt" data-tag="1v1">1v1<small>Pass It on</small></button><button type="button" class="opt" data-tag="run">Run<small>You vs 3 hunters</small></button><button type="button" class="opt" data-tag="hunt">Hunt<small>You + 2 bots vs 1</small></button></div>
-        <div class="optrow" id="optBots" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-bots="1">1</button><button type="button" class="opt" data-bots="3">3</button><button type="button" class="opt" data-bots="6">6</button><button type="button" class="opt" data-bots="9">9</button></div>
-        <div class="optrow" id="optDiff" hidden><span class="lbl">Bots</span><button type="button" class="opt" data-diff="easy">Easy</button><button type="button" class="opt" data-diff="normal">Normal</button><button type="button" class="opt" data-diff="hard">Hard</button></div>
-        <div class="group" id="optRivals" hidden><p class="lbl">Friends' bots</p><div class="rivals" id="rivalList"></div><input type="file" id="rivalIn" class="vh" accept=".zip,application/zip"><label class="btn small" for="rivalIn">Add a friend's bot</label><p class="modeinfo" id="rivalInfo">Ask a friend to tap Download save on their menu and send you the file. Their trained bot joins your Bot Battles, online too when you create the room.</p></div>
       </div>
       <div class="play-row">
         <button class="btn primary big" id="soloBtn" type="button">Play solo</button>
@@ -676,66 +651,6 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       </div>
       <button class="btn bot big" id="watchBtn" type="button">Watch my bot play</button>
       <div class="menu-links"><button class="btn small" id="tutBtn" type="button">How to play</button><button class="btn small" id="statsBtn" type="button">Stats &amp; trophies</button><button class="btn small" id="setBtn" type="button">Settings</button></div>
-      <ol class="how">
-        <li><span><b>Play.</b> Steer with your mouse, or drag your thumb anywhere on a phone. Hold click, Space or Boost to go fast. The game records how you steer.</span></li>
-        <li><span><b>Train.</b> Press Train bot. A small brain studies your moves right here in your browser.</span></li>
-        <li><span><b>Hand over.</b> Press <b>B</b> or Bot takes over and it plays like you until you take back control.</span></li>
-      </ol>
-      </div>
-      <div class="col">
-      <div class="daily" id="dailyCard">
-        <div class="daily-head"><p class="lbl">Daily challenges</p><span class="stars" id="starCount">0 ⭐</span></div>
-        <ul class="chal-list" id="chalList"></ul>
-        <p class="bc-line" id="dailyNext"></p>
-      </div>
-      <div class="botcard">
-        <div class="botcard-head">
-          <span class="botface"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg></span>
-          <div><p class="lbl">Your bot</p><p class="botname" id="bcName">Not trained yet</p></div>
-        </div>
-        <div class="meter two"><div id="bcMeter"></div><div class="pend" id="bcPend"></div></div>
-        <p class="bc-line" id="bcLine">Play a game and it starts watching how you steer.</p>
-        <dl class="bc-stats">
-          <div><dt>Moves learned</dt><dd id="bcMoves">0</dd></div>
-          <div><dt>Same move as you</dt><dd id="bcAcc">–</dd></div>
-          <div><dt>Bot best length</dt><dd id="bcBest">–</dd></div>
-        </dl>
-        <div class="toggles">
-          <label class="switch" for="reflexChk"><input type="checkbox" id="reflexChk"><span class="track"></span><span>Survival reflexes: dodge snakes it's about to hit</span></label>
-          <label class="switch" for="autoChk"><input type="checkbox" id="autoChk"><span class="track"></span><span>Take over when I'm away for 10 seconds</span></label>
-        </div>
-        <div class="bc-actions">
-          <button class="btn small" id="bcTrain" type="button">Train now</button>
-          <button class="linkbtn" id="bcReset" type="button">Reset bot</button>
-        </div>
-        <div class="confirm" id="resetConfirm" hidden>
-          <span>Erase your bot's brain and every recorded move?</span>
-          <button class="btn small danger" id="resetYes" type="button">Erase</button>
-          <button class="btn small" id="resetNo" type="button">Keep</button>
-        </div>
-      </div>
-      <div class="soundrow">
-        <div class="toggles">
-          <label class="switch" for="soundChk"><input type="checkbox" id="soundChk"><span class="track"></span><span>Sound effects <span class="lbl">(M)</span></span></label>
-          <label class="switch" for="musicChk"><input type="checkbox" id="musicChk"><span class="track"></span><span>Music <small class="mname" id="musicName"></small> <span class="lbl">(N)</span></span></label>
-        </div>
-        <input type="range" id="volIn" class="range" min="0" max="100" step="5" aria-label="Volume">
-      </div>
-
-      <div class="savebox">
-        <div class="group">
-          <p class="lbl">Save file</p>
-          <p class="bc-line">Download your name, look, saved looks, stats and trained bot as a .zip. Load it here or in the HTML version of the game to pick up where you left off.</p>
-        </div>
-        <div class="row">
-          <button class="btn small" id="exportBtn" type="button">Download save (.zip)</button>
-          <input type="file" id="importIn" class="vh" accept=".zip,application/zip">
-          <label class="btn small" for="importIn">Load save</label>
-        </div>
-        <p class="savemsg" id="saveMsg" aria-live="polite"></p>
-      </div>
-      </div>
-      </div>
       <button class="version" id="versionLine" type="button">Noodle Bots</button>
     </div>
   </section>
@@ -922,6 +837,55 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   <section id="settings" class="screen" hidden>
     <div class="card">
       <div class="card-head"><h2>Settings</h2><button class="btn primary small" id="setDone" type="button">Done</button></div>
+      <div class="botcard">
+        <div class="botcard-head">
+          <span class="botface"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/></svg></span>
+          <div><p class="lbl">Your bot</p><p class="botname" id="bcName">Not trained yet</p></div>
+        </div>
+        <div class="meter two"><div id="bcMeter"></div><div class="pend" id="bcPend"></div></div>
+        <p class="bc-line" id="bcLine">Play a game and it starts watching how you steer.</p>
+        <dl class="bc-stats">
+          <div><dt>Moves learned</dt><dd id="bcMoves">0</dd></div>
+          <div><dt>Same move as you</dt><dd id="bcAcc">–</dd></div>
+          <div><dt>Bot best length</dt><dd id="bcBest">–</dd></div>
+        </dl>
+        <div class="toggles">
+          <label class="switch" for="reflexChk"><input type="checkbox" id="reflexChk"><span class="track"></span><span>Survival reflexes: dodge snakes it's about to hit</span></label>
+          <label class="switch" for="autoChk"><input type="checkbox" id="autoChk"><span class="track"></span><span>Take over when I'm away for 10 seconds</span></label>
+        </div>
+        <div class="bc-actions">
+          <button class="btn small" id="bcTrain" type="button">Train now</button>
+          <button class="linkbtn" id="bcReset" type="button">Reset bot</button>
+        </div>
+        <div class="confirm" id="resetConfirm" hidden>
+          <span>Erase your bot's brain and every recorded move?</span>
+          <button class="btn small danger" id="resetYes" type="button">Erase</button>
+          <button class="btn small" id="resetNo" type="button">Keep</button>
+        </div>
+      </div>
+        <div class="group" id="optRivals"><p class="lbl">Friends' bots for Bot Battle</p><div class="rivals" id="rivalList"></div><input type="file" id="rivalIn" class="vh" accept=".zip,application/zip"><label class="btn small" for="rivalIn">Add a friend's bot</label><p class="modeinfo" id="rivalInfo">Ask a friend to tap Download save in their Settings and send you the file. Their trained bot joins your Bot Battles, online too when you create the room.</p></div>
+      <div class="group"><p class="lbl">Sound</p>
+      <div class="soundrow">
+          <div class="toggles">
+            <label class="switch" for="soundChk"><input type="checkbox" id="soundChk"><span class="track"></span><span>Sound effects <span class="lbl">(M)</span></span></label>
+            <label class="switch" for="musicChk"><input type="checkbox" id="musicChk"><span class="track"></span><span>Music <small class="mname" id="musicName"></small> <span class="lbl">(N)</span></span></label>
+          </div>
+          <input type="range" id="volIn" class="range" min="0" max="100" step="5" aria-label="Volume">
+        </div>
+
+      </div>
+      <div class="savebox">
+        <div class="group">
+          <p class="lbl">Save file</p>
+          <p class="bc-line">Download your name, look, saved looks, stats and trained bot as a .zip. Load it here or in the HTML version of the game to pick up where you left off.</p>
+        </div>
+        <div class="row">
+          <button class="btn small" id="exportBtn" type="button">Download save (.zip)</button>
+          <input type="file" id="importIn" class="vh" accept=".zip,application/zip">
+          <label class="btn small" for="importIn">Load save</label>
+        </div>
+        <p class="savemsg" id="saveMsg" aria-live="polite"></p>
+      </div>
       <div class="group"><p class="lbl">Steering on a touch screen</p>
         <div class="setopts">
           <button type="button" class="opt" data-steer="auto"><span>Smart</span><small>Hold your finger where you want to go, or drag it like a joystick.</small></button>
@@ -937,11 +901,6 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="group"><p class="lbl">Graphics</p><label class="switch" for="smoothChk"><input type="checkbox" id="smoothChk"><span class="track"></span><span>Smooth mode: less detail so it runs faster on older tablets</span></label></div>
       <div class="group"><p class="lbl">Sound on iPhone</p><label class="switch" for="silentChk"><input type="checkbox" id="silentChk"><span class="track"></span><span>Play sound even when my iPhone is on silent</span></label><p class="bc-line">Off: game sounds are built in, nothing shows on the Dynamic Island, but the silent switch mutes them. On: sound plays on silent too, but iPhone shows music controls on the Dynamic Island.</p></div>
       <div class="group"><p class="lbl">Recording videos</p><label class="switch" for="cleanChk"><input type="checkbox" id="cleanChk"><span class="track"></span><span>Trailer mode: hide the scores, leaderboard and map while you play</span></label><p class="bc-line">The pause/Exit buttons and the Boost bar fade out but still work. Turn it off here when you're done.</p></div>
-      <div class="group" id="roleGroup"><p class="lbl">Role code</p>
-        <p class="bc-line" id="roleNow">Got a special code from TtGamer15? Type it here to get a role next to your name.</p>
-        <div class="joinrow"><input id="roleIn" class="input code rolein" type="text" name="nb-role" maxlength="14" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="XXXX-XXXX-XXXX" autocapitalize="characters"><button class="btn primary" id="roleBtn" type="button">Use code</button></div>
-        <p class="bc-line rolemsg" id="roleMsg" role="status"></p>
-      </div>
       <div class="group"><p class="lbl">Secret</p><button class="btn" id="retroBtn" type="button">🐍 Old-school Snake</button><p class="bc-line">The classic grid game, made out of Noodle Bots.</p></div>
     </div>
   </section>
@@ -971,7 +930,7 @@ const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
 // BETA = the test copy at /noodle-bots/beta/. It keeps its own save and its own online channel, so testing never touches the real game.
 const BETA = false;
-const GAME_VERSION = '1.3.0';
+const GAME_VERSION = '1.4.0';
 const STORE_KEY = BETA ? 'noodlebots.beta' : 'noodlebots.v2', MOVES_KEY = STORE_KEY + '.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -988,7 +947,7 @@ const PAT_OWN_COLOR = { 7: '#e8692c', 8: '#7a4a24' };
 const EYES = [
   { id: 'classic', name: 'Classic' }, { id: 'sleepy', name: 'Sleepy' }, { id: 'angry', name: 'Grumpy' }, { id: 'googly', name: 'Googly' },
   { id: 'shades', name: 'Shades', lock: { type: 'games', v: 10, text: 'Play 10 games' } },
-  { id: 'starry', name: 'Star eyes', lock: { type: 'stars', v: 25, text: 'Get 25 ⭐' } },
+  { id: 'starry', name: 'Star eyes', lock: { type: 'best', v: 5000, text: 'Reach length 5,000', was: 25 } },
   { id: 'stuffed', name: 'Stuffed' }, { id: 'hungry', name: 'Hungry' },
 ];
 const HATS = [
@@ -996,48 +955,13 @@ const HATS = [
   { id: 'crown', name: 'Crown', lock: { type: 'best', v: 1000, text: 'Reach length 1,000' } },
   { id: 'horns', name: 'Horns', lock: { type: 'kills', v: 5, text: 'Take out 5 snakes' } },
   { id: 'halo', name: 'Halo', lock: { type: 'botBest', v: 500, text: 'Bot reaches 500' } },
-  { id: 'wizard', name: 'Wizard hat', lock: { type: 'stars', v: 3, text: 'Get 3 ⭐' } },
-  { id: 'phones', name: 'Headphones', lock: { type: 'stars', v: 8, text: 'Get 8 ⭐' } },
-  { id: 'bunny', name: 'Bunny ears', lock: { type: 'stars', v: 15, text: 'Get 15 ⭐' } },
+  { id: 'wizard', name: 'Wizard hat', lock: { type: 'games', v: 3, text: 'Play 3 games', was: 3 } },
+  { id: 'phones', name: 'Headphones', lock: { type: 'games', v: 25, text: 'Play 25 games', was: 8 } },
+  { id: 'bunny', name: 'Bunny ears', lock: { type: 'kills', v: 25, text: 'Take out 25 snakes', was: 15 } },
   { id: 'turkey', name: 'Turkey hat', tag: '🦃 New' }, { id: 'pilgrim', name: 'Pilgrim hat', tag: '🦃 New' },
   { id: 'leaves', name: 'Leaf crown', tag: '🦃 New' }, { id: 'chef', name: 'Chef hat', tag: '🦃 New' },
   { id: 'pie', name: 'Pumpkin pie hat', tag: '🦃 New' },
 ];
-// Special roles, shown next to your name. You get one with a one-time code from TtGamer15.
-const ROLES = {
-  owner: { name: 'Owner', ico: '👑', col: '#ffd447', dark: '#9a6400' },
-  idea: { name: 'Weird Idea Maker', ico: '💡', col: '#d9a3ff', dark: '#7d36c4' },
-  elite: { name: 'Elite', ico: '💎', col: '#5ee7ff', dark: '#06789a' },
-};
-const ROLE_ORDER = ['owner', 'idea', 'elite'];   // if you have more than one, the first one shows
-// Only a fingerprint (hash) of each code is kept here, so reading the game's code doesn't give the codes away.
-const ROLE_CODES = { '8539b41ad6a2ac6c6322658f': 'owner', '2f1b3a641aeb5a1145a7083c': 'owner', '6e44173c94cdb980014a2b61': 'owner', 'f9c415e6cec0964081054da7': 'idea', '16bfbbcb20325d4a70fbe7bf': 'idea', '071f08f456397e0ea4b3338d': 'idea', 'a55d320b7af9de5a2aca6592': 'idea', '02be94b7e60fcc2044abb6a3': 'idea', 'dd9159260968ad40a6e4f0c2': 'elite', 'cdf6651160ff9b5e9036820c': 'elite', '4572d5c50ddd6873f83d8a2c': 'elite', 'e4c715a2d69fd0d7900796d2': 'elite', '0f71cf4b6bf8385e32e9046f': 'elite', 'cba08d7ce8480aa6327076fc': 'elite', 'de74865c92d0cf77b2272981': 'elite', '0431b8cf73a98f64384508ea': 'elite', 'ab0efbb09e85efc29cb1d4c3': 'elite', '2c8b38f6e8850e12c313ee90': 'elite' };
-const ROLE_KEY = 'noodlebots.role';   // shared by the game and the beta (same website), so a role works in both
-const ROLE_TOPIC = 'noodlebots/tt15/roles/u/';
-function sha256hex(ascii) {
-  const rr = (v, n) => (v >>> n) | (v << (32 - n)), maxWord = 4294967296, words = [], bitLen = ascii.length * 8, comp = {};
-  let hash = [], k = [], pc = 0, i, j;
-  for (let cand = 2; pc < 64; cand++) {
-    if (!comp[cand]) { for (i = 0; i < 313; i += cand) comp[i] = cand; hash[pc] = (Math.pow(cand, 0.5) * maxWord) | 0; k[pc++] = (Math.pow(cand, 1 / 3) * maxWord) | 0; }
-  }
-  ascii += '\x80'; while (ascii.length % 64 - 56) ascii += '\x00';
-  for (i = 0; i < ascii.length; i++) { j = ascii.charCodeAt(i); if (j >> 8) return ''; words[i >> 2] |= j << ((3 - i) % 4) * 8; }
-  words[words.length] = (bitLen / maxWord) | 0; words[words.length] = bitLen;
-  for (j = 0; j < words.length;) {
-    const w = words.slice(j, j += 16), old = hash; hash = hash.slice(0, 8);
-    for (i = 0; i < 64; i++) {
-      const w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];
-      const t1 = hash[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & hash[5]) ^ (~e & hash[6])) + k[i]
-        + (w[i] = i < 16 ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
-      const t2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
-      hash = [(t1 + t2) | 0].concat(hash); hash[4] = (hash[4] + t1) | 0;
-    }
-    for (i = 0; i < 8; i++) hash[i] = (hash[i] + old[i]) | 0;
-  }
-  let out = '';
-  for (i = 0; i < 8; i++) for (j = 3; j + 1; j--) { const b = (hash[i] >> (j * 8)) & 255; out += (b < 16 ? '0' : '') + b.toString(16); }
-  return out;
-}
 const FALL_HATS = [10, 11, 12, 13, 14];   // computer snakes sometimes wear these in November
 // Trails: little things your snake leaves behind as it slithers. `life` is how long each bit lasts (s), `rate` how many per second.
 const TRAILS = [
@@ -1047,7 +971,7 @@ const TRAILS = [
   { id: 'leaf', name: 'Fall leaves', tag: '🦃 New', life: 1.4, rate: 8 },
   { id: 'feather', name: 'Turkey feathers', tag: '🦃 New', life: 1.3, rate: 8 },
   { id: 'heart', name: 'Hearts', tag: '✨ New', life: 1.2, rate: 9, lock: { type: 'games', v: 15, text: 'Play 15 games' } },
-  { id: 'star', name: 'Stars', tag: '✨ New', life: 1.1, rate: 10, lock: { type: 'stars', v: 10, text: 'Get 10 ⭐' } },
+  { id: 'star', name: 'Stars', tag: '✨ New', life: 1.1, rate: 10, lock: { type: 'games', v: 30, text: 'Play 30 games', was: 10 } },
   { id: 'fire', name: 'Flames', tag: '✨ New', life: 0.7, rate: 26, lock: { type: 'kills', v: 10, text: 'Take out 10 snakes' } },
   { id: 'rainbow', name: 'Rainbow', tag: '✨ New', life: 0.8, rate: 30, lock: { type: 'best', v: 2000, text: 'Reach length 2,000' } },
 ];
@@ -1147,7 +1071,7 @@ const tok = (n, fb) => css.getPropertyValue(n).trim() || fb;
 const C = { floor: tok('--floor', '#17122c'), dot: tok('--floor-dot', '#2c2553'), ink: tok('--ink', '#f4effe'), muted: tok('--muted', '#a9a1cc'), bot: tok('--bot', '#52e5ff'), accent: tok('--accent', '#ff9f43'), danger: tok('--danger', '#ff5d7d') };
 
 /* ================= profile & storage ================= */
-const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0, tr: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, daily: null, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false, retroRight: false, clean: false },
+const profile = { name: '', look: { c1: 0, c2: 3, pat: 1, eye: 0, hat: 0, tr: 0 }, slots: [null, null, null], auto: true, reflex: true, practice: 0, acc: null, near: null, bestYou: 0, bestBot: 0, totalRecorded: 0, games: 0, kills: 0, sessions: 0, sound: true, music: true, volume: 0.7, theme: 0, npcPool: [], npcGen: 0, skin: [], stars: 0, tutDone: false, seenVer: '', mstyle: 'calm', retroBest: 0, ach: null, set: { steer: 'auto', swap: false, smooth: false, silentOk: false, retroRight: false, clean: false },
   fid: '', friends: [], fOut: [], fBlock: [],
   st: { snacks: 0, longest: 0, wins: { tag: 0, ctl: 0, br: 0, bb: 0 }, powers: 0, online: 0, rivalWins: 0 }, modeSel: { m: 'classic', ctl: 1, tag: '1v1', diff: 'normal', base: 'classic', ab: 'jump', bots: 3 } };
 let brain = null;
@@ -1180,7 +1104,7 @@ function applyProfileData(p) {
   if (['auto', 'calm', 'intense', 'fun', 'sad', 'neutral'].includes(p.mstyle)) profile.mstyle = p.mstyle;
   if (typeof p.seenVer === 'string' && /^R?[0-9.]{1,12}$/.test(p.seenVer)) profile.seenVer = p.seenVer;
   if (typeof p.fid === 'string' && FID_RE.test(p.fid)) profile.fid = p.fid;
-  if (Array.isArray(p.friends)) { const ids = new Set(); profile.friends = p.friends.filter((f) => f && typeof f.id === 'string' && FID_RE.test(f.id) && !ids.has(f.id) && ids.add(f.id)).slice(0, FR_MAX).map((f) => ({ id: f.id, n: cleanName(f.n), lk: Number.isFinite(f.lk) ? clamp(Math.floor(f.lk), 0, 999999) : 0, rl: typeof f.rl === 'string' && ROLES[f.rl] ? f.rl : '' })); }
+  if (Array.isArray(p.friends)) { const ids = new Set(); profile.friends = p.friends.filter((f) => f && typeof f.id === 'string' && FID_RE.test(f.id) && !ids.has(f.id) && ids.add(f.id)).slice(0, FR_MAX).map((f) => ({ id: f.id, n: cleanName(f.n), lk: Number.isFinite(f.lk) ? clamp(Math.floor(f.lk), 0, 999999) : 0, })); }
   for (const k of ['fOut', 'fBlock']) if (Array.isArray(p[k])) profile[k] = [...new Set(p[k].filter((x) => typeof x === 'string' && FID_RE.test(x)))].slice(0, 40);
   if (Array.isArray(p.ach)) profile.ach = p.ach.filter((x) => typeof x === 'string' && x.length < 20).slice(0, 60);
   if (p.set && typeof p.set === 'object') profile.set = { steer: ['auto', 'point', 'joy'].includes(p.set.steer) ? p.set.steer : 'auto', swap: p.set.swap === true, smooth: p.set.smooth === true, silentOk: p.set.silentOk === true, retroRight: p.set.retroRight === true, clean: p.set.clean === true };
@@ -1188,16 +1112,12 @@ function applyProfileData(p) {
     const n = (v) => clamp(int(v), 0, 1e9), w = p.st.wins && typeof p.st.wins === 'object' ? p.st.wins : {};
     profile.st = { snacks: n(p.st.snacks), longest: n(p.st.longest), wins: { tag: n(w.tag), ctl: n(w.ctl), br: n(w.br), bb: n(w.bb) }, powers: n(p.st.powers), online: n(p.st.online), rivalWins: n(p.st.rivalWins) };
   }
-  if (p.daily && typeof p.daily === 'object' && typeof p.daily.day === 'string' && Array.isArray(p.daily.list)) {
-    const list = p.daily.list.slice(0, 3).filter((c) => c && CHAL[c.id] && typeof c.n === 'number' && typeof c.p === 'number')
-      .map((c) => ({ id: c.id, n: clamp(Math.floor(c.n), 1, 1e6), p: clamp(Math.floor(c.p), 0, 1e6), done: !!c.done }));
-    if (list.length === 3) profile.daily = { day: p.daily.day.slice(0, 10), list, bonus: !!p.daily.bonus };
-  }
 }
 let saveTimer = 0;
 function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(() => save(false), 500); }
 function load() {
-  setTimeout(loadRoles, 0);
+  // The beta website was taken down in 1.4.0: if this device only has a beta save, bring it over.
+  if (!BETA) { try { if (!localStorage.getItem(STORE_KEY) && localStorage.getItem('noodlebots.beta')) for (const k of ['', '.moves', '.rivals']) { const v = localStorage.getItem('noodlebots.beta' + k); if (v) localStorage.setItem('noodlebots.v2' + k, v); } } catch (e) { /* ignore */ } }
   if (BETA) { try { if (!localStorage.getItem(STORE_KEY)) for (const [a, b] of [['noodlebots.v2', STORE_KEY], ['noodlebots.v2.rivals', RIVAL_KEY]]) { const v = localStorage.getItem(a); if (v) localStorage.setItem(b, v); } } catch (e) { /* ignore */ } }
   try {
     const raw = localStorage.getItem(STORE_KEY); if (!raw) return;
@@ -1239,17 +1159,17 @@ function botLevel() {
 }
 function isUnlocked(item) {
   const L = item.lock; if (!L) return true;
+  if (L.was && (profile.stars || 0) >= L.was) return true;   // earned with daily-challenge stars before 1.4.0
   if (L.type === 'botLevel') return botReady() && botLevel().n >= L.v;
   if (L.type === 'games') return profile.games >= L.v;
   if (L.type === 'best') return profile.bestYou >= L.v;
   if (L.type === 'kills') return profile.kills >= L.v;
   if (L.type === 'botBest') return profile.bestBot >= L.v;
-  if (L.type === 'stars') return (profile.stars || 0) >= L.v;
   return false;
 }
 let unlockedKeys = null;
 function unlockSnapshot() { const s = new Set(); for (const [arr, tag] of [[PATTERNS, 'p'], [EYES, 'e'], [HATS, 'h'], [TRAILS, 't']]) arr.forEach((it, i) => { if (isUnlocked(it)) s.add(tag + i); }); return s; }
-function creditKill(name) { profile.kills++; toast(`You took out ${name}`); SFX.kill(); checkUnlocks(); chal('kill'); }
+function creditKill(name) { profile.kills++; toast(`You took out ${name}`); SFX.kill(); checkUnlocks(); }
 /* ---------- trophies ---------- */
 const ACH = [
   { id: 'grad', ic: '🎓', name: 'Graduate', text: 'Finish the How to play tutorial', n: 1, v: () => (profile.tutDone ? 1 : 0) },
@@ -1268,7 +1188,6 @@ const ACH = [
   { id: 'bb', ic: '⚔️', name: 'Robot Wars', text: 'Win 5 Bot Battles', n: 5, v: () => profile.st.wins.bb },
   { id: 'rival', ic: '🤝', name: 'Rival Crusher', text: "Beat a friend's bot in Bot Battle", n: 1, v: () => profile.st.rivalWins },
   { id: 'power', ic: '⚡', name: 'Powered Up', text: 'Use powers 25 times', n: 25, v: () => profile.st.powers },
-  { id: 'stars', ic: '⭐', name: 'Star Collector', text: 'Earn 10 stars', n: 10, v: () => profile.stars || 0 },
   { id: 'party', ic: '👋', name: 'Party Noodle', text: 'Play 5 games with friends', n: 5, v: () => profile.st.online },
   { id: 'style', ic: '🎨', name: 'Fashion Noodle', text: 'Build a custom snake with 10+ pieces', n: 10, v: () => profile.skin.length },
 ];
@@ -1286,7 +1205,7 @@ function openStats() {
   checkAch(true);
   const st = profile.st, g = $('statGrid'); g.textContent = '';
   const tiles = [['Games played', fmt(profile.games)], ['Best length', fmt(profile.bestYou)], ['Bot best length', fmt(profile.bestBot)], ['Take-outs', fmt(profile.kills)],
-    ['Snacks eaten', fmt(st.snacks)], ['Longest life', fmtTime(st.longest)], ['Stars', `${fmt(profile.stars || 0)} ⭐`], ['Bot level', botReady() ? `${botLevel().n} · ${botLevel().name}` : '–'],
+    ['Snacks eaten', fmt(st.snacks)], ['Longest life', fmtTime(st.longest)], ['Games with friends', fmt(st.online)], ['Bot level', botReady() ? `${botLevel().n} · ${botLevel().name}` : '–'],
     ['Tag wins', fmt(st.wins.tag)], ['Capture wins', fmt(st.wins.ctl)], ['Arena wins', fmt(st.wins.br)], ['Bot Battle wins', fmt(st.wins.bb)]];
   for (const [l, v] of tiles) { const d = document.createElement('div'), a = document.createElement('span'), b = document.createElement('b'); a.textContent = l; b.textContent = v; d.append(a, b); g.append(d); }
   const list = $('trophyList'); list.textContent = ''; const had = new Set(profile.ach || []);
@@ -1298,67 +1217,8 @@ function openStats() {
     const m = document.createElement('div'); m.className = 'meter small'; const f = document.createElement('div'); f.style.width = (had.has(a.id) ? 100 : Math.round(v / a.n * 100)) + '%'; m.append(f);
     d.append(ic, nm, tx, m); list.append(d);
   }
-  $('trophyHead').textContent = `Trophies · ${had.size} of ${ACH.length}`;
+  $('trophyHead').textContent = `Trophies · ${ACH.filter((a) => had.has(a.id)).length} of ${ACH.length}`;
   showScreen('stats');
-}
-/* ---------- daily challenges: three a day, each worth a star ---------- */
-const CHAL = {
-  eat: { g: 0, n: [150, 300], text: (n) => `Eat ${fmt(n)} snacks` },
-  len: { g: 0, n: [800, 1500], text: (n) => `Reach length ${fmt(n)} in one game` },
-  surv: { g: 0, n: [90, 180], text: (n) => `Stay alive ${n >= 120 ? n / 60 + ' minutes' : n + ' seconds'} in one game` },
-  nob: { g: 1, n: [500, 900], text: (n) => `Reach length ${fmt(n)} without boosting` },
-  kill: { g: 1, n: [2, 4], text: (n) => `Take out ${n} snakes` },
-  train: { g: 1, n: [1, 1], text: () => 'Train your bot' },
-  power: { g: 1, n: [3, 5], text: (n) => `Use your power ${n} times in Abilities` },
-  tag: { g: 2, n: [1, 1], text: () => 'Win a round of Tag' },
-  ctl: { g: 2, n: [1, 1], text: () => 'Win a game of Capture the Leader' },
-  br: { g: 2, n: [1, 1], text: () => 'Finish top 3 in Shrinking Arena' },
-  bb: { g: 2, n: [1, 1], text: () => 'Win a Bot Battle round' },
-  friends: { g: 2, n: [1, 1], text: () => 'Play a game with friends' },
-};
-const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-function ensureDaily() {
-  const day = dayKey();
-  if (profile.daily && profile.daily.day === day) return;
-  let sd = 0; for (const ch of day) sd = (Math.imul(sd, 31) + ch.charCodeAt(0)) | 0;
-  const rnd = rng(sd), list = [];
-  for (let g = 0; g < 3; g++) {
-    const ids = Object.keys(CHAL).filter((id) => CHAL[id].g === g), id = ids[Math.floor(rnd() * ids.length)], C = CHAL[id];
-    list.push({ id, n: C.n[Math.floor(rnd() * 2)], p: 0, done: false });
-  }
-  profile.daily = { day, list, bonus: false };
-}
-function chalSet(id, v, add) {
-  if (!profile.daily) return;
-  if (profile.daily.day !== dayKey()) { ensureDaily(); updateDailyCard(); }
-  for (const c of profile.daily.list) {
-    if (c.id !== id || c.done) continue;
-    c.p = Math.min(c.n, add ? c.p + v : Math.max(c.p, Math.floor(v)));
-    if (c.p >= c.n) {
-      c.done = true; profile.stars = (profile.stars || 0) + 1; SFX.unlock();
-      toast(`Challenge done: ${CHAL[c.id].text(c.n)}! +1 ⭐`);
-      if (!profile.daily.bonus && profile.daily.list.every((x) => x.done)) { profile.daily.bonus = true; profile.stars += 2; setTimeout(() => toast('All 3 daily challenges done! +2 bonus ⭐'), 2900); }
-      save(false); checkUnlocks(); updateDailyCard();
-    }
-  }
-}
-const chal = (id, n = 1) => chalSet(id, n, true);
-const chalMax = (id, v) => chalSet(id, v, false);
-function updateDailyCard() {
-  ensureDaily();
-  const ul = $('chalList'); if (!ul) return; ul.textContent = '';
-  profile.daily.list.forEach((c, i) => {
-    const li = document.createElement('li'); if (c.done) li.classList.add('done');
-    const k = document.createElement('span'); k.className = 'chk'; k.textContent = c.done ? '✓' : String(i + 1);
-    const t = document.createElement('span'); t.className = 'ct'; t.textContent = CHAL[c.id].text(c.n);
-    const p = document.createElement('span'); p.className = 'cp'; p.textContent = c.done ? '⭐' : `${fmt(c.p)}/${fmt(c.n)}`;
-    const m = document.createElement('div'); m.className = 'meter small'; const f = document.createElement('div'); f.style.width = Math.round(c.p / c.n * 100) + '%'; m.append(f);
-    li.append(k, t, p, m); ul.append(li);
-  });
-  $('starCount').textContent = `${fmt(profile.stars || 0)} ⭐`;
-  const next = [...HATS, ...EYES].filter((it) => it.lock && it.lock.type === 'stars' && (profile.stars || 0) < it.lock.v).sort((a, b) => a.lock.v - b.lock.v)[0];
-  const end = new Date(); end.setHours(24, 0, 0, 0); const mins = Math.max(1, Math.round((end - new Date()) / 60000));
-  $('dailyNext').textContent = `${next ? `Next unlock: ${next.name} at ${next.lock.v} ⭐. ` : 'You unlocked every star prize! '}New challenges in ${mins >= 60 ? Math.floor(mins / 60) + 'h ' : ''}${mins % 60}m.`;
 }
 function checkUnlocks() {
   const now = unlockSnapshot();
@@ -1529,7 +1389,7 @@ function finishTraining() {
   const last = j.accs[j.accs.length - 1] || { exact: 0, near: 0 };
   profile.practice += Math.max(1, j.newAtStart); newSince = Math.max(0, newSince - j.newAtStart);
   profile.acc = last.exact; profile.near = last.near; profile.sessions++;
-  lastJob = j; SFX.trainDone(); save(); checkUnlocks(); updateDock(); updateBotCard(); updateMenuButtons(); chal('train');
+  lastJob = j; SFX.trainDone(); save(); checkUnlocks(); updateDock(); updateBotCard(); updateMenuButtons();
   if (!$('train').hidden) showTrainResult(); else toast(`Training done. Your bot picks your move ${Math.round(last.exact * 100)}% of the time.`);
 }
 let lastJob = null;
@@ -1972,7 +1832,7 @@ function eatAround(s, dt) {
     const fi = qbuf[q], f = foodAt(fi); if (!f || f.eaten) continue;
     const dx = s.x - f.x, dy = s.y - f.y, d = Math.sqrt(dx * dx + dy * dy);
     if (d < s.r + f.r + 6) {
-      if (match.m !== 'tag') s.mass += f.v; if (s === player) { SFX.eat(f.v); profile.st.snacks++; if (!botDriving) chal('eat'); if (tut.on) tut.eats++; }
+      if (match.m !== 'tag') s.mass += f.v; if (s === player) { SFX.eat(f.v); profile.st.snacks++; if (tut.on) tut.eats++; }
       if (s.ab && !s.fx) s.charge = Math.min(ABIL[s.ab].cost, s.charge + f.v * 10);
       if (fi < MAX_SLOTS) { if (gameKind === 'online') logEat(fi * 1000 + (slotGen[fi] % 1000)); slotGen[fi]++; setSlot(fi); }
       else { f.eaten = true; if (gameKind === 'online' && f.id) { logEat(f.id); eatenDrops.set(f.id, performance.now()); } }
@@ -2083,7 +1943,7 @@ function useAbility(s, now) {
     if (gameKind === 'online') online.fzOut.push({ id: myKey().slice(0, 6) + '.' + (++fzSeq), x: Math.round(s.x), y: Math.round(s.y), it: s.it ? 1 : 0, t: now });
     if (s === player) toast(n ? `Froze ${n} snake${n === 1 ? '' : 's'}!` : 'Freeze! Nobody was close enough this time.');
   }
-  if (s === player) { abilStats.me++; SFX.power(s.ab); chal('power'); profile.st.powers++; }
+  if (s === player) { abilStats.me++; SFX.power(s.ab); profile.st.powers++; }
   else { abilStats.bot++; if (player && player.alive && mode === 'play' && Math.hypot(s.x - player.x, s.y - player.y) < 800) SFX.power(s.ab, true); }
   return true;
 }
@@ -2180,9 +2040,9 @@ const MODE_INFO = {
   classic: 'Eat, grow and dodge. Your bot learns by watching how you play.',
   ctl: 'Red vs Blue. Each Leader is big and guarded by 10 mini bots that drive like the bot you trained. A Leader respawns while their team has 3+ minis. Catch one with fewer than 3 and your team wins.',
   tag: 'Nobody dies here. Whoever is It glows red: touch someone with your head to tag them. Boost runs on stamina, so save it for close calls.',
-  abil: 'Pick a power, then play Classic, Tag or Shrinking Arena. Eating snacks and staying alive fill up your bits. When they are full, press E or tap the power button to use it. Bots get powers too!',
+  abil: 'Pick a power and play. Eating snacks and staying alive fill up your bits. When they are full, press E or tap the power button to use it. Bots get powers too!',
   br: "Everyone against everyone while the edge of the arena closes in. There are no respawns: crash once and you're out. Last snake alive wins the round.",
-  bb: "Your trained bot fights on its own against other bots (and your friends' bots online) while the edge closes in. No respawns. Last bot alive wins, so train it well!",
+  bb: "Your trained bot fights on its own against other bots (add your friends' bots in Settings) while the edge closes in. No respawns. Last bot alive wins, so train it well!",
 };
 let match = { m: 'classic' };
 const inModes = () => match.m === 'ctl' || match.m === 'tag' || match.m === 'br';
@@ -2198,11 +2058,14 @@ function modeName(m) {
   if (m.m === 'tag') return (m.v === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one') + plus;
   return 'Classic' + plus;
 }
+// Every mode just uses these (1.4.0 took out the team size, tag type, bot count and difficulty pickers).
+const MODE_DEF = { ctl: 1, tag: '1v1', diff: 'normal', bots: 3 };
+const MODE_NAME = { classic: 'Classic', ctl: 'Capture the Leader', tag: 'Tag', abil: 'Abilities', br: 'Shrinking Arena', bb: 'Bot Battle' };
 function newMatchCfg() {
   const ms = profile.modeSel;
-  if (ms.m === 'abil') return ms.base === 'tag' ? { m: 'tag', sz: 1, v: ms.tag, df: ms.diff, ab: 1 } : ms.base === 'br' ? { m: 'br', sz: ms.bots, df: ms.diff, bot: 0, ab: 1 } : { m: 'classic', ab: 1 };
-  if (ms.m === 'br' || ms.m === 'bb') return { m: 'br', sz: ms.bots, df: ms.diff, bot: ms.m === 'bb' ? 1 : 0 };
-  return { m: ms.m, sz: ms.ctl, v: ms.tag, df: ms.diff };
+  if (ms.m === 'abil') return { m: 'classic', ab: 1 };
+  if (ms.m === 'br' || ms.m === 'bb') return { m: 'br', sz: MODE_DEF.bots, df: MODE_DEF.diff, bot: ms.m === 'bb' ? 1 : 0 };
+  return { m: ms.m, sz: MODE_DEF.ctl, v: MODE_DEF.tag, df: MODE_DEF.diff };
 }
 function cfgOf(m) { return { m: m.m, sz: m.sz, v: m.v, df: m.df, ab: m.ab ? 1 : 0, bot: m.bot ? 1 : 0 }; }
 function arenaFor(m) { if (m.m === 'br') return m.R0 || 2000; return m.m === 'ctl' ? CTL_R[clamp(m.sz, 1, 3)] : m.v === '1v1' ? 1300 : TAG_TUNE.arena; }
@@ -2669,28 +2532,17 @@ function updateModeBar() {
 }
 function setModeSel(patch) { Object.assign(profile.modeSel, patch); save(false); renderModeSel(); }
 function renderModeSel() {
-  const ms = profile.modeSel, ab = ms.m === 'abil', tagLike = ms.m === 'tag' || (ab && ms.base === 'tag');
+  const ms = profile.modeSel, ab = ms.m === 'abil';
   for (const b of document.querySelectorAll('.modetab')) b.setAttribute('aria-pressed', String(b.dataset.mode === ms.m));
-  for (const b of document.querySelectorAll('[data-ctl]')) b.setAttribute('aria-pressed', String(+b.dataset.ctl === ms.ctl));
-  for (const b of document.querySelectorAll('[data-tag]')) b.setAttribute('aria-pressed', String(b.dataset.tag === ms.tag));
-  for (const b of document.querySelectorAll('[data-diff]')) b.setAttribute('aria-pressed', String(b.dataset.diff === ms.diff));
-  for (const b of document.querySelectorAll('[data-base]')) b.setAttribute('aria-pressed', String(b.dataset.base === ms.base));
-  for (const b of document.querySelectorAll('[data-bots]')) b.setAttribute('aria-pressed', String(+b.dataset.bots === ms.bots));
-  for (const b of document.querySelectorAll('[data-ab]')) { const id = b.dataset.ab, okHere = ms.base !== 'tag' || ABIL[id].tag; b.disabled = !okHere; b.setAttribute('aria-pressed', String(id === ms.ab && okHere)); }
+  for (const b of document.querySelectorAll('[data-ab]')) b.setAttribute('aria-pressed', String(b.dataset.ab === ms.ab));
   $('modeInfo').textContent = MODE_INFO[ms.m];
-  const brLike = ms.m === 'br' || ms.m === 'bb' || (ab && ms.base === 'br');
-  $('optRivals').hidden = ms.m !== 'bb'; if (ms.m === 'bb') renderRivals();
-  $('optCtl').hidden = ms.m !== 'ctl'; $('optTag').hidden = !tagLike; $('optDiff').hidden = !(ms.m === 'ctl' || tagLike || brLike); $('optBots').hidden = !brLike;
-  $('optBase').hidden = $('optAbil').hidden = $('abilInfo').hidden = !ab;
-  if (ab) { const A = ABIL[ms.ab] || ABIL.jump; $('abilInfo').textContent = `${A.name} · ${fmt(A.cost)} bits. ${ms.base === 'tag' && A.tagInfo ? A.tagInfo : A.info}`; }
+  $('optAbil').hidden = $('abilInfo').hidden = !ab;
+  if (ab) { const A = ABIL[ms.ab] || ABIL.jump; $('abilInfo').textContent = `${A.name} · ${fmt(A.cost)} bits. ${A.info}`; }
   $('watchBtn').hidden = ms.m !== 'classic';
   const line = $('roomModeLine');
   if (ms.m === 'classic') { line.textContent = 'Mode: Classic. Pick another mode in the menu if you like.'; return; }
-  line.textContent = ''; const b = document.createElement('b');
-  const tagName = ms.tag === '1v1' ? 'Tag 1v1' : 'Tag: everyone vs one';
-  if (ab) b.textContent = `Abilities · ${ms.base === 'tag' ? tagName : ms.base === 'br' ? 'Shrinking Arena' : 'Classic'}`;
-  else b.textContent = ms.m === 'ctl' ? `Capture the Leader ${ms.ctl}v${ms.ctl}` : brLike ? (ms.m === 'bb' ? 'Bot Battle' : 'Shrinking Arena') : tagName;
-  line.append('Mode: ', b, ab ? `${tagLike || brLike ? `, ${ms.diff} bots` : ''}. Friends who join play your mode and use the power they picked.` : `, ${ms.diff} bots. Friends who join play your mode.`);
+  line.textContent = ''; const b = document.createElement('b'); b.textContent = MODE_NAME[ms.m];
+  line.append('Mode: ', b, ab ? '. Friends who join play your mode and use the power they picked.' : '. Friends who join play your mode.');
 }
 function resultFor() {
   const k = myKey(), out = { mode: modeName(match), title: '', won: false, labels: [], values: [] };
@@ -2725,13 +2577,10 @@ function showResult() {
   $('resNext').hidden = gameKind !== 'online';
   updateResultNext(performance.now());
   profile.games++; save(false); checkUnlocks();
-  if (r.won && match.m === 'tag') { chal('tag'); profile.st.wins.tag++; }
+  if (r.won && match.m === 'tag') profile.st.wins.tag++;
   if (r.won && match.m === 'ctl') profile.st.wins.ctl++;
   if (r.won && match.m === 'br') { if (match.bot) { profile.st.wins.bb++; if (match.rivals) profile.st.rivalWins++; } else profile.st.wins.br++; }
   checkAch();
-  if (r.won && match.m === 'ctl') chal('ctl');
-  if (match.m === 'br' && !match.bot && (r.won || (match.myPlace && match.myPlace <= 3))) chal('br');
-  if (match.m === 'br' && match.bot && r.won) chal('bb');
   stopSpectate();
   if (r.won) SFX.trainDone(); else SFX.death();
   mode = 'dead'; botDriving = false; updateBanner(); setBoostSound(false);
@@ -2972,9 +2821,6 @@ function step(dt, now) {
   if (tut.on && player && player.alive && player.wantBoost && !botDriving) tut.boostT += dt;
   if (frame % 30 === 0 && player && player.alive && run.time > profile.st.longest) profile.st.longest = Math.floor(run.time);
   if (frame % 240 === 0 && profile.ach) checkAch();
-  if (frame % 30 === 0 && player && player.alive && mode === 'play' && !botDriving && (match.m === 'classic' || match.m === 'br')) {
-    const L = Math.floor(player.mass * 10); chalMax('len', L); if (!run.boosted) chalMax('nob', L); chalMax('surv', run.time);
-  }
   if (player && player.alive && mode === 'play' && !inModes()) {
     const sc = Math.floor(player.mass * 10);
     if (sc > run.max) run.max = sc;
@@ -3320,7 +3166,7 @@ async function joinRoom(code, create) {
     setRoomHash(null);
     return;
   } finally { online.busy = false; $('createBtn').disabled = $('joinBtn').disabled = false; }
-  online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0; chal('friends'); profile.st.online++;
+  online.room = r; online.code = code; online.claim = !!create; online.isHost = false; online.noClaimSince = 0; profile.st.online++;
   online.filler = create ? $('fillerChk').checked : true; online.tier = 0; online.players = 1; online.eatLog = []; online.nk = []; online.lagLv = 0; online.sendMs = NET_SEND_MS; online.lagHi = 0; online.lagLow = 0; online.refreshAt = 0; online.sendN = 0;
   online.remotes.clear(); online.rnpcs.clear(); online.lastPres.clear(); online.lastHostPres = null; online.seenKills.clear(); online.brains.clear();
   gameKind = 'online'; myDeaths = 0; match = { m: 'classic' };
@@ -3401,7 +3247,7 @@ function applyPeer(peer, pr, now) {
   }
   if (aliveNow && rs.snake) setNetPath(rs.snake, pr, now);
   hearChat(rs, pr, now);
-  if (rs.snake) { rs.snake.badge = typeof pr.rl === 'string' && ROLES[pr.rl] ? pr.rl : ''; rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; const f = Array.isArray(pr.fx) ? pr.fx : null; applyNetFx(rs.snake, f ? int(f[0]) : 0, f ? num(f[1]) : 0, f ? int(f[2]) : rs.snake.fxUse, num(pr.sl), now, !!f && f[3] === 1); }
+  if (rs.snake) { rs.snake.bot = pr.bot === 1; rs.snake.hid = pr.hid === 1; const f = Array.isArray(pr.fx) ? pr.fx : null; applyNetFx(rs.snake, f ? int(f[0]) : 0, f ? num(f[1]) : 0, f ? int(f[2]) : rs.snake.fxUse, num(pr.sl), now, !!f && f[3] === 1); }
   if (Array.isArray(pr.fz)) {
     const cur = new Set();
     for (const e of pr.fz.slice(0, 12)) {
@@ -3534,7 +3380,7 @@ function sendPresence(now, force) {
   if (online.eatLog.length > 70) online.eatLog.splice(0, online.eatLog.length - 70);
   online.nk = online.nk.filter((e) => now - e.t < 3000);
   const p = player, alive = !!(p && p.alive);
-  const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), tr: profile.look.tr || undefined, rl: myRole || undefined, p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
+  const pr = { g: 'nb1', n: cleanName(profile.name), s: packLook(profile.look), tr: profile.look.tr || undefined, p: 1, al: alive ? 1 : 0, d: myDeaths, lt: alive ? Math.round(run.time) : 0, bot: botDriving ? 1 : 0,
     h: online.claim ? 1 : 0, e: online.eatLog.map((x) => x.id), kb: lastKiller, hid: document.hidden ? 1 : null };
   if (alive) { pr.x = Math.round(p.x); pr.y = Math.round(p.y); pr.a = Math.round(p.ang * 100) / 100; pr.m = Math.round(p.mass * 10) / 10; pr.b = p.boosting ? 1 : 0; pr.w = Math.round((p.w || 0) * 100) / 100; pr.bd = half ? 0 : bodyDeltas(p); const es = speedOf(p, now) / (p.boosting ? BOOST_SPEED : BASE_SPEED); pr.sp = Math.abs(es - 1) > 0.01 ? Math.round(es * 100) / 100 : null;
     pr.fx = p.fx ? [FX_CODE[p.fx] || 0, Math.round(p.fxEnd - now), p.fxUse || 0, p.hold ? 1 : 0] : null; pr.sl = p.slowEnd > now ? Math.round(p.slowEnd - now) : null; }
@@ -4073,10 +3919,9 @@ function render(now) {
     if (s.role === 'M' || s.predDead) continue;
     const lift = s.r + (HATS[s.look.hat].id !== 'none' || s.bot || s.role === 'L' ? s.r * 1.3 : 0) + 10 / z + (s.drawLift || 0);
     if (s.it) { ctx.fillStyle = IT_COLOR; ctx.globalAlpha = 1; ctx.fillText('IT', h.x, h.y - lift - 16 / z); }
-    const bd = ROLES[s === player ? myRole : s.kind === 'remote' ? s.badge : ''];
-    ctx.fillStyle = bd ? (lightBg ? bd.dark : bd.col) : lightBg ? (s === player ? 'rgba(28,20,56,0.92)' : s.kind === 'remote' ? 'rgba(28,20,56,0.82)' : 'rgba(28,20,56,0.6)') : s === player ? 'rgba(244,239,254,0.95)' : s.kind === 'remote' ? 'rgba(244,239,254,0.85)' : 'rgba(244,239,254,0.55)';
+    ctx.fillStyle = lightBg ? (s === player ? 'rgba(28,20,56,0.92)' : s.kind === 'remote' ? 'rgba(28,20,56,0.82)' : 'rgba(28,20,56,0.6)') : s === player ? 'rgba(244,239,254,0.95)' : s.kind === 'remote' ? 'rgba(244,239,254,0.85)' : 'rgba(244,239,254,0.55)';
     ctx.globalAlpha = s.ghost ? 0.4 : 1;
-    ctx.fillText((s.fx === 'ghost' ? '👻 ' : '') + (bd ? bd.ico + ' ' : '') + (s.kind === 'remote' && s.bot ? s.name + ' (bot)' : s.name), h.x, h.y - lift);
+    ctx.fillText((s.fx === 'ghost' ? '👻 ' : '') + (s.kind === 'remote' && s.bot ? s.name + ' (bot)' : s.name), h.x, h.y - lift);
     if (s.chat) { ctx.font = `700 ${15 / z}px Lexend, system-ui, sans-serif`; drawChat(s, h, h.y - lift - (s.it ? 16 / z : 0) - 14 / z, z, now); ctx.font = `600 ${13 / z}px Lexend, system-ui, sans-serif`; }
   }
   ctx.globalAlpha = 1;
@@ -4183,49 +4028,25 @@ function drawChat(s, h, top, z, now) {
   ctx.fillStyle = '#17122c'; ctx.fillText(ch.text, h.x, y + hh - 5 / z); ctx.globalAlpha = 1;
 }
 /* ---------- what's new: shows once after each update ---------- */
-const NEWS = [
-  { v: '1.3.0', items: ['✨ Snake trails! Pick one in Customize snake: Sparkles, Bubbles, Fall leaves, Turkey feathers, Hearts, Stars, Flames or Rainbow. A few of them unlock as you play.', 'Everyone in an online room sees your trail, and some computer snakes leave trails too.', '🍂 The menus are dressed up for Thanksgiving all November.'] },
-  { v: '1.2.2', items: ['Online rooms run much smoother, even on slow internet. Updates are smaller, the game sends them a little less often if someone can\'t keep up, and it catches up instead of falling further and further behind.', 'If the player running the computer snakes leaves the app, someone else takes over right away, so the computer snakes don\'t freeze.', 'Rude names are blocked. They show up as "Player".', 'Playing with friends? Everyone needs this version to join the same room, so tell them to refresh the page.'] },
-  { v: '1.2.1', items: ['Roles! Some players get a special role next to their name: 👑 Owner, 💡 Weird Idea Maker or 💎 Elite. Everyone sees it on the name tag, the leaderboard and in friends lists.', 'Got a role code from TtGamer15? Go to Settings → Role code and type it in. Each code works one time.'] },
-  { v: '1.2.0', pin: '🦃 The Thanksgiving update', until: '2026-12-01', items: ['🦃 The Thanksgiving update! 5 new hats: Turkey hat, Pilgrim hat, Leaf crown, Chef hat and Pumpkin pie hat. Find them in Customize snake with a 🦃 New tag.', 'New eyes: Stuffed (happy and full) and Hungry (watch the tongue).', 'New patterns: Autumn, in red, orange and gold leaf colors, and Turkey feathers.', 'New backgrounds: Harvest Moon and Autumn Park, with leaves falling across the arena.', 'All through November, computer snakes sometimes show up in the new hats too.'] },
-  { v: '1.1.1', items: ['Controller support! Connect an Xbox, PlayStation, Switch or most other controllers and press any button.', 'Steer with the stick, boost with the bottom button, and move around the menus with the d-pad.', 'Button hints use simple icons that work on any controller: the dots show which button to press (bottom, right, left or top). Settings has the full list.'] },
-  { v: '1.1.0', items: ['Friends! Open Play with friends to find your friend code. Add friends with their code, see when they are online and which room they are in, and tap Join to hop into their game.', 'In a room, tap Invite next to a friend and they get a pop-up to join you.', 'Friend requests need to be accepted, and you can remove or block anyone.'] },
-  { v: '1.0.0', items: ['Noodle Bots is officially out! Version 1.0.0 is the first full release.', 'All the updates before this one are now called Pre-Releases, from Pre-Release 2.5.0 to Pre-Release 3.1.0. You can still read them all below.'] },
-  { v: '3.1.0', pre: true, items: ['Hats ride on the head now: they turn with your snake and lean back the way it moves (the Cap and Halo are drawn from above).', 'Trailer mode in Settings: hides the scores, leaderboard and map so you can record clean videos.', 'Snakes burst in their own color when they crash.'] },
-  { v: '3.0.1', pre: true, items: ['Old-school Snake works sideways: arrows on the left, a big board on the right, and a ⇄ Switch sides button to flip them.'] },
-  { v: '3.0.0', pre: true, items: ['Secret: Settings has a new 🐍 Old-school Snake button. It is the classic grid Snake game, played with your own Noodle Bots snake, snacks and background.'] },
-  { v: '2.9.6', pre: true, items: ['Fixed: the iPhone top bar could still pick up a bright background color when the game started. Now it stays purple.'] },
-  { v: '2.9.5', pre: true, items: ["iPhone home-screen app: the solid bar behind the time and battery is back, and it's always the same dark purple as the buttons, whatever background you pick. (Re-add the app to your home screen to get it.)"] },
-  { v: '2.9.4', pre: true, items: ['Fixed the Take back button on phones: its words were the same color as the button and spilled out of it.'] },
-  { v: '2.9.3', pre: true, items: ['Music and sounds are built into the game now, so iPhone no longer shows music controls on the Dynamic Island. (Settings has a switch if you want sound to play when your phone is on silent.)'] },
-  { v: '2.9.2', pre: true, items: ["iPhone home-screen app: the game goes all the way to the top, behind the time and battery, and the buttons sit just below the iPhone's dark fade. (Re-add the app to your home screen to get it.)"] },
-  { v: '2.9.0', pre: true, items: ['6 bright new backgrounds: Sunny Meadow, Beach Day, Cotton Candy, Sky Blue, Snow Day and Lemonade.', 'Abilities works with Shrinking Arena now: pick Abilities, then Shrinking Arena under Play.', 'Music lives in Customize snake now, right under Arena background.', 'New Auto music: it switches to a different style every 45 seconds, like the Auto background.', 'Every hat takes your hat color now, including the Wizard hat, Crown jewel, Halo, Horns, Flower and Bunny ears.', 'Hats have a thin outline, so a hat the same color as your snake still shows up.', 'Online: when you take someone out, they go down on your screen right away instead of a moment later.', 'Online: bots stay solid through short connection hiccups instead of turning see-through. A snake with 👻 over its name is using the Ghost power.', 'Typing a room code or name on a phone: the box stays in view above the keyboard, with no black gap.', 'The leaderboard never bumps into the top buttons, even with bigger text or zoom.'] },
-  { v: '2.8.0', pre: true, items: ['Tidier screen on phones held upright: the pause, sound, music and Exit buttons get their own row across the top, so the leaderboard never covers them.', 'The bot banner is one short line, and Boost is a big thumb-sized button.', 'Train bot only shows up when your bot has new moves ready to learn.'] },
-  { v: '2.7.0', pre: true, items: ['Music styles! Pick Relaxing, Intense, Fun, Sad or Neutral under the sound switches on the menu.', 'Exit and Leave ask "Sure?" first, so a thumb that slides onto them while steering won\'t end your game.', 'Buttons that pop up when you crash ignore a tap that started before they appeared.', 'iPhone: no more stray bars at the top or bottom, and the screen settles back after typing.'] },
-  { v: '2.6.0', pre: true, items: ["Friends' bots can join online Bot Battles now. Whoever creates the room brings their friends' bots.", "This What's new page shows up after every update. Tap the version number at the bottom of the menu to see it again."] },
-  { v: '2.5.0', pre: true, items: ['How to play: a step-by-step first game.', 'Pause button in solo (or press P).', 'Stats & trophies page with 19 trophies.', 'Settings: steering style, swap the button sides, and smooth mode for older tablets.', '4 more bot levels, and levels come faster. The bot bar shows a percentage.', "Battle a friend's bot: load their save in Bot Battle.", 'Fixes: loading a save plays one sound, and the tutorial card no longer covers your snake on phones.'] },
-];
-const ver3 = (v) => { const p = String(v || '').split('.').map((n) => parseInt(n, 10) || 0); while (p.length < 3) p.push(0); return p.slice(0, 3).join('.'); };
-const newsKey = (n) => (n.pre ? ver3(n.v) : 'R' + n.v);            // old saves remember Pre-Releases as plain numbers like "3.1"
-const seenKey = (v) => (/^R/.test(v || '') ? v : ver3(v));
+// What's new shows just the latest update (like Museum After Dark). Change this when a new update comes out.
+const LATEST = { v: GAME_VERSION, name: 'a simpler Noodle Bots', icon: '🦃', items: [
+  ['🦃', 'Happy Thanksgiving!', 'Turkey hats, fall maps and a dressed-up menu all November.'],
+  ['🧹', 'A simpler menu:', 'just your snake, the game modes and the play buttons.'],
+  ['🤖', 'Your bot, sound and save file', 'are in Settings now.'],
+  ['🎮', 'Modes just start.', 'No more picking teams, bot counts or difficulty.'],
+  ['⭐', 'Daily challenges are gone.', 'Prizes that needed stars unlock by playing now, and anything you already unlocked stays yours.'],
+  ['✨', 'Snake trails:', 'pick one in Customize snake.'],
+] };
 const CUR_KEY = 'R' + GAME_VERSION;
-const newsLabel = (n) => (n.pre ? `Pre-Release ${n.v}` : `Version ${n.v}`);
-function openNews(onlyNew) {
+function openNews() {
   const list = $('newsList'); list.textContent = '';
-  const at = NEWS.findIndex((n) => newsKey(n) === seenKey(profile.seenVer));   // NEWS is newest first
-  const fresh = at > 0 ? NEWS.slice(0, at) : NEWS.slice(0, 1);
-  let shown = onlyNew ? fresh : NEWS;
-  // A big update can stay pinned on top for a while (the Thanksgiving update, all November), with smaller changes under it.
-  const pin = NEWS.find((n) => n.pin && (!n.until || Date.now() < Date.parse(n.until)));
-  if (pin) shown = [pin, ...shown.filter((n) => n !== pin)];
-  shown.forEach((n, i) => {
-    const d = document.createElement('div'); if (i > 0 && !fresh.includes(n)) d.className = 'old';
-    const h = document.createElement('h3');
-    h.textContent = n === pin ? `${pin.pin} · ${newsLabel(n).replace('Version', 'version')}` : n === NEWS[0] && fresh.includes(n) ? `${pin && pin !== n ? 'Also new' : 'New'} in ${newsLabel(n).replace('Version', 'version')}` : newsLabel(n);
-    const ul = document.createElement('ul'); for (const t of n.items) { const li = document.createElement('li'); li.textContent = t; ul.append(li); }
-    d.append(h, ul); list.append(d);
-  });
-  $('newsTitle').textContent = "What's new";
+  const ul = document.createElement('ul');
+  for (const [em, b, t] of LATEST.items) {
+    const li = document.createElement('li'), e = document.createElement('span'), s = document.createElement('span'), bb = document.createElement('b');
+    e.className = 'em'; e.textContent = em; bb.textContent = b; s.append(bb, ' ' + t); li.append(e, s); ul.append(li);
+  }
+  list.append(ul);
+  $('newsTitle').textContent = `${LATEST.icon} What's new: ${LATEST.name}`;
   profile.seenVer = CUR_KEY; save(false);
   showScreen('news');
 }
@@ -4234,7 +4055,7 @@ function maybeShowNews() {
   if (profile.seenVer === CUR_KEY) return;
   const veteran = profile.games > 0 || profile.sessions > 0 || profile.practice > 0;
   if (!veteran || (window.NB_DEBUG && !window.NB_NEWS) || /^#(?:room=)?[A-Za-z]{4}$/.test(location.hash || '')) { profile.seenVer = CUR_KEY; save(false); return; }
-  openNews(true);
+  openNews();
 }
 /* ---------- Old-school Snake: a grid snake drawn with the real Noodle Bots look ---------- */
 const RETRO = { N: 17, on: false, alive: false, cells: [], prev: [], dir: [1, 0], queue: [], food: null, bonus: null, score: 0, acc: 0, step: 150, grow: 0, eaten: 0, last: 0, raf: 0, dead: 0 };
@@ -4330,59 +4151,10 @@ function retroDraw(now) {
 }
 /* ---------- settings ---------- */
 function applySettings() { app.classList.toggle('swap', !!profile.set.swap); app.classList.toggle('clean', !!profile.set.clean); }
-/* ---------- roles ----------
-   A role code is 12 letters and numbers. The game checks it against ROLE_CODES (hashes only), then asks the
-   free message servers whether anyone else already used it. If not, it marks the code as used there (a
-   retained message) and keeps the code on this device, in a save slot the game and the beta share. */
-let myRole = '', myRoles = [], roleRec = { c: [], d: '' }, roleBusy = false;
-function roleNorm(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
-function roleOf(code) { return ROLE_CODES[sha256hex('nbrole:' + code).slice(0, 24)] || ''; }
-function loadRoles() {
-  try { const r = JSON.parse(localStorage.getItem(ROLE_KEY) || 'null'); if (r && Array.isArray(r.c)) roleRec = { c: r.c.filter((c) => typeof c === 'string').map(roleNorm).slice(0, 12), d: typeof r.d === 'string' ? r.d.slice(0, 16) : '' }; } catch (e) { /* no storage */ }
-  myRoles = [...new Set(roleRec.c.map(roleOf).filter(Boolean))];
-  myRole = ROLE_ORDER.find((id) => myRoles.includes(id)) || '';
-  updateRoleUI();
-}
-function saveRoles() { try { localStorage.setItem(ROLE_KEY, JSON.stringify(roleRec)); } catch (e) { /* storage full */ } }
-function updateRoleUI() {
-  const chip = $('roleChip'), R = ROLES[myRole];
-  chip.hidden = !R; if (R) { chip.textContent = `${R.ico} ${R.name}`; chip.style.color = R.col; }
-  const more = myRoles.filter((id) => id !== myRole).map((id) => `${ROLES[id].ico} ${ROLES[id].name}`);
-  $('roleNow').textContent = R ? `Your role: ${R.ico} ${R.name}${more.length ? ` (you also have ${more.join(', ')})` : ''}. Everyone sees it next to your name. Got another code? Type it here.`
-    : 'Got a special code from TtGamer15? Type it here to get a role next to your name.';
-  FR.lastSig = '';
-}
-async function useRoleCode(raw) {
-  if (roleBusy) return;
-  const code = roleNorm(raw), msg = $('roleMsg');
-  const say = (t, kind) => { msg.textContent = t; msg.className = 'bc-line rolemsg' + (kind ? ' ' + kind : ''); };
-  if (code.length !== 12) { say('Role codes have 12 letters and numbers, like ABCD-EFGH-JKMN.', 'bad'); return; }
-  const role = roleOf(code);
-  if (!role) { say("That code doesn't work. Check the letters and try again.", 'bad'); return; }
-  if (roleRec.c.includes(code)) { say(`You already used this code. You're ${ROLES[role].ico} ${ROLES[role].name}!`, 'good'); return; }
-  if (!NET_TE || typeof WebSocket !== 'function') { say('Using a code needs the internet. Open the game on its website and try again.', 'bad'); return; }
-  roleBusy = true; $('roleBtn').disabled = true; say('Checking your code…');
-  if (!roleRec.d) roleRec.d = frNewId() + frNewId().slice(0, 4);
-  const topic = ROLE_TOPIC + sha256hex('nbused:' + code).slice(0, 24);
-  const brokers = (Array.isArray(window.NB_MQTT_BROKERS) ? window.NB_MQTT_BROKERS : NET_BROKERS).slice(0, 4);
-  let usedBy = null; const conns = [];
-  const hear = (t, text) => { if (t !== topic || !text) return; try { const m = JSON.parse(text); if (m && typeof m.d === 'string' && m.d !== roleRec.d) usedBy = m; } catch (e) { /* not ours */ } };
-  await Promise.all(brokers.map((url, i) => mqttConnect(url, { clientId: 'nbr' + roleRec.d.slice(0, 8) + i + netId().slice(0, 3), timeout: 7000, onMessage: hear })
-    .then((c) => { conns.push(c); c.subscribe(topic); }).catch(() => { /* that server is down or blocked */ })));
-  const done = () => { roleBusy = false; $('roleBtn').disabled = false; setTimeout(() => conns.forEach((c) => { try { c.close(); } catch (e) { /* ignore */ } }), 500); };
-  if (!conns.length) { say("Couldn't reach the internet to check your code. Try again in a moment.", 'bad'); done(); return; }
-  await new Promise((r) => setTimeout(r, 1800));   // the servers send any "used" mark right after we subscribe
-  if (usedBy) { say('That code was already used on another device. Each code works one time.', 'bad'); done(); return; }
-  const mark = JSON.stringify({ d: roleRec.d, n: cleanName(profile.name), r: role, t: Date.now() });
-  for (const c of conns) if (c.open) c.publish(topic, mark, true);
-  roleRec.c.push(code); saveRoles(); loadRoles(); done();
-  $('roleIn').value = '';
-  say(`🎉 You're now ${ROLES[role].ico} ${ROLES[role].name}! Everyone sees it next to your name.`, 'good');
-  toast(`${ROLES[role].ico} You got the ${ROLES[role].name} role!`); SFX.unlock();
-}
 function openSettings() {
   for (const b of document.querySelectorAll('[data-steer]')) b.setAttribute('aria-pressed', String(b.dataset.steer === profile.set.steer));
   $('swapChk').checked = !!profile.set.swap; $('smoothChk').checked = !!profile.set.smooth; $('silentChk').checked = !!profile.set.silentOk; $('cleanChk').checked = !!profile.set.clean;
+  updateBotCard(); renderRivals();
   showScreen('settings');
 }
 /* ---------- pause (solo only) ---------- */
@@ -4478,7 +4250,7 @@ function startTutorial() {
 }
 function endTutorial(done) {
   tut.on = false; $('coach').hidden = true; app.classList.remove('tut');
-  if (done && !profile.tutDone) { profile.tutDone = true; profile.stars = (profile.stars || 0) + 1; toast('Tutorial complete! +1 ⭐'); SFX.trainDone(); save(false); checkAch(); }
+  if (done && !profile.tutDone) { profile.tutDone = true; toast('Tutorial complete! 🎓'); SFX.trainDone(); save(false); checkAch(); }
 }
 function tutTick() {
   if (!tut.on) return;
@@ -4533,7 +4305,7 @@ function showMenu() {
   if (inModes() && gameKind === 'solo') { match = { m: 'classic' }; setupSoloWorld(); }
   mode = 'menu'; if (player && player.alive) { const i = snakes.indexOf(player); if (i >= 0) snakes.splice(i, 1); }
   player = null; botDriving = false; updateBanner();
-  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); renderModeSel(); updateDailyCard(); updateTutBtn(); showScreen('menu');
+  $('nameIn').value = profile.name; updateBotCard(); updateMenuButtons(); renderModeSel(); updateTutBtn(); showScreen('menu');
 }
 function startGame(opts = {}) {
   stopSpectate();
@@ -4562,7 +4334,7 @@ function onPlayerDeath(killer) {
     $('dRun').textContent = fmt(run.max); $('dBestYou').textContent = fmt(profile.bestYou); $('dBestBot').textContent = fmt(profile.bestBot);
     let tip;
     if (!botReady()) tip = sampCount >= MIN_TRAIN ? `Your bot has ${fmt(sampCount)} of your moves to study. Train it now.` : `Your bot is still watching you. ${fmt(sampCount)} of ${MIN_TRAIN} moves recorded so far.`;
-    else if (wasBot) tip = `Bots copy their teacher. Every game you play gives it more to learn${profile.reflex ? '' : ', and Survival reflexes (in the menu) help it dodge'}.`;
+    else if (wasBot) tip = `Bots copy their teacher. Every game you play gives it more to learn${profile.reflex ? '' : ', and Survival reflexes (in Settings) help it dodge'}.`;
     else tip = newSince > 0 ? `You have ${fmt(newSince)} new moves your bot hasn't studied yet.` : 'Your bot is up to date with your moves.';
     $('deathTip').textContent = `${tip} Arena bots reached ${Math.round(npcIQ * 100)}% smarts${gameKind === 'solo' ? '. They drop back to 10% when you respawn and get smarter the longer you last.' : '.'}`;
     $('againBtn').textContent = gameKind === 'online' ? 'Respawn' : 'Play again';
@@ -4608,7 +4380,6 @@ function updateHud() {
     if (s.kind === 'remote') li.classList.add('friend');
     const a = document.createElement('span'); a.className = 'n'; a.textContent = i + 1;
     const b = document.createElement('span'); b.className = 'nm'; b.textContent = s === player ? (botDriving ? `${s.name} (bot)` : s.name) : s.kind === 'remote' && s.bot ? `${s.name} (bot)` : s.name;
-    const bd = ROLES[s === player ? myRole : s.kind === 'remote' ? s.badge : '']; if (bd) { b.textContent = bd.ico + ' ' + b.textContent; b.style.color = bd.col; b.title = bd.name; }
     const c = document.createElement('span'); c.className = 'sc'; c.textContent = fmt(s.mass * 10);
     li.append(a, b, c); ol.append(li);
   };
@@ -4740,7 +4511,6 @@ function lockProgress(L) {
   if (L.type === 'best') return `best ${fmt(profile.bestYou)}`;
   if (L.type === 'botBest') return `best ${fmt(profile.bestBot)}`;
   if (L.type === 'botLevel') return botReady() ? `now level ${botLevel().n}` : 'not trained yet';
-  if (L.type === 'stars') return `${Math.min(profile.stars || 0, L.v)}/${L.v} ⭐`;
   return '';
 }
 function buildLocker() {
@@ -4889,7 +4659,7 @@ const frOnline = (st) => !!(st && !st.off && Date.now() - st.seen < 75000);
 function frNewId() { let id = ''; for (let i = 0; i < 8; i++) id += FID_ABC[Math.floor(Math.random() * FID_ABC.length)]; return id; }
 function frEnsure() { if (!profile.fid) { profile.fid = frNewId(); save(false); } frStart(); }
 function frPub(topic, obj, retain) { const text = obj === null ? '' : JSON.stringify(obj); for (const c of FR.conns) if (c.open) c.publish(topic, text, retain); }
-function frMe() { return { n: cleanName(profile.name), lk: packLook(profile.look), rl: myRole || undefined }; }
+function frMe() { return { n: cleanName(profile.name), lk: packLook(profile.look) }; }
 function frStart() {
   if (FR.started || online.kind !== 'web' || !profile.fid || !NET_TE || typeof WebSocket !== 'function') return;
   FR.started = true;
@@ -4937,7 +4707,7 @@ function frHear(topic, text, retained) {
     const st = { off: !!m.off, st: ['m', 'p', 'r'].includes(m.st) ? m.st : 'm', r: typeof m.r === 'string' && /^[A-Z]{4}$/.test(m.r) ? m.r : null, c: clamp(int(m.c), 0, 99), t, seen: retained ? Math.min(now, t) : now };
     FR.status.set(who, st);
     const f = profile.friends.find((x) => x.id === who);
-    if (f && !m.off && typeof m.n === 'string') { const n = cleanName(m.n), lk = Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 999999) : f.lk, rl = typeof m.rl === 'string' && ROLES[m.rl] ? m.rl : ''; if (n !== f.n || lk !== f.lk || rl !== (f.rl || '')) { f.n = n; f.lk = lk; f.rl = rl; saveSoon(); } }
+    if (f && !m.off && typeof m.n === 'string') { const n = cleanName(m.n), lk = Number.isFinite(m.lk) ? clamp(Math.floor(m.lk), 0, 999999) : f.lk; if (n !== f.n || lk !== f.lk) { f.n = n; f.lk = lk; saveSoon(); } }
     renderFriends(); return;
   }
   if (who !== profile.fid || !FID_RE.test(from || '')) return;
@@ -5080,8 +4850,7 @@ function renderFriends() {
   const list = profile.friends.map((f) => ({ f, s: frStatusText(f.id) })).sort((a, b) => (b.s.on - a.s.on) || a.f.n.localeCompare(b.f.n));
   for (const { f, s } of list) {
     const li = document.createElement('li'), who = document.createElement('span'); who.className = 'fwho';
-    const nm = document.createElement('span'); nm.className = 'fname'; nm.textContent = (ROLES[f.rl] ? ROLES[f.rl].ico + ' ' : '') + f.n;
-    if (ROLES[f.rl]) nm.title = ROLES[f.rl].name;
+    const nm = document.createElement('span'); nm.className = 'fname'; nm.textContent = f.n;
     const sub = document.createElement('span'); sub.className = 'fst' + (s.on ? ' on' : ''); sub.textContent = s.t;
     who.append(nm, sub);
     let act = document.createElement('span');
@@ -5919,9 +5688,6 @@ $('lockerBtn').addEventListener('click', openLocker);
 $('lockerDone').addEventListener('click', showMenu);
 $('tutBtn').addEventListener('click', startTutorial);
 $('retroBtn').addEventListener('click', retroOpen);
-$('roleBtn').addEventListener('click', () => useRoleCode($('roleIn').value));
-$('roleIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); useRoleCode($('roleIn').value); } });
-$('roleIn').addEventListener('input', () => { const el = $('roleIn'), c = roleNorm(el.value).slice(0, 12); const f = c.match(/.{1,4}/g); const v = f ? f.join('-') : ''; if (v !== el.value) el.value = v; });
 $('retroBack').addEventListener('click', retroClose);
 tapButton($('retroSwap'), () => { profile.set.retroRight = !profile.set.retroRight; $('retroCard').classList.toggle('swap', profile.set.retroRight); save(false); });
 tapButton($('retroGo'), () => { if (performance.now() - RETRO.dead > 600) retroStart(); });
@@ -5952,7 +5718,6 @@ $('resumeBtn').addEventListener('click', popGuard(resumeGame));
 $('pauseMenuBtn').addEventListener('click', popGuard(() => { paused = false; showMenu(); }));
 tapButton($('coachNext'), () => { const S = TUT[tut.step]; if (S.last) endTutorial(true); else { tut.step++; tut.t0 = performance.now(); updateCoach(); } });
 $('coachSkip').addEventListener('click', () => endTutorial(false));
-for (const b of document.querySelectorAll('[data-bots]')) b.addEventListener('click', () => setModeSel({ bots: +b.dataset.bots }));
 $('deathWatchBtn').addEventListener('click', popGuard(() => startSpectate()));
 tapButton($('specNext'), () => { nextSpec(); blurIfPlaying(); });
 tapButton($('specRespawn'), () => { stopSpectate(); if (match.m === 'br') { if (gameKind === 'solo') startMatch(cfgOf(match)); } else startGame({ watch: false }); });
@@ -5965,11 +5730,7 @@ $('soloBtn').addEventListener('click', () => {
   if (cfg.m === 'classic') { const wasMode = inModes(); match = { m: 'classic' }; abilClassic = !!cfg.ab; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: false }); }
   else { gameKind = 'solo'; abilClassic = false; startMatch(cfg); }
 });
-for (const b of document.querySelectorAll('[data-base]')) b.addEventListener('click', () => { const p = { base: b.dataset.base }; if (p.base === 'tag' && !ABIL[profile.modeSel.ab].tag) p.ab = 'jump'; setModeSel(p); });
 for (const b of document.querySelectorAll('.modetab')) b.addEventListener('click', () => setModeSel({ m: b.dataset.mode }));
-for (const b of document.querySelectorAll('[data-ctl]')) b.addEventListener('click', () => setModeSel({ ctl: +b.dataset.ctl }));
-for (const b of document.querySelectorAll('[data-tag]')) b.addEventListener('click', () => setModeSel({ tag: b.dataset.tag }));
-for (const b of document.querySelectorAll('[data-diff]')) b.addEventListener('click', () => setModeSel({ diff: b.dataset.diff }));
 $('resAgain').addEventListener('click', popGuard(() => { if (gameKind === 'solo') startMatch(cfgOf(match)); }));
 $('resMenu').addEventListener('click', popGuard(() => { if (gameKind === 'online') leaveRoom(false); else showMenu(); }));
 $('watchBtn').addEventListener('click', () => { const wasMode = inModes(); match = { m: 'classic' }; abilClassic = false; if (gameKind !== 'solo' || wasMode) setupSoloWorld(); startGame({ watch: true }); });
@@ -6091,7 +5852,7 @@ function boot() {
   checkUnlocks();
   $('nameIn').value = profile.name;
   $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}${BETA ? ' BETA' : ''} · What's new`;
-  ensureDaily(); buildChat(); updateDailyCard(); loadRivals(); applySettings(); updateTutBtn(); checkAch(true);
+  buildChat(); loadRivals(); applySettings(); updateTutBtn(); checkAch(true);
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = FALL_MENU ? FALL_BG()[0] : profile.theme >= 0 ? profile.theme : 0; fallBgOn = FALL_MENU; paintPage(); syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
@@ -6205,9 +5966,7 @@ function boot() {
     brAge: (sec) => { match.started -= sec * 1000; },
     killBots: (n) => { let k = 0; for (const sn of [...snakes]) if (sn.kind === 'npc' && sn.role === 'B' && k < n) { killSnake(sn, null); k++; } return k; },
     spec: () => ({ on: spec.on, target: spec.target ? spec.target.name : null, mode, bar: !$('specBar').hidden }),
-    daily: () => ({ day: profile.daily && profile.daily.day, list: profile.daily && profile.daily.list.map((c) => [c.id, c.p, c.n, c.done]), stars: profile.stars }),
-    chal: (id, n) => { chal(id, n || 1); return profile.stars; },
-    setStars: (n) => { profile.stars = n; checkUnlocks(); updateDailyCard(); return n; },
+    setStars: (n) => { profile.stars = n; checkUnlocks(); return n; },
     chatSent: () => myChat,
     chatOn: () => snakes.filter((sn) => sn.chat && sn.chat.until > performance.now()).map((sn) => [sn.kind, sn.name, sn.chat.text]),
     abil: () => (player ? { on: abilOn(), ab: player.ab, charge: Math.round(player.charge || 0), fx: player.fx, phase: !!player.phase, slow: player.slowEnd > curNow, stats: abilStats, btn: !$('abilBtn').hidden, bits: $('abBits').textContent } : { on: abilOn(), stats: abilStats }),
