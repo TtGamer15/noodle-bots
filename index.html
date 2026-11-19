@@ -425,10 +425,21 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   .card{padding:12px;gap:10px}
 }
 /* ---------- game modes ---------- */
-.modetabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.modetabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
 .modetab{appearance:none;border:0;background:transparent;color:var(--muted);font:600 13px/1.2 var(--f-body);padding:10px 6px;border-radius:10px;cursor:pointer;touch-action:manipulation;min-width:0}
 .modetab[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .modetab:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
+.ltabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.ltab{appearance:none;border:0;background:transparent;color:var(--muted);font:600 14px/1.2 var(--f-body);padding:10px 6px;border-radius:10px;cursor:pointer;touch-action:manipulation}
+.ltab[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.ltab:focus-visible{outline:3px solid var(--bot);outline-offset:2px}
+#holList{display:grid;gap:18px}
+#lockHol{display:grid;gap:14px}
+#lockHol[hidden]{display:none}
+.hol-head{display:flex;align-items:baseline;gap:8px;margin:0 0 8px}
+.hol-head .hol-em{font-size:20px;line-height:1}
+.hol-head b{font-size:15px}
+.hol-head small{color:var(--muted);font-size:12px}
 .modeinfo{font-size:13px;line-height:1.45;color:var(--muted)}
 .optrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .optrow > .lbl{margin-right:2px}
@@ -615,12 +626,10 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
     </div>
   </div>
 
-  <div id="fallLeaves" aria-hidden="true"></div>
   <!-- Menu -->
   <section id="menu" class="screen">
     <div class="card menucard">
       <h1 class="logo">Noodle <span>Bots</span></h1>
-      <button class="fallchip" id="fallChip" type="button" hidden>🦃 Happy Thanksgiving! <span>See what's new</span></button>
       <p class="tag">Eat, grow, and teach a bot to play exactly like you. Then hand it the controls whenever you need a break.</p>
       <div class="me-row">
         <canvas id="menuPreview" class="preview" aria-label="Your snake"></canvas>
@@ -635,10 +644,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <p class="lbl">Game mode</p>
         <div class="modetabs" role="group" aria-label="Game mode">
           <button type="button" class="modetab" data-mode="classic" aria-pressed="true">Classic</button>
-          <button type="button" class="modetab" data-mode="ctl" aria-pressed="false">Capture the Leader</button>
           <button type="button" class="modetab" data-mode="tag" aria-pressed="false">Tag</button>
-          <button type="button" class="modetab" data-mode="abil" aria-pressed="false">Abilities</button>
-          <button type="button" class="modetab" data-mode="br" aria-pressed="false">Shrinking Arena</button>
           <button type="button" class="modetab" data-mode="bb" aria-pressed="false">Bot Battle</button>
         </div>
         <p class="modeinfo" id="modeInfo"></p>
@@ -650,8 +656,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
         <button class="btn big" id="onlineBtn" type="button">Play with friends<span class="fbadge" id="fBadge" hidden></span></button>
       </div>
       <button class="btn bot big" id="watchBtn" type="button">Watch my bot play</button>
-      <div class="menu-links"><button class="btn small" id="tutBtn" type="button">How to play</button><button class="btn small" id="statsBtn" type="button">Stats &amp; trophies</button><button class="btn small" id="setBtn" type="button">Settings</button></div>
-      <button class="version" id="versionLine" type="button">Noodle Bots</button>
+      <div class="menu-links"><button class="btn small" id="tutBtn" type="button">How to play</button><button class="btn small" id="setBtn" type="button">Settings</button></div>
+      <p class="version" id="versionLine">Noodle Bots</p>
     </div>
   </section>
 
@@ -668,6 +674,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="group"><p class="lbl">Saved looks</p><div class="slots" id="slotRow"></div></div>
       </div>
       <div class="col">
+      <div class="ltabs" role="group" aria-label="Customize"><button type="button" class="ltab" data-ltab="style" aria-pressed="true">Style</button><button type="button" class="ltab" data-ltab="hol" aria-pressed="false">🎉 Holidays</button></div>
+      <div class="col" id="lockStyle">
       <div class="group"><p class="lbl">Pattern</p><div class="opts" id="patRow"></div></div>
       <div class="group builder" id="buildGroup">
         <div class="build-head"><p class="lbl">Build it piece by piece</p><span class="lbl" id="buildCount">0/20 pieces</span></div>
@@ -681,6 +689,11 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <div class="group"><p class="lbl">Trail</p><div class="opts" id="trRow"></div></div>
       <div class="group"><p class="lbl">Arena background</p><div class="opts" id="themeRow"></div></div>
       <div class="group"><p class="lbl">Music</p><div class="opts" id="musicStyleRow"></div><p class="bc-line" id="musicHint" hidden>Music is off right now. Picking one turns it on.</p></div>
+      </div>
+      <div class="col" id="lockHol" hidden>
+        <p class="bc-line">Holiday hats and trails. Wear them any time of year!</p>
+        <div class="col" id="holList"></div>
+      </div>
       </div>
       </div>
     </div>
@@ -906,6 +919,85 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   </section>
 </div>
 
+<style>
+/* TtGamer15 Games: the back button (when you came from the app) and the "moving" box (old Home Screen apps). */
+.ttg-back{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;justify-self:start;margin:0 0 4px;padding:7px 13px 7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:inherit;font:600 13px/1.1 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;text-decoration:none;touch-action:manipulation}
+.ttg-back:hover{background:rgba(255,255,255,.14)}
+.ttg-back:focus-visible,.ttg-move button:focus-visible,.ttg-move a:focus-visible{outline:3px solid #52e5ff;outline-offset:2px}
+.ttg-move{display:grid;gap:8px;margin:0 0 6px;padding:12px 14px;border-radius:14px;border:1px solid rgba(82,229,255,.45);background:linear-gradient(135deg,rgba(82,229,255,.13),rgba(178,140,255,.13));font:400 13.5px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:left}
+.ttg-move b{font-weight:700}
+.ttg-move p{margin:0}
+.ttg-move .ttg-row{display:flex;flex-wrap:wrap;gap:6px}
+.ttg-move button,.ttg-move a{appearance:none;display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:inherit;font:600 13px/1.1 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;text-decoration:none;touch-action:manipulation;min-height:36px}
+.ttg-move .ttg-go{background:#52e5ff;border-color:#52e5ff;color:#0b1430}
+.ttg-move small{opacity:.75;font-size:12px}
+</style>
+<script>
+(function () {
+  // Which game this is. Saves for every TtGamer15 game travel together.
+  var GAME = 'nb', NAME = 'Noodle Bots', HUB_URL = '/';
+  var PREFIXES = ['noodlebots.v2', 'museum-after-dark-v1'];
+  var hub = false;
+  try { if (/[?&]hub=1/.test(location.search)) sessionStorage.setItem('ttg.hub', '1'); hub = sessionStorage.getItem('ttg.hub') === '1'; } catch (e) { /* storage off */ }
+  var onSite = location.hostname === 'ttgamer15.github.io' || /[?&]ttgtest=1/.test(location.search);
+  function exportSave() {
+    var k = {};
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (PREFIXES.some(function (p) { return key === p || key.indexOf(p + '.') === 0; })) k[key] = localStorage.getItem(key);
+      }
+    } catch (e) { /* storage off */ }
+    return 'TTGSAVE1:' + JSON.stringify({ from: GAME, at: Date.now(), k: k });
+  }
+  function copyText(text) {
+    var done = function (ok) { return ok; };
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallback(); });
+    return Promise.resolve(fallback());
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+      document.body.appendChild(ta); ta.select(); try { ta.setSelectionRange(0, text.length); } catch (e) { /* old */ }
+      var ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      ta.remove(); return done(ok);
+    }
+  }
+  function download(text) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+    a.download = 'ttgamer15-games-save.txt'; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  // Called by the game with the menu card element to put things at the top of.
+  window.TTG = {
+    hub: hub, onSite: onSite, exportSave: exportSave,
+    // anchor = the game's logo: the back button goes above it, the moving box just below it.
+    // top = where the back button goes when it should sit above something else (e.g. a small heading over the logo).
+    mount: function (card, anchor, top) {
+      if (!card) return;
+      var at = anchor || card.firstChild;
+      if (hub) {
+        var b = el('button', 'ttg-back', '← TtGamer15 Games'); b.type = 'button'; b.id = 'ttgBack';
+        b.addEventListener('click', function () { location.href = HUB_URL; });
+        card.insertBefore(b, top || at); return;
+      }
+      if (!onSite) return;
+      var box = el('div', 'ttg-move'); box.id = 'ttgMove';
+      var p = el('p'); p.appendChild(document.createTextNode('🎮 ' + NAME + ' is now part of ')); p.appendChild(el('b', null, 'TtGamer15 Games')); p.appendChild(document.createTextNode(', one app with all of TtGamer15\'s games.'));
+      var p2 = el('p'); p2.appendChild(el('small', null, 'Moving over? Tap Copy my save, open TtGamer15 Games, then go to Settings → Bring in a save → Paste.'));
+      var row = el('div', 'ttg-row');
+      var go = el('a', 'ttg-go', 'Open TtGamer15 Games'); go.href = HUB_URL;
+      var cp = el('button', null, 'Copy my save'); cp.type = 'button'; cp.id = 'ttgCopy';
+      cp.addEventListener('click', function () { copyText(exportSave()).then(function (ok) { cp.textContent = ok ? 'Copied! ✓' : 'Couldn\'t copy. Try Save file'; }); });
+      var dl = el('button', null, 'Save file'); dl.type = 'button'; dl.id = 'ttgFile';
+      dl.addEventListener('click', function () { download(exportSave()); });
+      row.appendChild(cp); row.appendChild(dl); row.appendChild(go);
+      box.appendChild(p); box.appendChild(row); box.appendChild(p2);
+      card.insertBefore(box, at ? at.nextSibling : null);
+    }
+  };
+})();
+</script>
+
 <script>
 (() => {
 'use strict';
@@ -930,7 +1022,7 @@ const BASE_SPEED = 230, BOOST_SPEED = 470, MIN_BOOST_MASS = 14, START_MASS = 12;
 const MAX_SAMPLES = 40000, SAVE_SAMPLES = 12000, MIN_TRAIN = 300, AWAY_MS = 10000;
 // BETA = the test copy at /noodle-bots/beta/. It keeps its own save and its own online channel, so testing never touches the real game.
 const BETA = false;
-const GAME_VERSION = '1.4.0';
+const GAME_VERSION = '1.5.0';
 const STORE_KEY = BETA ? 'noodlebots.beta' : 'noodlebots.v2', MOVES_KEY = STORE_KEY + '.moves';
 const PALETTE = ['#ff9f43', '#ff6fae', '#a6e85b', '#52b7ff', '#b28cff', '#ffd447', '#45e0b0', '#ff6b5b', '#f3ecff', '#8f9bff'];
 const NPC_NAMES = ['Sir Wiggles', 'Noodle Doodle', 'Captain Slurp', 'Zigzag Zoe', 'Danger Noodle', 'Twisty', 'Lil Loop', 'Pretzel', 'Hiss Kid', 'Ramen Rex', 'Doodlebug', 'Swirl', 'Fizz', 'Tater Tail', 'Coil', 'Lasso', 'Bubblegum', 'Mega Munch', 'Wobble', 'Spiral Sam'];
@@ -958,22 +1050,48 @@ const HATS = [
   { id: 'wizard', name: 'Wizard hat', lock: { type: 'games', v: 3, text: 'Play 3 games', was: 3 } },
   { id: 'phones', name: 'Headphones', lock: { type: 'games', v: 25, text: 'Play 25 games', was: 8 } },
   { id: 'bunny', name: 'Bunny ears', lock: { type: 'kills', v: 25, text: 'Take out 25 snakes', was: 15 } },
-  { id: 'turkey', name: 'Turkey hat', tag: '🦃 New' }, { id: 'pilgrim', name: 'Pilgrim hat', tag: '🦃 New' },
-  { id: 'leaves', name: 'Leaf crown', tag: '🦃 New' }, { id: 'chef', name: 'Chef hat', tag: '🦃 New' },
-  { id: 'pie', name: 'Pumpkin pie hat', tag: '🦃 New' },
+  // holiday hats (Customize → Holidays)
+  { id: 'turkey', name: 'Turkey hat' }, { id: 'pilgrim', name: 'Pilgrim hat' },
+  { id: 'leaves', name: 'Leaf crown' }, { id: 'chef', name: 'Chef hat' },
+  { id: 'pie', name: 'Pumpkin pie hat' },
+  { id: 'newyear', name: 'New Year top hat' }, { id: 'heartband', name: 'Heart headband' }, { id: 'leprechaun', name: 'Leprechaun hat' },
+  { id: 'eggshell', name: 'Easter egg hat' }, { id: 'flowercrown', name: 'Flower crown' }, { id: 'fishhat', name: 'Fishing hat' },
+  { id: 'unclesam', name: 'Stars & stripes hat' }, { id: 'witch', name: 'Witch hat' }, { id: 'pumpkin', name: "Jack-o'-lantern" },
+  { id: 'dreidel', name: 'Dreidel hat' }, { id: 'santa', name: 'Santa hat' }, { id: 'antlers', name: 'Reindeer antlers' },
 ];
+// Customize → Holidays. Everything here can be worn any time of year.
+const HOLIDAYS = [
+  { e: '🎆', name: "New Year's", when: 'January 1', hats: ['newyear'], trails: ['confetti'] },
+  { e: '💘', name: "Valentine's Day", when: 'February 14', hats: ['heartband'], trails: [] },
+  { e: '☘️', name: "St. Patrick's Day", when: 'March 17', hats: ['leprechaun'], trails: ['clover'] },
+  { e: '🐣', name: 'Easter', when: 'Spring', hats: ['eggshell'], trails: [] },
+  { e: '💐', name: "Mother's Day", when: 'May', hats: ['flowercrown'], trails: [] },
+  { e: '🎣', name: "Father's Day", when: 'June', hats: ['fishhat'], trails: [] },
+  { e: '🎇', name: 'Fourth of July', when: 'July 4', hats: ['unclesam'], trails: ['firework'] },
+  { e: '🎃', name: 'Halloween', when: 'October 31', hats: ['witch', 'pumpkin'], trails: ['bat'] },
+  { e: '🦃', name: 'Thanksgiving', when: 'November', hats: ['turkey', 'pilgrim', 'leaves', 'chef', 'pie'], trails: ['leaf', 'feather'] },
+  { e: '🕎', name: 'Hanukkah', when: 'December', hats: ['dreidel'], trails: [] },
+  { e: '🎄', name: 'Christmas', when: 'December 25', hats: ['santa', 'antlers'], trails: ['snow'] },
+];
+const HOL_IDS = new Set(HOLIDAYS.flatMap((H) => [...H.hats, ...H.trails]));
 const FALL_HATS = [10, 11, 12, 13, 14];   // computer snakes sometimes wear these in November
 // Trails: little things your snake leaves behind as it slithers. `life` is how long each bit lasts (s), `rate` how many per second.
 const TRAILS = [
   { id: 'none', name: 'None' },
-  { id: 'sparkle', name: 'Sparkles', tag: '✨ New', life: 0.9, rate: 16 },
-  { id: 'bubble', name: 'Bubbles', tag: '✨ New', life: 1.3, rate: 10 },
-  { id: 'leaf', name: 'Fall leaves', tag: '🦃 New', life: 1.4, rate: 8 },
-  { id: 'feather', name: 'Turkey feathers', tag: '🦃 New', life: 1.3, rate: 8 },
-  { id: 'heart', name: 'Hearts', tag: '✨ New', life: 1.2, rate: 9, lock: { type: 'games', v: 15, text: 'Play 15 games' } },
-  { id: 'star', name: 'Stars', tag: '✨ New', life: 1.1, rate: 10, lock: { type: 'games', v: 30, text: 'Play 30 games', was: 10 } },
-  { id: 'fire', name: 'Flames', tag: '✨ New', life: 0.7, rate: 26, lock: { type: 'kills', v: 10, text: 'Take out 10 snakes' } },
-  { id: 'rainbow', name: 'Rainbow', tag: '✨ New', life: 0.8, rate: 30, lock: { type: 'best', v: 2000, text: 'Reach length 2,000' } },
+  { id: 'sparkle', name: 'Sparkles', life: 0.9, rate: 16 },
+  { id: 'bubble', name: 'Bubbles', life: 1.3, rate: 10 },
+  { id: 'leaf', name: 'Fall leaves', life: 1.4, rate: 8 },
+  { id: 'feather', name: 'Turkey feathers', life: 1.3, rate: 8 },
+  { id: 'heart', name: 'Hearts', life: 1.2, rate: 9, lock: { type: 'games', v: 15, text: 'Play 15 games' } },
+  { id: 'star', name: 'Stars', life: 1.1, rate: 10, lock: { type: 'games', v: 30, text: 'Play 30 games', was: 10 } },
+  { id: 'fire', name: 'Flames', life: 0.7, rate: 26, lock: { type: 'kills', v: 10, text: 'Take out 10 snakes' } },
+  { id: 'rainbow', name: 'Rainbow', life: 0.8, rate: 30, lock: { type: 'best', v: 2000, text: 'Reach length 2,000' } },
+  // holiday trails (Customize → Holidays)
+  { id: 'confetti', name: 'Confetti', life: 1.0, rate: 14 },
+  { id: 'clover', name: 'Shamrocks', life: 1.2, rate: 8 },
+  { id: 'firework', name: 'Fireworks', life: 0.8, rate: 7 },
+  { id: 'bat', name: 'Bats', life: 1.4, rate: 6 },
+  { id: 'snow', name: 'Snowflakes', life: 1.4, rate: 10 },
 ];
 const TR_RAINBOW = 8;
 const trailNum = (v) => clamp(int(v), 0, TRAILS.length - 1);
@@ -1083,7 +1201,7 @@ function applyProfileData(p) {
   for (const k of ['auto', 'reflex', 'sound', 'music']) if (typeof p[k] === 'boolean') profile[k] = p[k];
   if (p.modeSel && typeof p.modeSel === 'object') {
     const ms = p.modeSel;
-    profile.modeSel = { m: ['classic', 'ctl', 'tag', 'abil', 'br', 'bb'].includes(ms.m) ? ms.m : 'classic', bots: [1, 3, 6, 9].includes(ms.bots) ? ms.bots : 3, ctl: clamp(int(ms.ctl, 1), 1, 3), tag: ['1v1', 'run', 'hunt'].includes(ms.tag) ? ms.tag : '1v1', diff: ['easy', 'normal', 'hard'].includes(ms.diff) ? ms.diff : 'normal',
+    profile.modeSel = { m: MENU_MODES.includes(ms.m) ? ms.m : 'classic', bots: [1, 3, 6, 9].includes(ms.bots) ? ms.bots : 3, ctl: clamp(int(ms.ctl, 1), 1, 3), tag: ['1v1', 'run', 'hunt'].includes(ms.tag) ? ms.tag : '1v1', diff: ['easy', 'normal', 'hard'].includes(ms.diff) ? ms.diff : 'normal',
       base: ['tag', 'br'].includes(ms.base) ? ms.base : 'classic', ab: typeof ms.ab === 'string' && Object.prototype.hasOwnProperty.call(ABIL, ms.ab) ? ms.ab : 'jump' };
   }
   if (typeof p.volume === 'number' && isFinite(p.volume)) profile.volume = clamp(p.volume, 0, 1);
@@ -1191,7 +1309,8 @@ const ACH = [
   { id: 'party', ic: '👋', name: 'Party Noodle', text: 'Play 5 games with friends', n: 5, v: () => profile.st.online },
   { id: 'style', ic: '🎨', name: 'Fashion Noodle', text: 'Build a custom snake with 10+ pieces', n: 10, v: () => profile.skin.length },
 ];
-function checkAch(quiet) {
+function checkAch() {   // trophies are kept quietly (no Stats screen since 1.5.0)
+  const quiet = true;
   const had = new Set(profile.ach || []), first = !profile.ach, got = [];
   for (const a of ACH) if (!had.has(a.id) && a.v() >= a.n) { had.add(a.id); got.push(a); }
   profile.ach = [...had];
@@ -1488,7 +1607,7 @@ function makeSnake(o) {
 }
 function randomLook() {
   const c1 = Math.floor(Math.random() * 10); let c2 = Math.floor(Math.random() * 10); if (c2 === c1) c2 = (c1 + 3) % 10;
-  const hatRoll = Math.random(), fall = new Date().getMonth() === 10;   // November
+  const hatRoll = Math.random(), fall = false;
   const hat = fall && hatRoll >= 0.6 && hatRoll < 0.84 ? FALL_HATS[Math.floor(Math.random() * FALL_HATS.length)] : hatRoll < 0.78 ? 0 : 1 + Math.floor(Math.random() * 3);
   return { c1, c2, pat: Math.floor(Math.random() * 5), eye: Math.floor(Math.random() * 4), hat };
 }
@@ -2060,6 +2179,8 @@ function modeName(m) {
 }
 // Every mode just uses these (1.4.0 took out the team size, tag type, bot count and difficulty pickers).
 const MODE_DEF = { ctl: 1, tag: '1v1', diff: 'normal', bots: 3 };
+// The menu only offers these now (1.5.0). The other modes still work in rooms hosted by older versions.
+const MENU_MODES = ['classic', 'tag', 'bb'];
 const MODE_NAME = { classic: 'Classic', ctl: 'Capture the Leader', tag: 'Tag', abil: 'Abilities', br: 'Shrinking Arena', bb: 'Bot Battle' };
 function newMatchCfg() {
   const ms = profile.modeSel;
@@ -3595,13 +3716,19 @@ function drawSnakeBody(c, s, b, t, now, z) {
    Each snake keeps its own short list of trail bits, dropped at its tail as it moves. Computer snakes: about
    1 in 5 has one of the free trails, picked from its id, so everyone in a room sees the same ones. */
 function trailOf(s) {
-  if (s.kind === 'npc' || s.kind === 'rnpc') { const k = s.npcId != null ? s.npcId : s.id, hsh = Math.imul((k | 0) + 7, 2654435761) >>> 0; return hsh % 100 < 22 ? 1 + ((hsh >>> 9) % 4) : 0; }
+  if (s.kind === 'npc' || s.kind === 'rnpc') { const k = s.npcId != null ? s.npcId : s.id, hsh = Math.imul((k | 0) + 7, 2654435761) >>> 0; return hsh % 100 < 22 ? [1, 2, 5, 6][(hsh >>> 9) % 4] : 0; }
   return (s.look && s.look.tr) || 0;
 }
 function heartPath(c, x, y, z) {
   c.beginPath(); c.moveTo(x, y + z * 0.38);
   c.bezierCurveTo(x - z * 1.05, y - z * 0.35, x - z * 0.5, y - z * 1.05, x, y - z * 0.45);
   c.bezierCurveTo(x + z * 0.5, y - z * 1.05, x + z * 1.05, y - z * 0.35, x, y + z * 0.38); c.closePath();
+}
+// A three-leaf shamrock with a little stem. (x, y) is the middle.
+function drawClover(c, x, y, z, col) {
+  c.fillStyle = col;
+  for (let q = 0; q < 3; q++) { const a = -Math.PI / 2 + q * TAU / 3; c.beginPath(); c.arc(x + Math.cos(a - 0.35) * z * 0.42, y + Math.sin(a - 0.35) * z * 0.42, z * 0.3, 0, TAU); c.arc(x + Math.cos(a + 0.35) * z * 0.42, y + Math.sin(a + 0.35) * z * 0.42, z * 0.3, 0, TAU); c.fill(); }
+  c.strokeStyle = col; c.lineWidth = Math.max(1, z * 0.14); c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + z * 0.25, y + z * 0.6, x + z * 0.05, y + z * 0.95); c.stroke();
 }
 let trailLeafSprites = null;
 // One trail bit. age 0..1, k = its own random number, r = the snake's size.
@@ -3637,6 +3764,31 @@ function drawTrailBit(c, id, x, y, age, k, r, now, light) {
     const z = r * 0.72 * (1 - age * 0.5) * (0.85 + 0.3 * k);
     const col = age < 0.25 ? '#ffe066' : age < 0.5 ? '#ff9f2b' : age < 0.75 ? '#ff4a1c' : 'rgba(110,100,100,1)';
     c.globalAlpha = age < 0.75 ? 0.9 * fade : 0.4 * (1 - age) / 0.25; c.fillStyle = col; c.beginPath(); c.arc(x, y, z, 0, TAU); c.fill();
+  } else if (id === 9) {   // confetti, tumbling
+    const z = r * 0.62, cols = ['#ff5d9e', '#ffd447', '#52e5ff', '#7be38f', '#b28cff'];
+    c.globalAlpha = fade; c.save(); c.translate(x, y); c.rotate(k * 20 + now * 0.006 * (k < 0.5 ? 1 : -1)); c.scale(1, 0.25 + 0.75 * Math.abs(Math.cos(now * 0.009 + k * 9)));
+    c.fillStyle = cols[Math.floor(k * cols.length)]; c.fillRect(-z / 2, -z * 0.28, z, z * 0.56); c.restore();
+  } else if (id === 10) {   // shamrock
+    c.globalAlpha = fade; c.save(); c.translate(x, y); c.rotate(k * 9 + now * 0.0015); drawClover(c, 0, 0, r * 0.7, k < 0.5 ? '#38b85a' : '#6fdc84'); c.restore();
+  } else if (id === 11) {   // fireworks: little red, white and blue bursts
+    const col = light ? ['#e8343f', '#7d8fb8', '#2b4fb8'][Math.floor(k * 3)] : ['#ff4a5a', '#ffffff', '#5b95ff'][Math.floor(k * 3)], R = r * (0.25 + age * 1.5);
+    c.globalAlpha = fade; c.fillStyle = col;
+    for (let q = 0; q < 7; q++) { const a = q / 7 * TAU + k * 6; c.beginPath(); c.arc(x + Math.cos(a) * R, y + Math.sin(a) * R, r * 0.15 * (1 - age * 0.6), 0, TAU); c.fill(); }
+  } else if (id === 12) {   // bats, flapping off
+    const z = r * 0.85, flap = Math.sin(now * 0.03 + k * 20) * 0.5;
+    c.globalAlpha = fade; c.fillStyle = light ? '#2a1f3d' : '#120d20'; c.strokeStyle = light ? 'rgba(42,31,61,0.4)' : 'rgba(200,170,255,0.6)'; c.lineWidth = Math.max(1, r * 0.06);
+    c.beginPath();
+    for (const sd of [-1, 1]) { c.moveTo(x, y); c.quadraticCurveTo(x + sd * z * 0.5, y - z * (0.5 + flap), x + sd * z, y - z * flap * 0.6); c.quadraticCurveTo(x + sd * z * 0.72, y + z * 0.12, x + sd * z * 0.45, y + z * 0.04); c.quadraticCurveTo(x + sd * z * 0.25, y + z * 0.26, x, y + z * 0.1); }
+    c.fill(); c.stroke(); c.beginPath(); c.arc(x, y + z * 0.04, z * 0.2, 0, TAU); c.fill();
+  } else if (id === 13) {   // snowflakes, drifting down
+    const z = r * 0.6 * (1 - age * 0.3), a = k * 5 + now * 0.0015;
+    c.globalAlpha = fade; c.strokeStyle = light ? '#6f97da' : '#eef6ff'; c.lineWidth = Math.max(1, r * 0.09); c.lineCap = 'round'; c.beginPath();
+    for (let q = 0; q < 6; q++) {
+      const aa = a + q * Math.PI / 3, mx = x + Math.cos(aa) * z * 0.55, my = y + Math.sin(aa) * z * 0.55;
+      c.moveTo(x, y); c.lineTo(x + Math.cos(aa) * z, y + Math.sin(aa) * z);
+      c.moveTo(mx, my); c.lineTo(mx + Math.cos(aa + 0.8) * z * 0.3, my + Math.sin(aa + 0.8) * z * 0.3); c.moveTo(mx, my); c.lineTo(mx + Math.cos(aa - 0.8) * z * 0.3, my + Math.sin(aa - 0.8) * z * 0.3);
+    }
+    c.stroke();
   }
   c.globalAlpha = 1;
 }
@@ -3672,7 +3824,7 @@ function drawTrails(c, b, now) {
         if (s.tra > 1) s.tra = 1;
       }
     }
-    const P = s.trp, rise = id === 2 ? 14 : id === 5 ? 20 : id === 7 ? 10 : 0;
+    const P = s.trp, rise = id === 2 ? 14 : id === 5 ? 20 : id === 7 ? 10 : id === 12 ? 16 : id === 13 ? -9 : 0;
     while (P.length && (now - P[0].t0) / 1000 > P[0].life) P.shift();
     if (!P.length) continue;
     if (id === TR_RAINBOW) { drawRainbow(c, P.map((q) => ({ x: q.x, y: q.y, age: (now - q.t0) / 1000 / q.life, hue: q.hue })), s.r); continue; }
@@ -3810,6 +3962,106 @@ function drawHat(c, s, now) {
       c.fillStyle = tint(s.colorB, 0.3); c.beginPath(); c.ellipse(0, r * 0.05, r * 0.1, r * 0.45, 0, 0, TAU); c.fill();
       c.restore();
     }
+  } else if (id === 'newyear') {   // a shiny top hat with a gold band and twinkles
+    c.fillStyle = '#1b1530'; c.strokeStyle = 'rgba(255,255,255,0.32)'; c.lineWidth = ew;
+    c.beginPath(); c.ellipse(bx, by + r * 0.02, r * 0.82, r * 0.2, 0, 0, TAU); c.fill(); c.stroke();
+    c.beginPath(); c.rect(bx - r * 0.44, by - r * 1.1, r * 0.88, r * 1.1); c.fill(); c.stroke();
+    c.beginPath(); c.ellipse(bx, by - r * 1.1, r * 0.44, r * 0.11, 0, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = '#ffd447'; c.fillRect(bx - r * 0.44, by - r * 0.42, r * 0.88, r * 0.2);
+    const tw = 0.6 + 0.4 * Math.sin(now * 0.008);
+    drawStar(c, bx + r * 0.62, by - r * 1.12, r * 0.22 * tw, '#fff3a0'); drawStar(c, bx - r * 0.68, by - r * 0.72, r * 0.15 * (1.4 - tw), '#ffd447');
+  } else if (id === 'heartband') {   // a headband with two hearts bobbing on springs
+    c.strokeStyle = '#ff5d9e'; c.lineWidth = r * 0.14; c.lineCap = 'round';
+    c.beginPath(); c.arc(bx, by + r * 0.5, r * 0.72, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
+    for (const side of [-1, 1]) {
+      const bob = Math.sin(now * 0.006 + side) * r * 0.08, sx = bx + side * r * 0.3, sy = by - r * 0.1, tx = bx + side * r * 0.48, ty = by - r * 1.0 + bob;
+      c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = r * 0.06; c.beginPath(); c.moveTo(sx, sy);
+      for (let q = 1; q <= 6; q++) { const t = q / 6; c.lineTo(sx + (tx - sx) * t + (q % 2 ? 1 : -1) * r * 0.07, sy + (ty + r * 0.15 - sy) * t); }
+      c.stroke();
+      heartPath(c, tx, ty, r * 0.36); c.fillStyle = side < 0 ? '#ff5d9e' : '#ff3b6b'; c.fill(); c.strokeStyle = edge; c.lineWidth = ew; c.stroke();
+    }
+  } else if (id === 'leprechaun') {   // a green hat with a buckle and a shamrock
+    c.fillStyle = '#1f9a4b'; c.strokeStyle = edge; c.lineWidth = ew;
+    c.beginPath(); c.ellipse(bx, by + r * 0.02, r * 0.86, r * 0.21, 0, 0, TAU); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(bx - r * 0.48, by); c.lineTo(bx - r * 0.4, by - r * 1.0); c.lineTo(bx + r * 0.4, by - r * 1.0); c.lineTo(bx + r * 0.48, by); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#16121f'; c.beginPath(); c.moveTo(bx - r * 0.47, by - r * 0.08); c.lineTo(bx - r * 0.45, by - r * 0.32); c.lineTo(bx + r * 0.45, by - r * 0.32); c.lineTo(bx + r * 0.47, by - r * 0.08); c.closePath(); c.fill();
+    c.strokeStyle = '#ffd447'; c.lineWidth = r * 0.08; c.strokeRect(bx - r * 0.14, by - r * 0.33, r * 0.28, r * 0.26);
+    drawClover(c, bx + r * 0.28, by - r * 0.68, r * 0.34, '#8ff0a0');
+  } else if (id === 'eggshell') {   // the top of a painted Easter egg, worn like a cap
+    c.fillStyle = '#9fd8ff'; c.strokeStyle = edge; c.lineWidth = ew;
+    c.beginPath(); c.moveTo(bx - r * 0.62, by + r * 0.05);
+    for (const [zx, zy] of [[-0.46, -0.12], [-0.31, 0.06], [-0.15, -0.12], [0, 0.06], [0.15, -0.12], [0.31, 0.06], [0.46, -0.12], [0.62, 0.05]]) c.lineTo(bx + zx * r, by + zy * r);
+    c.bezierCurveTo(bx + r * 0.68, by - r * 0.8, bx + r * 0.32, by - r * 1.32, bx, by - r * 1.32);
+    c.bezierCurveTo(bx - r * 0.32, by - r * 1.32, bx - r * 0.68, by - r * 0.8, bx - r * 0.62, by + r * 0.05); c.closePath(); c.fill(); c.stroke();
+    c.save(); c.clip();
+    c.strokeStyle = '#fff59a'; c.lineWidth = r * 0.12; c.beginPath(); c.moveTo(bx - r * 0.7, by - r * 0.36); c.quadraticCurveTo(bx, by - r * 0.16, bx + r * 0.7, by - r * 0.42); c.stroke();
+    c.strokeStyle = '#ff9fd0'; c.beginPath(); c.moveTo(bx - r * 0.7, by - r * 0.74); c.quadraticCurveTo(bx, by - r * 0.56, bx + r * 0.7, by - r * 0.8); c.stroke();
+    c.fillStyle = '#ffffff'; for (const [ex, ey] of [[-0.3, -0.56], [0.22, -0.6], [0, -1.02], [0.38, -0.18], [-0.4, -0.12]]) { c.beginPath(); c.arc(bx + ex * r, by + ey * r, r * 0.07, 0, TAU); c.fill(); }
+    c.restore();
+  } else if (id === 'flowercrown') {   // a crown of little flowers
+    const cols = ['#ff8fc0', '#ffd447', '#b28cff', '#ff9f6b', '#8fd9ff'];
+    c.strokeStyle = '#4caf50'; c.lineWidth = r * 0.08; c.beginPath(); c.arc(bx, by + r * 0.12, r * 0.66, Math.PI, TAU); c.stroke();
+    for (let j = 0; j < 6; j++) {
+      const a = Math.PI * (1.0 + j / 5), x = bx + Math.cos(a) * r * 0.66, y = by + r * 0.12 + Math.sin(a) * r * 0.66, z = r * (j % 2 ? 0.16 : 0.2);
+      c.fillStyle = cols[j % cols.length];
+      for (let q = 0; q < 5; q++) { const pa = q / 5 * TAU + j; c.beginPath(); c.arc(x + Math.cos(pa) * z, y + Math.sin(pa) * z, z * 0.72, 0, TAU); c.fill(); }
+      c.fillStyle = '#fff6c2'; c.beginPath(); c.arc(x, y, z * 0.6, 0, TAU); c.fill();
+    }
+  } else if (id === 'fishhat') {   // Dad's fishing hat, with a lure hooked on the side
+    c.fillStyle = '#9a8f5a'; c.strokeStyle = edge; c.lineWidth = ew;
+    c.beginPath(); c.ellipse(bx, by + r * 0.05, r * 0.9, r * 0.27, 0, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = '#b5a96c'; c.beginPath(); c.moveTo(bx - r * 0.56, by); c.quadraticCurveTo(bx - r * 0.5, by - r * 0.86, bx, by - r * 0.86); c.quadraticCurveTo(bx + r * 0.5, by - r * 0.86, bx + r * 0.56, by); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#6d6440'; c.fillRect(bx - r * 0.55, by - r * 0.25, r * 1.1, r * 0.14);
+    c.save(); c.translate(bx + r * 0.4, by - r * 0.52); c.rotate(Math.sin(now * 0.004) * 0.25);
+    c.strokeStyle = '#d6dbe8'; c.lineWidth = r * 0.04; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, r * 0.12); c.stroke();
+    c.fillStyle = '#ff7a3d'; c.beginPath(); c.ellipse(0, r * 0.3, r * 0.1, r * 0.19, 0, 0, TAU); c.fill();
+    c.fillStyle = '#ffd447'; c.beginPath(); c.moveTo(-r * 0.1, r * 0.48); c.lineTo(r * 0.1, r * 0.48); c.lineTo(0, r * 0.38); c.closePath(); c.fill();
+    c.restore();
+  } else if (id === 'unclesam') {   // a stars-and-stripes top hat
+    c.strokeStyle = edge; c.lineWidth = ew;
+    c.fillStyle = '#2b4fb8'; c.beginPath(); c.ellipse(bx, by + r * 0.02, r * 0.84, r * 0.2, 0, 0, TAU); c.fill(); c.stroke();
+    const body = () => { c.beginPath(); c.moveTo(bx - r * 0.44, by); c.lineTo(bx - r * 0.38, by - r * 1.25); c.lineTo(bx + r * 0.38, by - r * 1.25); c.lineTo(bx + r * 0.44, by); c.closePath(); };
+    c.save(); body(); c.fillStyle = '#ffffff'; c.fill(); c.clip();
+    c.fillStyle = '#e8343f'; for (let q = 0; q < 5; q++) c.fillRect(bx - r * 0.5 + q * r * 0.2, by - r * 1.3, r * 0.1, r * 1.3);
+    c.fillStyle = '#2b4fb8'; c.fillRect(bx - r * 0.5, by - r * 0.42, r, r * 0.26); c.restore();
+    body(); c.stroke();
+    for (const sx of [-0.22, 0, 0.22]) drawStar(c, bx + sx * r, by - r * 0.29, r * 0.085, '#ffffff');
+  } else if (id === 'witch') {   // a bendy witch hat
+    c.fillStyle = '#231a33'; c.strokeStyle = 'rgba(255,255,255,0.28)'; c.lineWidth = ew;
+    c.beginPath(); c.ellipse(bx, by + r * 0.05, r * 0.92, r * 0.22, 0, 0, TAU); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(bx - r * 0.5, by); c.lineTo(bx + r * 0.5, by); c.quadraticCurveTo(bx + r * 0.2, by - r * 0.9, bx + r * 0.58, by - r * 1.58); c.quadraticCurveTo(bx - r * 0.15, by - r * 1.0, bx - r * 0.5, by); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#8a4dff'; c.beginPath(); c.moveTo(bx - r * 0.49, by - r * 0.05); c.lineTo(bx + r * 0.49, by - r * 0.05); c.lineTo(bx + r * 0.42, by - r * 0.26); c.lineTo(bx - r * 0.42, by - r * 0.26); c.closePath(); c.fill();
+    c.strokeStyle = '#ffd447'; c.lineWidth = r * 0.06; c.strokeRect(bx - r * 0.1, by - r * 0.27, r * 0.2, r * 0.22);
+  } else if (id === 'pumpkin') {   // a little glowing jack-o'-lantern
+    const py = by - r * 0.45;
+    c.fillStyle = '#ff8a1f'; c.strokeStyle = 'rgba(120,50,0,0.7)'; c.lineWidth = ew;
+    for (const [ox, w] of [[-0.3, 0.32], [0.3, 0.32], [0, 0.36]]) { c.beginPath(); c.ellipse(bx + ox * r, py, w * r, r * 0.46, 0, 0, TAU); c.fill(); c.stroke(); }
+    c.fillStyle = '#3b7d2a'; c.fillRect(bx - r * 0.05, py - r * 0.62, r * 0.1, r * 0.2);
+    const glow = 0.75 + 0.25 * Math.sin(now * 0.01); c.fillStyle = `rgba(255,${Math.round(200 + 40 * glow)},90,${glow.toFixed(2)})`;
+    for (const sx of [-1, 1]) { c.beginPath(); c.moveTo(bx + sx * r * 0.27, py - r * 0.2); c.lineTo(bx + sx * r * 0.11, py - r * 0.03); c.lineTo(bx + sx * r * 0.36, py - r * 0.03); c.closePath(); c.fill(); }
+    c.beginPath(); c.moveTo(bx - r * 0.34, py + r * 0.1); c.lineTo(bx - r * 0.18, py + r * 0.22); c.lineTo(bx - r * 0.06, py + r * 0.12); c.lineTo(bx + r * 0.06, py + r * 0.22); c.lineTo(bx + r * 0.18, py + r * 0.12); c.lineTo(bx + r * 0.34, py + r * 0.1); c.lineTo(bx + r * 0.2, py + r * 0.3); c.lineTo(bx - r * 0.2, py + r * 0.3); c.closePath(); c.fill();
+  } else if (id === 'dreidel') {   // a dreidel spinning on top
+    c.save(); c.translate(bx, by - r * 0.12); c.rotate(Math.sin(now * 0.012) * 0.18);
+    c.strokeStyle = 'rgba(20,30,80,0.7)'; c.lineWidth = ew;
+    c.fillStyle = '#3d7bff'; c.beginPath(); c.moveTo(0, 0); c.lineTo(-r * 0.42, -r * 0.42); c.lineTo(-r * 0.42, -r * 1.08); c.lineTo(r * 0.42, -r * 1.08); c.lineTo(r * 0.42, -r * 0.42); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#dfe8ff'; c.fillRect(-r * 0.07, -r * 1.4, r * 0.14, r * 0.33);
+    c.fillStyle = '#c9d4f2'; c.fillRect(-r * 0.42, -r * 0.66, r * 0.84, r * 0.11);
+    c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(-r * 0.33, -r * 1.0, r * 0.12, r * 0.5);
+    c.restore();
+  } else if (id === 'santa') {   // a floppy Santa hat
+    const flop = Math.sin(now * 0.004) * r * 0.06;
+    c.fillStyle = '#e3263b'; c.strokeStyle = edge; c.lineWidth = ew;
+    c.beginPath(); c.moveTo(bx - r * 0.56, by - r * 0.1); c.quadraticCurveTo(bx - r * 0.2, by - r * 1.3, bx + r * 0.78 + flop, by - r * 0.86); c.quadraticCurveTo(bx + r * 0.3, by - r * 0.76, bx + r * 0.56, by - r * 0.1); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(bx, by - r * 0.08, r * 0.68, r * 0.21, 0, 0, TAU); c.fill(); c.stroke();
+    c.beginPath(); c.arc(bx + r * 0.82 + flop, by - r * 0.84, r * 0.18, 0, TAU); c.fill(); c.stroke();
+  } else if (id === 'antlers') {   // reindeer antlers with a jingle bell
+    c.strokeStyle = '#8a5a2b'; c.lineWidth = r * 0.14; c.lineCap = 'round';
+    for (const side of [-1, 1]) {
+      c.beginPath(); c.moveTo(bx + side * r * 0.25, by - r * 0.1); c.quadraticCurveTo(bx + side * r * 0.35, by - r * 0.8, bx + side * r * 0.72, by - r * 1.15); c.stroke();
+      c.beginPath(); c.moveTo(bx + side * r * 0.33, by - r * 0.55); c.lineTo(bx + side * r * 0.64, by - r * 0.6); c.moveTo(bx + side * r * 0.46, by - r * 0.86); c.lineTo(bx + side * r * 0.36, by - r * 1.16); c.stroke();
+    }
+    c.fillStyle = '#ffd447'; c.strokeStyle = 'rgba(120,80,0,0.75)'; c.lineWidth = ew; c.beginPath(); c.arc(bx, by - r * 0.12, r * 0.15, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = 'rgba(120,80,0,0.75)'; c.beginPath(); c.arc(bx, by - r * 0.06, r * 0.04, 0, TAU); c.fill();
   } else if (id === 'turkey') {   // a roast turkey, drumsticks up
     c.strokeStyle = edge; c.lineWidth = ew;
     for (const side of [-1, 1]) {
@@ -3978,7 +4230,7 @@ addEventListener('pointerdown', () => { lastDownAt = performance.now(); }, true)
 const popGuard = (fn) => (e) => { if (e && e.detail === 0) { fn(e); return; } const now = performance.now(); if (now - screenAt < 350 || lastDownAt < screenAt) return; fn(e); };
 function showScreen(name) { if (name && $(name).hidden) screenAt = performance.now(); for (const id of screens) $(id).hidden = id !== name; app.classList.toggle('menuup', !!name); app.classList.toggle('playing', (mode === 'play' || mode === 'spec') && !name); }
 // November: the menus get a Thanksgiving look (it turns itself off on December 1).
-const FALL_MENU = new Date().getMonth() === 10;
+const FALL_MENU = false;   // the November menu is gone; Thanksgiving lives in Customize → Holidays
 const FALL_BG = () => [THEMES.findIndex((t) => t.name === 'Harvest Moon'), THEMES.findIndex((t) => t.name === 'Autumn Park')];
 if (FALL_MENU) {
   app.classList.add('fall'); $('fallChip').hidden = false; $('fallChip').addEventListener('click', () => openNews(false));
@@ -4051,8 +4303,9 @@ function openNews() {
   showScreen('news');
 }
 // After an update, players who've played before see what changed. Brand-new players skip it.
-function maybeShowNews() {
-  if (profile.seenVer === CUR_KEY) return;
+function maybeShowNews() {   // no more What's new pop-ups (1.5.0)
+  if (profile.seenVer !== CUR_KEY) { profile.seenVer = CUR_KEY; save(false); }
+  return;
   const veteran = profile.games > 0 || profile.sessions > 0 || profile.practice > 0;
   if (!veteran || (window.NB_DEBUG && !window.NB_NEWS) || /^#(?:room=)?[A-Za-z]{4}$/.test(location.hash || '')) { profile.seenVer = CUR_KEY; save(false); return; }
   openNews();
@@ -4526,7 +4779,8 @@ function buildLocker() {
   mkSw('c1Row', 'c1'); mkSw('c2Row', 'c2');
   const mkOpts = (rowId, arr, key) => {
     const row = $(rowId); row.textContent = '';
-    const order = arr.map((_, i) => i); if (key === 'pat') order.push(...order.splice(CUSTOM_PAT, 1));   // Custom (build your own) stays last
+    let order = arr.map((_, i) => i); if (key === 'pat') order.push(...order.splice(CUSTOM_PAT, 1));   // Custom (build your own) stays last
+    if (key === 'hat' || key === 'tr') order = order.filter((i) => !HOL_IDS.has(arr[i].id));   // holiday things live in the Holidays tab
     order.forEach((i) => { const it = arr[i];
       const b = document.createElement('button'); b.type = 'button'; b.className = 'opt';
       const noPieces = key === 'pat' && it.id === 'custom' && !profile.skin.length, ok = isUnlocked(it) && !noPieces; b.disabled = !ok; b.setAttribute('aria-pressed', String(profile.look[key] === i));
@@ -4539,6 +4793,7 @@ function buildLocker() {
     });
   };
   mkOpts('patRow', PATTERNS, 'pat'); mkOpts('eyeRow', EYES, 'eye'); mkOpts('hatRow', HATS, 'hat'); mkOpts('trRow', TRAILS, 'tr');
+  buildHolidays(); syncLockTab();
   const custom = (profile.look.pat === CUSTOM_PAT && profile.skin.length > 0) || !!PAT_OWN_COLOR[profile.look.pat];
   $('c1Group').hidden = custom; $('c2Lbl').textContent = custom ? 'Hat color' : 'Second color (and hat)';
   buildBuilder();
@@ -4575,6 +4830,35 @@ function buildLocker() {
     row.append(wear, sv); d.append(row); sr.append(d);
   });
 }
+
+// Customize → Holidays: each holiday's hats and trails. Tap one to wear it, tap it again to take it off.
+let lockTab = 'style';
+function syncLockTab() {
+  for (const b of document.querySelectorAll('.ltab')) b.setAttribute('aria-pressed', String(b.dataset.ltab === lockTab));
+  $('lockStyle').hidden = lockTab !== 'style'; $('lockHol').hidden = lockTab !== 'hol';
+}
+function buildHolidays() {
+  const list = $('holList'); list.textContent = '';
+  for (const H of HOLIDAYS) {
+    const g = document.createElement('div'); g.className = 'group hol';
+    const head = document.createElement('p'); head.className = 'hol-head';
+    const em = document.createElement('span'); em.className = 'hol-em'; em.textContent = H.e;
+    const nm = document.createElement('b'); nm.textContent = H.name;
+    const wh = document.createElement('small'); wh.textContent = H.when; head.append(em, nm, wh);
+    const row = document.createElement('div'); row.className = 'opts';
+    const add = (arr, key, id, kind) => {
+      const i = arr.findIndex((x) => x.id === id); if (i < 0) return;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.setAttribute('aria-pressed', String(profile.look[key] === i));
+      const t = document.createElement('span'); t.textContent = arr[i].name; const sm = document.createElement('small'); sm.textContent = kind; b.append(t, sm);
+      b.addEventListener('click', () => { profile.look[key] = profile.look[key] === i ? 0 : i; save(); buildLocker(); });
+      row.append(b);
+    };
+    for (const id of H.hats) add(HATS, 'hat', id, 'Hat');
+    for (const id of H.trails) add(TRAILS, 'tr', id, 'Trail');
+    g.append(head, row); list.append(g);
+  }
+}
+for (const b of document.querySelectorAll('.ltab')) b.addEventListener('click', () => { lockTab = b.dataset.ltab; syncLockTab(); });
 
 let pieceSel = -1;
 function buildBuilder() {
@@ -5034,8 +5318,6 @@ const THEMES = [
   { name: 'Sky Blue', light: true, floor: '#bfe3ff', edge: '#2a74d0', style: 'clouds', ink: 'rgba(255,255,255,0.75)' },
   { name: 'Snow Day', light: true, floor: '#edf2fb', edge: '#5d84e0', style: 'snow', ink: 'rgba(120,150,210,0.45)' },
   { name: 'Lemonade', light: true, floor: '#fff2a6', edge: '#f08a00', style: 'grid', ink: 'rgba(230,150,10,0.32)' },
-  { name: 'Harvest Moon', floor: '#1a1026', edge: '#ffa34d', style: 'moon', ink: 'rgba(255,214,160,0.8)', leaves: true },
-  { name: 'Autumn Park', light: true, floor: '#efdcae', edge: '#c4561c', style: 'park', ink: 'rgba(150,110,40,0.35)', leaves: true },
 ];
 let themeCur = 0, themePrev = 0, themeFade = 1, themeClock = 0, fallBgOn = false;
 function rng(sd) { return () => { sd = (sd + 0x6d2b79f5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -5701,9 +5983,7 @@ for (const b of document.querySelectorAll('#dpad [data-d]')) tapButton(b, () => 
   });
   const up = () => { live = false; }; wrap.addEventListener('pointerup', up); wrap.addEventListener('pointercancel', up);
 })();
-$('versionLine').addEventListener('click', () => openNews(false));
 $('newsDone').addEventListener('click', showMenu);
-$('statsBtn').addEventListener('click', openStats);
 $('statsDone').addEventListener('click', showMenu);
 $('setBtn').addEventListener('click', openSettings);
 $('setDone').addEventListener('click', showMenu);
@@ -5851,12 +6131,13 @@ function boot() {
   cam.x = 0; cam.y = 0;
   checkUnlocks();
   $('nameIn').value = profile.name;
-  $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}${BETA ? ' BETA' : ''} · What's new`;
+  $('versionLine').textContent = `Noodle Bots · version ${GAME_VERSION}`;
   buildChat(); loadRivals(); applySettings(); updateTutBtn(); checkAch(true);
   buildAbilOpts(); updateBotCard(); updateMenuButtons(); updateDock(); updateRoomChip(); renderModeSel();
   themeCur = themePrev = FALL_MENU ? FALL_BG()[0] : profile.theme >= 0 ? profile.theme : 0; fallBgOn = FALL_MENU; paintPage(); syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
   padSetup(); if (padGet()) GP.connected = true;
+  if (window.TTG) TTG.mount(document.querySelector('#menu .menucard'), document.querySelector('#menu .logo'));
   showScreen('menu'); maybeShowNews();
   initOnline();
   if (online.kind === 'web') {
