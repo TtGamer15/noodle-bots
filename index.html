@@ -42,7 +42,7 @@
 }
 html,body{height:100%;overscroll-behavior:none}
 /* iOS 26 home-screen apps can get a viewport one status bar too short; a page at least screen-tall gets the full one */
-@media (display-mode: standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
+@media (display-mode: standalone){html{min-height:min(100lvh,calc(100% + var(--ttg-sa-top,env(safe-area-inset-top,0px))))}}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 #topcap{display:none}
@@ -54,7 +54,7 @@ h1,h2,p{margin:0}
 .lbl{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
 /* ---------- HUD ---------- */
-#hud{position:absolute;inset:0;pointer-events:none;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;gap:10px;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));transition:opacity .25s}
+#hud{position:absolute;inset:0;pointer-events:none;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr) auto;gap:10px;padding-block:14px;padding-left:max(16px,var(--ttg-sa-left,env(safe-area-inset-left,0px)));padding-right:max(16px,var(--ttg-sa-right,env(safe-area-inset-right,0px)));transition:opacity .25s}
 #app:not(.playing) #hud{opacity:0;visibility:hidden}
 .stats{grid-column:1;grid-row:1;align-self:start;justify-self:stretch;display:grid;grid-template-columns:minmax(0,1fr);justify-items:start;gap:3px;min-width:0}
 .stats > *{max-width:100%;min-width:0}
@@ -111,10 +111,10 @@ h1,h2,p{margin:0}
 #app.pad .padk{display:inline-flex;align-items:center;margin-left:6px}
 #app.pad .dock kbd,#app.pad .banner kbd{display:none}
 #app.pad .padfocus{outline:3px solid var(--bot)!important;outline-offset:3px!important;box-shadow:0 0 0 7px rgba(82,229,255,.22)!important}
-#padHint{position:absolute;left:0;right:0;margin-inline:auto;bottom:max(12px,calc(env(safe-area-inset-bottom,0px) + 6px));width:max-content;max-width:94vw;box-sizing:border-box;z-index:65;display:none;gap:6px 16px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 16px;border-radius:999px;background:rgba(18,13,38,.88);border:1px solid var(--line);font:600 13px/1 var(--f-body);color:var(--ink);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#padHint{position:absolute;left:0;right:0;margin-inline:auto;bottom:max(12px,calc(var(--ttg-sa-bottom,env(safe-area-inset-bottom,0px)) + 6px));width:max-content;max-width:94vw;box-sizing:border-box;z-index:65;display:none;gap:6px 16px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 16px;border-radius:999px;background:rgba(18,13,38,.88);border:1px solid var(--line);font:600 13px/1 var(--f-body);color:var(--ink);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 #app.pad #padHint.show{display:flex}
 #padHint .ph{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-#app.playing #padHint{bottom:auto;top:max(64px,calc(env(safe-area-inset-top,0px) * 1.75 + 52px));opacity:.92}
+#app.playing #padHint{bottom:auto;top:max(64px,calc(var(--ttg-sa-top,env(safe-area-inset-top,0px)) * 1.75 + 52px));opacity:.92}
 .padmap{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 14px;font-size:13px}
 .padmap li{display:flex;align-items:center;gap:8px;color:var(--ink)}
 .padmap .pk{display:inline-flex;gap:3px;min-width:58px;color:var(--bot);font-size:18px}
@@ -188,7 +188,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 @media (pointer:fine){.dpad{display:none}}
 /* sideways phone: arrows on one side, the board as big as the screen allows on the other, and a Switch sides button */
 @media (max-height:500px) and (orientation:landscape){
-  #retro.screen{padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));justify-content:center}
+  #retro.screen{padding:8px max(12px,var(--ttg-sa-right,env(safe-area-inset-right,0px))) 8px max(12px,var(--ttg-sa-left,env(safe-area-inset-left,0px)));justify-content:center}
   .card.retro{width:auto;max-width:none;margin:auto;height:calc(var(--app-h,100dvh) - 16px);display:flex;flex-direction:row;align-items:stretch;gap:16px;padding:12px 14px}
   .card.retro.swap{flex-direction:row-reverse}
   .retro-side{display:flex;flex-direction:column;justify-content:space-between;gap:8px;width:clamp(190px,30vw,250px);min-width:0}
@@ -208,7 +208,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 .meter > .pend{border-radius:0 999px 999px 0;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--bot) 55%,transparent) 0 4px,color-mix(in srgb,var(--bot) 25%,transparent) 4px 8px)}
 
 /* ---------- screens ---------- */
-.screen{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:radial-gradient(ellipse at center,rgba(23,18,44,.3),rgba(12,9,26,.84))}
+.screen{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding-block:24px;padding-left:max(16px,var(--ttg-sa-left,env(safe-area-inset-left,0px)));padding-right:max(16px,var(--ttg-sa-right,env(safe-area-inset-right,0px)));background:radial-gradient(ellipse at center,rgba(23,18,44,.3),rgba(12,9,26,.84))}
 .card{width:100%;max-width:460px;margin-block:auto;box-sizing:border-box;background:var(--panel-strong);border:1px solid var(--line);border-radius:22px;padding:22px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
 .card h2{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.02em;text-wrap:balance}
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -294,7 +294,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 #onlineBtn{position:relative;overflow:visible}
 .fbadge{position:absolute;top:-9px;right:-6px;padding:4px 8px;border-radius:99px;background:#a6e85b;color:#14301a;font:700 12px/1 var(--f-body);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none}
 .fbadge.req{background:#ffd447;color:#1b1433}
-.invite{position:absolute;left:0;right:0;margin-inline:auto;top:max(12px,calc(env(safe-area-inset-top,0px) * 1.75));z-index:70;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:min(92vw,440px);box-sizing:border-box;padding:10px 12px;border-radius:16px;background:var(--panel-strong);border:1px solid var(--bot);box-shadow:0 12px 32px rgba(0,0,0,.45);font-size:14px;color:var(--ink);animation:toastIn .25s ease-out}
+.invite{position:absolute;left:0;right:0;margin-inline:auto;top:max(12px,calc(var(--ttg-sa-top,env(safe-area-inset-top,0px)) * 1.75));z-index:70;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:min(92vw,440px);box-sizing:border-box;padding:10px 12px;border-radius:16px;background:var(--panel-strong);border:1px solid var(--bot);box-shadow:0 12px 32px rgba(0,0,0,.45);font-size:14px;color:var(--ink);animation:toastIn .25s ease-out}
 .invite span{flex:1 1 180px;min-width:0}
 .maps{width:100%;border-collapse:collapse;font-size:13px}
 .maps th,.maps td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}
@@ -348,7 +348,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   .card{padding:18px;gap:14px}
   .bc-stats dd{font-size:16px}
 }
-@media (pointer:coarse) and (orientation:portrait){#hud{padding-bottom:max(18px,env(safe-area-inset-bottom,0px))}}
+@media (pointer:coarse) and (orientation:portrait){#hud{padding-bottom:max(18px,var(--ttg-sa-bottom,env(safe-area-inset-bottom,0px)))}}
 /* Phones turned sideways */
 @media (max-height:500px) and (orientation:landscape){
   #hud{gap:6px;padding-block:8px}
@@ -465,15 +465,15 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 #app.mode-on #hud .board,#app.mode-on .iqline,#app.mode-on #rankVal{display:none}
 #app.tag-on .boost{background:linear-gradient(90deg,color-mix(in srgb,var(--bot) 34%,transparent) var(--stam,100%),rgba(244,239,254,.08) var(--stam,100%))}
 @media (max-width:420px){.pips{display:none}.mb-time{font-size:16px}.modebar{padding:6px 10px}}
-@media (max-height:500px) and (orientation:landscape){.modebar{position:absolute;top:max(8px,env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));padding:5px 10px;gap:2px}.mb-role{font-size:12px}.modebar .pips{display:none}}
+@media (max-height:500px) and (orientation:landscape){.modebar{position:absolute;top:max(8px,var(--ttg-sa-top,env(safe-area-inset-top,0px)));right:max(16px,var(--ttg-sa-right,env(safe-area-inset-right,0px)));padding:5px 10px;gap:2px}.mb-role{font-size:12px}.modebar .pips{display:none}}
 @media (prefers-reduced-motion:reduce){.mb-team.low .pips i.on{animation:none}}
 @media (prefers-reduced-motion:reduce){.pulse,.toast{animation:none}.btn,.meter > div{transition:none}}
 /* iPhones fade the top of a full-screen web app a little below the clock, so the arena runs under it and the HUD and menus sit clear of it */
-#hud{padding-top:max(14px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
-.screen{padding-top:max(24px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(24px,calc(env(safe-area-inset-bottom,0px) + 8px))}
-@media (max-width:640px) and (orientation:portrait){#hud{padding-top:max(10px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(18px,env(safe-area-inset-bottom,0px))}}
-@media (max-height:500px) and (orientation:landscape){#hud{padding-top:max(8px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}.screen{padding-top:max(12px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}}
-@media (max-height:320px) and (orientation:landscape){#hud{padding-top:max(6px,calc(env(safe-area-inset-top,0px) * 1.75));padding-bottom:max(6px,env(safe-area-inset-bottom,0px))}}
+#hud{padding-top:max(14px,calc(var(--ttg-sa-top,env(safe-area-inset-top,0px)) * 1.75));padding-bottom:max(14px,var(--ttg-sa-bottom,env(safe-area-inset-bottom,0px)))}
+.screen{padding-top:max(24px,calc(var(--ttg-sa-top,env(safe-area-inset-top,0px)) * 1.75));padding-bottom:max(24px,calc(var(--ttg-sa-bottom,env(safe-area-inset-bottom,0px)) + 8px))}
+@media (max-width:640px) and (orientation:portrait){#hud{padding-top:max(10px,calc(var(--ttg-sa-top,env(safe-area-inset-top,0px)) * 1.75));padding-bottom:max(18px,var(--ttg-sa-bottom,env(safe-area-inset-bottom,0px)))}}
+@media (max-height:500px) and (orientation:landscape){#hud{padding-top:max(8px,calc(var(--ttg-sa-top,env(safe-area-inset-top,0px)) * 1.75));padding-bottom:max(8px,var(--ttg-sa-bottom,env(safe-area-inset-bottom,0px)))}.screen{padding-top:max(12px,calc(var(--ttg-sa-top,env(safe-area-inset-top,0px)) * 1.75));padding-bottom:max(12px,var(--ttg-sa-bottom,env(safe-area-inset-bottom,0px)))}}
+@media (max-height:320px) and (orientation:landscape){#hud{padding-top:max(6px,calc(var(--ttg-sa-top,env(safe-area-inset-top,0px)) * 1.75));padding-bottom:max(6px,var(--ttg-sa-bottom,env(safe-area-inset-bottom,0px)))}}
 /* ---------- abilities ---------- */
 @media (min-width:1000px){.modetabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .abils{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
@@ -939,8 +939,14 @@ html{touch-action:manipulation}
   // Which game this is. Saves for every TtGamer15 game travel together.
   var GAME = 'nb', NAME = 'Noodle Bots', HUB_URL = '/';
   var PREFIXES = ['noodlebots.v2', 'museum-after-dark-v1'];
-  var hub = false;
+  var hub = false, host = null;
   try { if (/[?&]hub=1/.test(location.search)) sessionStorage.setItem('ttg.hub', '1'); hub = sessionStorage.getItem('ttg.hub') === '1'; } catch (e) { /* storage off */ }
+  // Playing inside the TtGamer15 Games app page (the same page as the menu, no page load in between)
+  try { if (window.parent && window.parent !== window && window.parent.TTG_HOST) host = window.parent.TTG_HOST; } catch (e) { host = null; }
+  if (host) hub = true;
+  // The app tells us how much room the iPhone's notch and home bar take, since a game inside the page may not be told.
+  function insets() { try { var v = host.safe(), r = document.documentElement.style; ['top', 'right', 'bottom', 'left'].forEach(function (k) { r.setProperty('--ttg-sa-' + k, (v[k] || 0) + 'px'); }); } catch (e) { /* fine */ } }
+  if (host) { insets(); addEventListener('resize', insets); }
   var onSite = location.hostname === 'ttgamer15.github.io' || /[?&]ttgtest=1/.test(location.search);
   function exportSave() {
     var k = {};
@@ -994,15 +1000,16 @@ html{touch-action:manipulation}
     fade.finished.then(done, done);
   }
   function takeApart(card, then) {
-    if (calm || !card.animate) { then(); return; }
+    if (calm || !card.animate) { then(); return 0; }
     var kids = kidsOf(card);
     kids.forEach(function (k, i) { k.animate([{ translate: '0 0' }, { translate: '-46px 0', opacity: 0 }], { duration: 230, delay: i * 45, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' }); });
     var last = kids.length * 45;
     card.animate([{ translate: '0 0' }, { translate: '-90px 0', opacity: 0 }], { duration: 300, delay: last, easing: 'cubic-bezier(.55,0,.85,.5)', fill: 'forwards' });
-    setTimeout(then, last + 300);
+    setTimeout(then, last + 300); return last + 300;
   }
   function goHub(card) {
     var bg = ''; try { bg = getComputedStyle(document.body).backgroundColor; } catch (e) { /* fine */ }
+    if (host) { var ms = takeApart(card, function () {}); try { host.back({ ms: ms, bg: bg, win: window }); } catch (e) { location.href = HUB_URL; } return; }
     try { sessionStorage.setItem('ttg.trip', JSON.stringify({ at: Date.now(), dir: -1, bg: bg })); } catch (e) { /* fine */ }
     takeApart(card, function () {
       // Step back to the menu that's still open behind this game, so its music carries on without a tap.
@@ -1026,6 +1033,11 @@ html{touch-action:manipulation}
         var b = el('button', 'ttg-back', '← TtGamer15 Games'); b.type = 'button'; b.id = 'ttgBack';
         b.addEventListener('click', function () { goHub(card); });
         card.insertBefore(b, top || at);
+        if (host) {
+          // The app shows this game when it's ready, and builds the menu in while its own menu slides away.
+          try { host.ready({ win: window, game: GAME, reveal: function (t) { buildIn(card, t); }, leave: function () { return takeApart(card, function () {}); } }); } catch (e) { /* fine */ }
+          return;
+        }
         var t = readTrip(); if (t) buildIn(card, t);
         // coming back to this page later (the browser kept it): put the pieces back
         addEventListener('pageshow', function (e) { if (!e.persisted) return; [card].concat(Array.prototype.slice.call(card.children)).forEach(function (k) { if (k.getAnimations) k.getAnimations().forEach(function (a) { a.cancel(); }); }); });
