@@ -1036,6 +1036,8 @@ html{touch-action:manipulation}
         if (host) {
           // The app shows this game when it's ready, and builds the menu in while its own menu slides away.
           try { host.ready({ win: window, game: GAME, reveal: function (t) { buildIn(card, t); }, leave: function () { return takeApart(card, function () {}); } }); } catch (e) { /* fine */ }
+          // playing with a controller in the app: this game is ready for it right away
+          try { if (host.padInUse && host.padInUse() && window.ttgPadWake) setTimeout(function () { window.ttgPadWake(); }, 0); } catch (e) { /* fine */ }
           return;
         }
         var t = readTrip(); if (t) buildIn(card, t);
@@ -5301,6 +5303,7 @@ function padPoll(now) {
   const p = padGet(); if (!p) { input.gBoost = false; return; }
   const std = p.mapping === 'standard';
   const cur = p.buttons.map((x) => !!x && (x.pressed || x.value > 0.5));
+  if (!GP.seen) { GP.seen = true; cur.forEach((v, i) => { if (v) GP.hold.add(i); }); }   // a button already down when the controller shows up just wakes it
   for (const i of [...GP.hold]) if (!cur[i]) GP.hold.delete(i);
   const hit = (i) => cur[i] && !GP.prev[i] && !GP.hold.has(i);
   const ax = p.axes || [], lx = ax[0] || 0, ly = ax[1] || 0, rx = std ? ax[2] || 0 : 0, ry = std ? ax[3] || 0 : 0;
@@ -5331,7 +5334,7 @@ function padPoll(now) {
     if (!GP.focus && list.length) padFocus(padPick(list));
     if (dirHit) padMove(list, dirHit);
     if (hit(PB.S)) { GP.hold.add(PB.S); padPress(GP.focus); }
-    if (hit(PB.E)) { const b = PAD_BACK[scr] && $(PAD_BACK[scr]); if (b && !b.hidden && b.getClientRects().length) { GP.hold.add(PB.E); padPress(b); } }
+    if (hit(PB.E)) { const b = padBackEl(scr); if (b && !b.hidden && b.getClientRects().length) { GP.hold.add(PB.E); padPress(b); } }
     if (hit(PB.START) && scr === 'pause') resumeGame();
     input.gBoost = false;
   } else if (mode === 'play' || mode === 'spec') {
@@ -5354,13 +5357,17 @@ function padHintUpdate(scr, now) {
   const el = $('padHint'), I = padIcon, ph = (ks, t) => `<span class="ph">${ks.map(I).join('')}${t}</span>`;
   let key = '', html = '';
   if (scr === 'retro') { key = 'retro'; html = ph(['DPAD'], 'Turn') + ph(['S'], 'Play') + ph(['E'], 'Back'); }
-  else if (scr) { key = 'menu' + (PAD_BACK[scr] ? 'b' : ''); html = ph(['DPAD'], 'Move') + ph(['S'], 'Select') + (PAD_BACK[scr] ? ph(['E'], 'Back') : ''); }
+  else if (scr) { const bk = !!padBackEl(scr); key = 'menu' + (bk ? 'b' : ''); html = ph(['DPAD'], 'Move') + ph(['S'], 'Select') + (bk ? ph(['E'], 'Back') : ''); }
   else if ((mode === 'play') && now < GP.hintUntil) {
     key = 'game' + (abilOn() ? 'a' : '') + gameKind;
     html = ph(['STICK'], 'Steer') + ph(['S'], 'Boost') + (abilOn() ? ph(['W'], 'Power') : '') + ph(['N'], 'Bot') + (gameKind === 'solo' ? ph(['START'], 'Pause') : ph(['BACK'], 'Chat'));
   }
   if (key !== GP.hintKey) { GP.hintKey = key; el.innerHTML = html; el.classList.toggle('show', !!key); }
 }
+// B on the main menu goes back to TtGamer15 Games when it opened this game
+function padBackEl(scr) { return (PAD_BACK[scr] && $(PAD_BACK[scr])) || (scr === 'menu' ? $('ttgBack') : null); }
+// Opened from TtGamer15 Games while using a controller: be ready for it straight away.
+window.ttgPadWake = () => { GP.connected = true; GP.seen = false; padUse(); };
 window.addEventListener('gamepadconnected', () => { GP.connected = true; padUse(); toast('Controller connected 🎮'); });
 window.addEventListener('gamepaddisconnected', () => { if (!padGet()) { GP.connected = false; input.gBoost = false; padOff(); } });
 // Touching the screen, the mouse or the keyboard switches the hints back.
