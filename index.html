@@ -144,6 +144,29 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
 #newsTitle{font-size:20px;line-height:1.2}
 .card.wide{max-width:980px}
 .card.menucard{max-width:520px}
+.mc-col{display:contents}
+/* Sideways screens (like a Retroid handheld): the menu splits into two columns so it fits without scrolling */
+@media (orientation:landscape) and (max-height:640px){
+  .card.menucard{max-width:880px;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);column-gap:24px;row-gap:10px;align-items:start}
+  .card.menucard > .ttg-back,.card.menucard > .ttg-move{grid-column:1/-1;justify-self:start}
+  .mc-col{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0}
+  .menucard .me-info{min-width:0}
+  .menucard .me-info .input{min-width:0;width:100%;box-sizing:border-box}
+}
+@media (orientation:landscape) and (max-height:440px){
+  .card.menucard{row-gap:8px}
+  .menucard .mc-col{gap:9px}
+  .menucard .logo{font-size:34px}
+  .menucard .tag{font-size:13px;line-height:1.35}
+  .menucard .version{display:none}
+  .menucard .btn.big{padding:9px 14px;font-size:15px}
+  .menucard .modeinfo{font-size:12px}
+  .menucard .me-row{grid-template-columns:100px minmax(0,1fr)}
+  .menucard .preview{height:76px}
+  .menucard .menu-links{flex-wrap:nowrap}
+  .menucard .menu-links{gap:6px}
+  .menucard .menu-links .btn{padding:6px 8px;font-size:12px;white-space:nowrap}
+}
 .btn,.opt,.swatch,.chipbtn,.switch{touch-action:manipulation}
 .iqline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .iqbar{width:64px;height:6px;border-radius:999px;background:rgba(244,239,254,.12);overflow:hidden;flex:none}
@@ -629,6 +652,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
   <!-- Menu -->
   <section id="menu" class="screen">
     <div class="card menucard">
+      <div class="mc-col mc-l">
       <h1 class="logo">Noodle <span>Bots</span></h1>
       <p class="tag">Eat, grow, and teach a bot to play exactly like you. Then hand it the controls whenever you need a break.</p>
       <div class="me-row">
@@ -640,6 +664,8 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
           <button class="btn small" id="lockerBtn" type="button">Customize snake</button>
         </div>
       </div>
+      </div>
+      <div class="mc-col mc-r">
       <div class="group">
         <p class="lbl">Game mode</p>
         <div class="modetabs" role="group" aria-label="Game mode">
@@ -658,6 +684,7 @@ kbd{font:600 11px/1 var(--f-num);padding:3px 6px;border-radius:6px;background:rg
       <button class="btn bot big" id="watchBtn" type="button">Watch my bot play</button>
       <div class="menu-links"><button class="btn small" id="tutBtn" type="button">How to play</button><button class="btn small" id="setBtn" type="button">Settings</button></div>
       <p class="version" id="versionLine">Noodle Bots</p>
+      </div>
     </div>
   </section>
 
@@ -987,7 +1014,10 @@ html{touch-action:manipulation}
   function readTrip() {
     try { var t = JSON.parse(sessionStorage.getItem('ttg.trip') || 'null'); sessionStorage.removeItem('ttg.trip'); return t && t.dir === 1 && Date.now() - t.at < 8000 ? t : null; } catch (e) { return null; }
   }
-  function kidsOf(card) { return Array.prototype.filter.call(card.children, function (k) { return k.offsetParent !== null || k.getClientRects().length; }).slice(0, 12); }
+  function kidsOf(card) {
+    var all = []; Array.prototype.forEach.call(card.children, function (k) { if (k.classList.contains('mc-col')) Array.prototype.push.apply(all, k.children); else all.push(k); });
+    return all.filter(function (k) { return k.offsetParent !== null || k.getClientRects().length; }).slice(0, 12);
+  }
   function buildIn(card, t) {
     var screen = card.parentElement; if (!screen || !card.animate) return;
     var veil = el('div', 'ttg-veil'); veil.style.background = t.bg || '#ffe0e4'; screen.insertBefore(veil, screen.firstChild);
@@ -1044,7 +1074,7 @@ html{touch-action:manipulation}
         }
         var t = readTrip(); if (t) buildIn(card, t);
         // coming back to this page later (the browser kept it): put the pieces back
-        addEventListener('pageshow', function (e) { if (!e.persisted) return; [card].concat(Array.prototype.slice.call(card.children)).forEach(function (k) { if (k.getAnimations) k.getAnimations().forEach(function (a) { a.cancel(); }); }); });
+        addEventListener('pageshow', function (e) { if (!e.persisted) return; [card].concat(Array.prototype.slice.call(card.querySelectorAll(':scope > *, :scope > .mc-col > *'))).forEach(function (k) { if (k.getAnimations) k.getAnimations().forEach(function (a) { a.cancel(); }); }); });
         return;
       }
       if (!onSite) return;
@@ -1059,7 +1089,7 @@ html{touch-action:manipulation}
       dl.addEventListener('click', function () { download(exportSave()); });
       row.appendChild(cp); row.appendChild(dl); row.appendChild(go);
       box.appendChild(p); box.appendChild(row); box.appendChild(p2);
-      card.insertBefore(box, at ? at.nextSibling : null);
+      ((at && at.parentNode) || card).insertBefore(box, at ? at.nextSibling : null);
     }
   };
 })();
@@ -5235,10 +5265,17 @@ function renderFriends() {
 const PB = { S: 0, E: 1, W: 2, N: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 const GP = { prev: [], dir: '', dirAt: 0, screen: null, focus: null, lastRect: null, hold: new Set(), connected: false, hintUntil: 0, lastMode: '', hintKey: '', invShown: false };
 const PAD_BACK = { online: 'onlineBack', locker: 'lockerDone', news: 'newsDone', settings: 'setDone', stats: 'statsDone', train: 'trainDone', pause: 'resumeBtn', death: 'deathMenuBtn', result: 'resMenu', retro: 'retroBack' };
+// Where A sits on the controller: TtGamer15 Games keeps this setting (Retroid and Nintendo-style controllers have A on the right).
+function padFace(k) {
+  let st = null; try { st = localStorage.getItem('ttg.padIcons'); } catch (e) { /* fine */ }
+  if (!st) { let nat = false; try { nat = !!(window.parent !== window && window.parent.TTG_HOST && window.parent.TTG_HOST.native); } catch (e) { /* fine */ } st = nat ? 'right' : 'bottom'; }
+  return st === 'right' ? ({ S: 'E', E: 'S', W: 'N', N: 'W' })[k] || k : k;
+}
 function padIcon(k) {
   const T = (t, y) => `<text x="12" y="${y}" text-anchor="middle" font-size="8.5" font-weight="800" font-family="system-ui,sans-serif" fill="currentColor">${t}</text>`;
   let inner = '';
   if (k === 'N' || k === 'E' || k === 'S' || k === 'W') {
+    k = padFace(k);
     const pos = { N: [12, 5], E: [19, 12], S: [12, 19], W: [5, 12] };
     for (const [n, [x, y]] of Object.entries(pos)) inner += n === k ? `<circle cx="${x}" cy="${y}" r="3.9" fill="currentColor"/>` : `<circle cx="${x}" cy="${y}" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".5"/>`;
   } else if (k === 'RT' || k === 'LT') inner = `<path d="M6 21.5V10a6 6 0 0 1 12 0v11.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>` + T(k[0], 18.5);
@@ -6211,7 +6248,7 @@ function boot() {
   themeCur = themePrev = FALL_MENU ? FALL_BG()[0] : profile.theme >= 0 ? profile.theme : 0; fallBgOn = FALL_MENU; paintPage(); syncSoundUI();
   dlApiPromise = window.claude && typeof window.claude.use === 'function' ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
   padSetup(); if (padGet()) GP.connected = true;
-  if (window.TTG) TTG.mount(document.querySelector('#menu .menucard'), document.querySelector('#menu .logo'));
+  if (window.TTG) TTG.mount(document.querySelector('#menu .menucard'), document.querySelector('#menu .logo'), document.querySelector('#menu .mc-l'));
   showScreen('menu'); maybeShowNews();
   initOnline();
   if (online.kind === 'web') {
